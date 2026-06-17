@@ -1,8 +1,8 @@
 # HANDOFF.md — golem 현재 위치와 다음 액션
 
 ## ▶ 새 세션 여기부터
-- 읽는 순서: 이 파일 → **context-notes G56(Step3 계약타이트 스윕: 곡선 0.37→0.65→0.80)·G55(정량3단계: 결합도 가설 기각+하네스 fix)·G54(정량2단계: RULE-10 d=2.7)·G53(정량1단계: 0.762는 단발)·G52(B완료)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G56) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
-- **지금 할 일 한 줄**: 정량 1~3단계 + Step3 스윕 1차 완료. **핵심 = 합의를 정하는 건 결합도가 아니라 계약 빡빡함**(G53~G56). RULE-10 효과 확립(d=2.71). Step3 스윕(G56)으로 **같은 카드 위 합의 곡선 단조 상승 재확인**: L0 0.37→L1 0.65→L2 0.80. L0→L1(RULE-10) p=0.004로 3번째 재현. **단 L1→L2(RULE-11 PHASE 순서)는 미확립**(p=0.148) — L2가 게이트 2~7로 투표수↓(소표본 인플레 G55 재발). 다음 = **sweep cap↑ 재측정**(L2 투표수 매칭, eco cap22와 동일 방식)으로 L1→L2 결판.
+- 읽는 순서: 이 파일 → **context-notes G58(Step3 스윕 결판: L1→L2 상승 아님)·G57(외부리뷰 P0)·G56(스윕 1차)·G55(결합도 가설 기각)·G54(RULE-10 d=2.7)·G53(0.762는 단발)·G52(B완료)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G58) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
+- **지금 할 일 한 줄**: 정량 1~3단계 + Step3 스윕 **종결**(G58). **핵심 = 합의를 정하는 건 결합도가 아니라 계약 빡빡함, 단 *규칙 종류*에 의존**(G53~G58). 확립 3가지: ① 결합도 가설 기각(eco 0.925 vs combat 0.633, d=5.89) ② **RULE-10 종료조항 효과**(L0→L1 d≈3, 4회 재현) ③ **RULE-11 PHASE 순서는 combat 합의 안 올림**(L1→L2 Δ−0.03, p=0.69 — G56의 0.80은 cap=11 소표본 인플레였고 cap=22로 0.607로 내려앉음). 사다리는 L0→L1 한 칸에서만 작동. **다음 = 자율 oracle(31B가 골든까지) / eco·combat 잔차 / 외부리뷰 P1(#8 실측 fixture·#6 taxonomy)**.
 - 정량 1단계(G53): combat 카드 multi-seed N=6 → 합의 **0.633±0.044**(min 0.565 max 0.685). G52의 0.762는 분포 밖 **+2.9σ 단발**. min 0.565 ≈ "RULE-10 박기 전" baseline 0.567 → **"0.567→0.762 상승" 서사는 과장, 상승 통계적 미확립**. 도구 `studio/multiseed.py`. 곁다리: 승격 누락된 `key_usage.py` 복사(코드0).
 - B 결과(G52, ★N=1 주의): 계약 종료조건(RULE-10: tick 1000 무승부) 박고 oracle 비종료 7개를 draw로 손교정 → 합의 0.762 측정**(단발, G53서 +2.9σ 운빨로 판명)**. 2/3 저합의 가드가 SCN-003·008(0.6) 라이브 강등. **하네스 repr 버그**(oracle None/bool이 빌드 JS null/true와 거짓불일치) 발견·수정(`_js_scalar`).
 - **프로젝트 승격 완료(2026-06-17)**: golem을 arag에서 독립 저장소로 분리(`C:\Users\USER\golem`). 둥지 구조(루트에 config 등 **5파일**[config·llm·observability·run_index·**key_usage**]+.env, 그 밑 `golem/`)라 코드 0수정. 셋업·구조·정본 규칙은 루트 `README.md`. arag/golem은 레거시로 남음(원본 삭제는 사용자 확인 후). 공유 파일은 **이 저장소가 정본**, arag와 따로 진화.
@@ -51,7 +51,7 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 4. ~~(키0) 하네스 fix(G55)~~ — **완료**: `_canon`으로 스칼라+구조적 출력 repr 통일(build_graded·reconcile), consensus min-voter 가드(1표 자명합의 제외, 표본수 병기). reconcile replay 회귀 통과.
 5. ~~(★키) eco cap=22 재측정(G55)~~ — **완료. 결합도 가설 기각 확정**: eco 0.925±0.054 vs combat 0.633±0.044(t=10.2, d=5.89, 분포 분리). cap11 0.983→0.925로 작은표본 인플레 잡힘(하네스 fix 실증).
 6. ~~(★키) Step3 계약-타이트 스윕 1차(G56)~~ — **완료. 합의 곡선 단조 상승 재확인**: L0 0.37→L1 0.65→L2 0.80(같은 combat 카드, 현재 하네스 동일조건). 도구 `studio/sweep.py`, 럽 = baseline/combat/`*_combat_phased`(RULE-11 PHASE 순서). L0→L1(RULE-10) p=0.004 3번째 재현. **L1→L2(RULE-11)는 미확립**(p=0.148, L2 투표수↓ 소표본 인플레).
-7. **(★키, 1순위) Step3 스윕 cap↑ 재측정** — L2(phased)가 게이트 2~7로 투표수 3.78표(L1 5.68)라 0.80이 소표본 인플레로 오염(G56). eco cap=22와 동일하게 cap↑로 L2 통과표를 5~7로 맞춰 L1→L2(PHASE 순서 효과)를 결판낸다. `python golem/studio/sweep.py --n 6 --cap 22`.
-8. (백로그) eco 잔차 분해(0.925≠1.0, SCN-004 번식 1건) / 자율 oracle(31B가 골든까지) / combat 잔차.
-5. **코어 다음 frontier**(★키) — 자율 oracle(31B가 골든까지) × 고결합 카드 × reconcile calibration. UI/Asset/Renderer는 채점기반을 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
-6. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
+7. ~~(★키) Step3 스윕 cap↑ 재측정(G58)~~ — **완료. L1→L2 상승 아님으로 결판**: cap=22로 L2 투표수 5.71표(자명합의 소거)로 매칭하자 합의 0.640→0.607(Δ−0.03, p=0.69, 분포 겹침). G56의 0.80은 cap=11 소표본 인플레였음 확정. L0→L1(RULE-10)은 11표로 더 강한 4번째 재현(d=2.98). thesis 정정 = 사다리는 규칙 종류 의존(종료조항 올림, PHASE 순서 안 올림).
+8. ~~(키0) 외부 코드리뷰 P0 4건(G57)~~ — **완료**: #1 build.py legacy 경고·#3 AUTO suspect 롤업+Green게이트·#7 planning_compare 경고·#9 schema(이미 됨). P1 5건(#8·#6·#4·#5·#10)은 다음 실험 전 백로그(checklist).
+9. **(다음 frontier, ★키)** 자율 oracle(31B가 골든까지) × 고결합 카드 × reconcile calibration / eco 잔차(0.925≠1.0, SCN-004 번식) / combat 잔차 / 외부리뷰 P1(#8 실측 fixture 우선). UI/Asset/Renderer는 채점기반을 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
+10. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
