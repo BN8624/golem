@@ -23,7 +23,9 @@
 - [ ] (새 세션, 키0) 저합의 가드 임계 강화 — 과반(>0.5)→절대다수(2/3↑). SCN-009(0.6) 같은 무한루프값 통과 빈틈 차단(G50)
 - [x] 정량 1단계 — B카드 multi-seed N=6 → 합의 0.633±0.044, **G52의 0.762는 +2.9σ 단발(재현X)**(G53, `studio/multiseed.py`). 곁다리: 승격 누락 `key_usage.py` 복사.
 - [x] 정량 2단계 — baseline(RULE-10 전) multi-seed N=6 → **RULE-10 효과 확립**: base 0.421±0.102 vs post 0.633±0.044, t=4.69 p≈0.002, d=2.71, 분포 분리, 분산 5.3배↓(G54). 사다리 방향 맞고 G52 두 숫자는 고점 운빨. baseline 패킷=`studio/planning_packet_combat_baseline`.
-- [ ] 정량 3단계 — **동결합 다수 카드**(0.633 카드별 재현성) → 결합도 스윕(임계곡선)(★키)
+- [x] 정량 3단계 — 새 고결합 카드(eco 생태계) 풀 파이프라인+multiseed → **결합도 가설 기각**: eco는 고결합인데 컴파일된 빌드 0.98 수렴(combat과 정반대). 합의를 정하는 건 결합도 아닌 계약 빡빡함(G55). 단 측정함정 2건(표본수 오염·repr 재발)으로 0.98은 잠정.
+- [x] (키0) 하네스 fix — `_canon`으로 스칼라+구조적출력 repr 통일(build_graded·reconcile, B) + consensus min-voter 가드/표본수 병기(A). reconcile replay 회귀 통과(G55).
+- [ ] (★키) eco cap↑ 재측정 — 게이트통과 combat급(5~7)으로 맞춰 0.98 검증 → 그 뒤 Step3 결합도 스윕
 - [ ] 코어 다음 frontier = 자율 oracle × 고결합 카드 × reconcile calibration (UI/Asset는 별도 트랙, 결정적 렌더 채점법 선결)
 - [ ] (backlog) levels 등 출력표면 확장 / adversarial BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주
 

@@ -43,18 +43,27 @@ def main(argv=None):
                            "--out", str(out)])
         c = json.loads((out / "consensus.json").read_text(encoding="utf-8"))
         seeds.append({"seed": i, "overall_agreement": c["overall_agreement"],
-                      "gate_passed": c["gate_passed"], "per_scenario": c["per_scenario"],
+                      "gate_passed": c["gate_passed"], "voters": c.get("voters", {}),
+                      "per_scenario": c["per_scenario"],
                       "failure_classes": c.get("failure_classes", {})})
-        print(f"  → 합의 {c['overall_agreement']}, 게이트 {c['gate_passed']}/{args.cap}\n")
+        print(f"  → 합의 {c['overall_agreement']}, 게이트 {c['gate_passed']}/{args.cap}, "
+              f"평균 {c.get('voters', {}).get('mean_voters', '?')}표\n")
 
-    agrees = [s["overall_agreement"] for s in seeds]
+    # 표 부족(overall=None)인 시드는 합의 분포에서 제외 — 표본수 오염 방지(G55)
+    scorable = [s for s in seeds if s["overall_agreement"] is not None]
+    agrees = [s["overall_agreement"] for s in scorable]
     gates = [s["gate_passed"] for s in seeds]
+    mean_voters = [s["voters"].get("mean_voters", 0) for s in scorable]
     summary = {
         "n": args.n, "cap": args.cap, "card": Path(args.packet).name,
+        "scorable_seeds": len(scorable),
         "agreement": {
-            "mean": round(statistics.mean(agrees), 4),
+            "mean": round(statistics.mean(agrees), 4) if agrees else None,
             "stdev": round(statistics.stdev(agrees), 4) if len(agrees) > 1 else 0.0,
-            "min": min(agrees), "max": max(agrees), "values": agrees},
+            "min": min(agrees) if agrees else None, "max": max(agrees) if agrees else None,
+            "values": agrees},
+        "voters": {"mean": round(statistics.mean(mean_voters), 2) if mean_voters else 0,
+                   "min": min(mean_voters) if mean_voters else 0},
         "gate_passed": {
             "mean": round(statistics.mean(gates), 2),
             "min": min(gates), "max": max(gates), "values": gates},
@@ -64,12 +73,17 @@ def main(argv=None):
 
     a = summary["agreement"]
     print("=" * 56)
-    print(f"[MULTISEED 결과] 합의 평균 {a['mean']} ± {a['stdev']} "
-          f"(min {a['min']}, max {a['max']}, N={args.n})")
-    print(f"  값: {agrees}")
+    if not agrees:
+        print(f"[MULTISEED 결과] 채점 가능 시드 0/{args.n} — 전부 표 부족(게이트통과<{build_graded.MIN_VOTERS}). "
+              f"cap↑로 표 늘려야 측정 가능(G55).")
+    else:
+        print(f"[MULTISEED 결과] 합의 평균 {a['mean']} ± {a['stdev']} "
+              f"(min {a['min']}, max {a['max']}, 채점시드 {len(scorable)}/{args.n})")
+        print(f"  값: {agrees}")
+        print(f"  평균 투표수 {summary['voters']['mean']} (min {summary['voters']['min']}) "
+              f"— 카드 간 비교는 이 값이 비슷해야 유효(G55)")
     print(f"  게이트통과 {summary['gate_passed']['mean']} "
           f"(min {summary['gate_passed']['min']}, max {summary['gate_passed']['max']})")
-    print(f"  B의 0.762는 이 분포의 {'안' if a['min'] <= 0.762 <= a['max'] else '밖'}.")
     print(f"[MULTISEED] → {base / 'multiseed_summary.json'}")
     return 0
 

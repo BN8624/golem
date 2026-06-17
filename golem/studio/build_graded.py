@@ -116,15 +116,18 @@ def _norm_output(stdout):
     return tuple(sorted(d.items()))
 
 
-def _js_scalar(val):
-    """oracle 값을 빌드가 stdout에 출력하는 JS 표현으로 문자열화 — None→null, bool→true/false.
-    파이썬 str()은 None/True를 'None'/'True'로 만들어 빌드의 JS 'null'/'true'와 어긋나 거짓
-    불일치를 낸다(고결합 카드 winner 7건 실측). 빌드 출력 표면과 oracle을 같은 표현으로 맞춘다."""
-    if isinstance(val, bool):
-        return "true" if val else "false"
-    if val is None:
-        return "null"
-    return str(val)
+def _canon(val):
+    """빌드 stdout 문자열이든 oracle 파이썬 값이든 같은 캐노니컬 JSON 문자열로 만든다.
+    표현차(파이썬 repr vs JS JSON: None/'None'·True/'true', dict 키순서·공백, 리스트 출력)를
+    제거해 거짓 불일치를 막는다. G52는 None/bool 스칼라만 맞췄으나 entities 같은 구조적 출력은
+    여전히 str()로 새 거짓 불일치를 냈다(G55) — JSON 정규화로 스칼라·구조 모두 통일한다.
+    파싱 불가한 순수 문자열(예: 'RUNNING')은 그대로 둔다."""
+    if isinstance(val, str):
+        try:
+            val = json.loads(val)
+        except (ValueError, TypeError):
+            return val
+    return json.dumps(val, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
 def classify_attempt_failure(reason):
@@ -163,8 +166,13 @@ def gate_and_run(workspace, manifest, scenarios):
     return True, "ok", outputs
 
 
+MIN_VOTERS = 2  # 합의는 최소 2표부터 의미 — 1표는 자기자신과 자명히 1.0(G55 표본수 오염 가드)
+
+
 def consensus(passed_outputs, gradeable_ids):
-    """시나리오별 다수합의 + 일치율. passed_outputs: {build: {scen_id: norm_output}}."""
+    """시나리오별 다수합의 + 일치율. passed_outputs: {build: {scen_id: norm_output}}.
+    overall은 표 ≥ MIN_VOTERS 시나리오만 평균(자명한 1표 합의 제외) — 표 부족이면 None을 돌려
+    카드 간 합의 비교가 표본수에 오염되지 않게 한다(G55)."""
     report = {}
     for sid in gradeable_ids:
         votes = [outs.get(sid) for outs in passed_outputs.values() if outs.get(sid) is not None]
@@ -173,8 +181,8 @@ def consensus(passed_outputs, gradeable_ids):
             continue
         top, n = Counter(votes).most_common(1)[0]
         report[sid] = {"agree": n, "total": len(votes), "rate": round(n / len(votes), 3)}
-    rates = [r["rate"] for r in report.values() if r["total"] > 0]
-    overall = round(sum(rates) / len(rates), 3) if rates else 0.0
+    rates = [r["rate"] for r in report.values() if r["total"] >= MIN_VOTERS]
+    overall = round(sum(rates) / len(rates), 3) if rates else None
     return overall, report
 
 
@@ -194,9 +202,8 @@ def _golden_diff(passed_outputs, scenarios, gradeable, contract):
         cons = dict(top[0])
         sc = by_id.get(sid, {})
         exp = sc.get("expected") or {}
-        gnorm = {k: (json.dumps(exp[k]) if k == "logs" else _js_scalar(exp[k]))
-                 for k in (set(exp) & output_keys)}
-        d = {k: {"consensus": cons.get(k), "oracle": v} for k, v in gnorm.items() if cons.get(k) != v}
+        d = {k: {"consensus": _canon(cons.get(k)), "oracle": _canon(exp[k])}
+             for k in (set(exp) & output_keys) if _canon(cons.get(k)) != _canon(exp[k])}
         if d:
             diffs.append({"id": sid, "input": {k: v for k, v in sc.items() if k not in grading},
                           "differing": d, "agreement": {"agree": top[1], "total": len(votes)}})
@@ -284,15 +291,21 @@ def main(argv=None):
     overall, report = consensus(passed_outputs, gradeable)
     golden_diffs = _golden_diff(passed_outputs, scenarios, gradeable, contract)
     fail_classes = Counter(classify_attempt_failure(r) for r in failures)
+    scored = [r["total"] for r in report.values() if r["total"] >= MIN_VOTERS]
+    voters = {"min_voters": MIN_VOTERS, "scenarios_scored": len(scored),
+              "mean_voters": round(sum(scored) / len(scored), 2) if scored else 0}
     base.mkdir(parents=True, exist_ok=True)
     (base / "consensus.json").write_text(json.dumps(
         {"gate_passed": len(passed_outputs), "cap": args.cap,
-         "gradeable": gradeable, "overall_agreement": overall, "per_scenario": report,
-         "golden_diffs": golden_diffs,
+         "gradeable": gradeable, "overall_agreement": overall, "voters": voters,
+         "per_scenario": report, "golden_diffs": golden_diffs,
          "failure_classes": dict(fail_classes), "gate_failed_reasons": failures},
         ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n[BUILD v1] 게이트 통과 {len(passed_outputs)}/{args.cap}, "
-          f"합의 채점(채점가능 {len(gradeable)}): 전체 일치율 {overall}")
+          f"합의 채점(채점가능 {len(gradeable)}): 전체 일치율 {overall} "
+          f"(채점시나리오 {voters['scenarios_scored']}, 평균 {voters['mean_voters']}표)")
+    if overall is None or voters["mean_voters"] < 3:
+        print("  [표본수 주의] 표 부족(평균<3) — 합의값이 표본수에 오염될 수 있음. 카드 간 비교는 cap↑로 표 맞춘 뒤(G55).")
     if failures:  # 실패 사전분류(G48): 카드 탓 전에 INFRA/HARNESS 먼저 분리
         print("  [실패 사전분류] " + ", ".join(f"{k}={v}" for k, v in fail_classes.items())
               + "  (INFRA·HARNESS는 카드 실패로 안 셈 — 하네스 수정 후 재실행)")

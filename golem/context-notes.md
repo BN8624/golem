@@ -645,3 +645,31 @@ RULE-10만 뺀 baseline 패킷(`studio/planning_packet_combat_baseline`, 계약 
 - **방법 메모**: baseline은 무한루프 빌드가 스모크 타임아웃(30s)으로 게이트 탈락 → 게이트통과 2~5(post는
   5~7). 통과 표본이 작아 합의 분산이 더 큰 것도 일부 기여. 그래도 분포 분리는 표본수로 안 깨질 만큼 큼.
 - 다음 = Step2 동결합 다수 카드(0.633이 카드별 재현되나) → Step3 결합도 스윕(임계곡선).
+
+## G55 — 정량 3단계(Step2): "고결합→합의붕괴" 재현 실패 = 결합도 가설 기각 (2026-06-17, ★키)
+새 고결합 카드(eco: 틱기반 포식자-피식자 생태계)를 풀 파이프라인(planning→design→specqa, 전부 ★키
+실완주, FROZEN/PASS)으로 만들어 multiseed N=6. 0.633 재현 여부를 보려던 것.
+
+- **결과(주의: 측정 함정 있음)**: eco 합의 **0.983±0.028**, 게이트통과 **1~6/11(평균 3.5)**. 실패 전부
+  JS 구문오류(생성품질). 즉 combat(0.63@게이트5~7)과 **정반대**: eco는 *대부분 컴파일 실패*하지만 컴파일된
+  빌드는 *강하게 수렴*(8개 중 7개 정답, 틀린 건 SCN-004 번식 1건).
+- **판정 — 결합도 가설 기각**: "결합도 크면 합의 무너진다"는 거짓. combat을 무너뜨린 건 결합도 *크기*가
+  아니라 **특정 종료 모호성**. eco는 planning이 계약에 **PHASE 1~5 순서를 명시**해(combat 종료조건이 느슨했던
+  것과 대조) 컴파일된 빌드가 수렴. **합의를 정하는 건 결합도가 아니라 계약 빡빡함** = G33~G54 사다리 thesis
+  재확인. [[G54]] 와 같은 결: 계약 타이트가 합의를 올린다. 난이도는 또 이동(eco는 합의붕괴가 아니라 컴파일
+  실패로 = 발열카드 G41~44 "난이도 이동" 반복).
+- **측정 함정 2건(이래서 결론은 잠정)**:
+  - **A. 합의 지표가 게이트통과 수에 오염**: 통과 1~2개면 합의 자동 1.0(자기자신 일치). eco 1~6표 vs
+    combat 5~7표라 0.98 직접비교 무효. → 통과수 맞춰야(cap↑) 깔끔. **consensus에 min-voter 가드/표본수
+    병기 필요**(하네스 backlog).
+  - **B. repr 버그 재발(_js_scalar 사각)**: `entities`(리스트) oracle 대조가 JSON 큰따옴표 vs 파이썬
+    repr 작은따옴표로 거짓 불일치 5/6건(값은 동일). G52 `_js_scalar`는 None/bool 스칼라만 고쳐 리스트/딕트
+    출력은 여전히 `str()`로 샘. measurement엔 무해(빌드합의 불변), golden_diff 진단표면만 오염. **구조적
+    출력값은 양쪽 json.dumps로 통일 필요**(하네스 fix 후보).
+- 산출물: `*_eco`(planning/design/specqa packet). 다음 = (1) eco cap↑ 재측정으로 표본수 맞춰 0.98 검증
+  / (2) repr·min-voter 하네스 fix / (3) Step3 결합도 스윕은 위 함정 해소 후.
+- **하네스 fix 완료(키0, 같은 세션)**: (B) `_js_scalar`→`_canon` 일원화 — 빌드 stdout 문자열이든 oracle
+  파이썬 값이든 JSON 정규화(sort_keys, 공백제거)로 통일해 스칼라+구조적 출력(entities) 거짓 불일치 차단.
+  build_graded·reconcile 동시 적용, reconcile replay 회귀 불변(불일치 2건 동일). (A) consensus에 MIN_VOTERS=2
+  가드 — 1표 자명합의(자기자신=1.0) 제외, 표 부족 시 overall=None, consensus.json에 `voters`(평균 투표수)
+  병기, multiseed가 None 시드 제외+표본수 출력. combat/baseline(표 2~7)은 불변, eco 1표 시드만 영향.

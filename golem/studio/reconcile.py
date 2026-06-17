@@ -29,7 +29,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE.parent.parent))
 
-from build_graded import _norm_output, _js_scalar    # noqa: E402
+from build_graded import _norm_output, _canon        # noqa: E402
 from planning import _extract_json       # noqa: E402
 
 MODEL_31 = "gemma-4-31b-it"
@@ -94,10 +94,9 @@ def diff(run_dir, scenarios, output_keys):
         top = Counter(votes).most_common(1)[0] if votes else (None, 0)
         consensus = json.loads(top[0]) if top[0] else None
         exp = sc.get("expected") or {}
-        gnorm = {k: (json.dumps(exp[k]) if k == "logs" else _js_scalar(exp[k]))
-                 for k in (set(exp) & output_keys)}
-        differing = {k: {"consensus": (consensus or {}).get(k), "oracle": v}
-                     for k, v in gnorm.items() if not consensus or consensus.get(k) != v}
+        differing = {k: {"consensus": (consensus or {}).get(k), "oracle": exp[k]}
+                     for k in (set(exp) & output_keys)
+                     if not consensus or _canon((consensus or {}).get(k)) != _canon(exp[k])}
         if differing:
             disagreements.append({"id": sc["id"], "input": _case_input(sc), "differing": differing,
                                   "agreement": {"agree": top[1], "total": len(votes)}})
@@ -166,8 +165,8 @@ def apply_fixes(verdicts, contract_path, scen_path, scenarios):
 
 
 def _stringify(k, val):
-    """diff()의 gnorm과 같은 방식으로 값을 문자열화 — 빌드 합의값과 비교 가능하게(JS 표현)."""
-    return json.dumps(val) if k == "logs" else _js_scalar(val)
+    """diff()와 같은 캐노니컬 JSON으로 값을 문자열화 — 빌드 합의값과 비교 가능하게(G55 통일)."""
+    return _canon(val)
 
 
 def apply_low_consensus_guard(verdicts, diffs):
