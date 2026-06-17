@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[codz]
+*.so
+.pytest_cache/
+.coverage
+
+# 자격증명 (키) — 저장소에 올리지 말 것
+.env
+.envrc
+
+# 생성물 (재생성 가능)
+golem/studio/build_runs/
+golem/runs/
+golem/studio/reconcile_report.json
+
+# Game Bank 카드 DB (바이너리·재생성 가능. 카드#1=bank_init.py)
+golem/game_bank.sqlite
+
+# 로그·임시
+*.log
+golem/_*.log

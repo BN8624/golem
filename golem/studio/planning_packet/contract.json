@@ -1,0 +1,47 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "resources": {
+        "energy": "number"
+      },
+      "stats": {
+        "productionRate": "number",
+        "levels": {
+          "generatorId": "number"
+        }
+      },
+      "gameStatus": "PLAYING | WON",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: WAIT action -> turn += 1, energy += productionRate.",
+      "RULE-02: UPGRADE action -> if energy >= currentCost then { energy -= currentCost, levels[id] += 1, recalculate productionRate } else { log 'Insufficient energy' }.",
+      "RULE-03: currentCost = floor(baseCost * (costMultiplier ** level)).",
+      "RULE-04: productionRate = 1 + sum(level * power).",
+      "RULE-05: Evaluate the win check at scenario start (BEFORE any action) AND immediately AFTER each action is applied: if energy >= 1000, set gameStatus = 'WON'.",
+      "RULE-06: Once gameStatus == 'WON', stop immediately — process no further actions from the scenario sequence; the current turn/energy are final.",
+      "RULE-07: An UPGRADE whose `id` is not present in the constants map causes NO state change and appends the log 'Invalid generator ID'."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "GameState",
+          "GameEngine"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

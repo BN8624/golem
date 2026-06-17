@@ -1,0 +1,11 @@
+{"run": "20260617-130018", "id": "SCN-001", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "5"}
+{"run": "20260617-130018", "id": "SCN-002", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "5"}
+{"run": "20260617-130018", "id": "SCN-007", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "5"}
+{"run": "20260617-130018", "id": "SCN-009", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "1001"}
+{"run": "20260617-130018", "id": "SCN-011", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "20"}
+{"run": "20260617-130018", "id": "SCN-012", "diagnosis": "ORACLE_BUG", "key": "tick", "value": "4"}
+{"run": "20260617-135921", "id": "SCN-004", "diagnosis": "ORACLE_BUG", "key": "winner", "value": "None"}
+{"run": "20260617-135921", "id": "SCN-005", "diagnosis": "ORACLE_BUG", "key": "winner", "value": "None"}
+{"run": "20260617-135921", "id": "SCN-009", "diagnosis": "ORACLE_BUG", "key": "winner", "value": "None"}
+{"run": "20260617-135921", "id": "SCN-010", "diagnosis": "ORACLE_BUG", "key": "winner", "value": "None"}
+{"run": "20260617-135921", "id": "SCN-013", "diagnosis": "ORACLE_BUG", "key": "winner", "value": "None"}
