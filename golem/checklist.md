@@ -25,7 +25,9 @@
 - [x] 정량 2단계 — baseline(RULE-10 전) multi-seed N=6 → **RULE-10 효과 확립**: base 0.421±0.102 vs post 0.633±0.044, t=4.69 p≈0.002, d=2.71, 분포 분리, 분산 5.3배↓(G54). 사다리 방향 맞고 G52 두 숫자는 고점 운빨. baseline 패킷=`studio/planning_packet_combat_baseline`.
 - [x] 정량 3단계 — 새 고결합 카드(eco 생태계) 풀 파이프라인+multiseed → **결합도 가설 기각**: eco는 고결합인데 컴파일된 빌드 0.98 수렴(combat과 정반대). 합의를 정하는 건 결합도 아닌 계약 빡빡함(G55). 단 측정함정 2건(표본수 오염·repr 재발)으로 0.98은 잠정.
 - [x] (키0) 하네스 fix — `_canon`으로 스칼라+구조적출력 repr 통일(build_graded·reconcile, B) + consensus min-voter 가드/표본수 병기(A). reconcile replay 회귀 통과(G55).
-- [ ] (★키) eco cap↑ 재측정 — 게이트통과 combat급(5~7)으로 맞춰 0.98 검증 → 그 뒤 Step3 결합도 스윕
+- [x] (★키) eco cap=22 재측정 — 평균 7표로 맞춰 **결합도 가설 기각 확정**: eco 0.925±0.054 vs combat 0.633±0.044, t=10.2 d=5.89 분포 분리. cap11 0.983→0.925로 작은표본 인플레+0.057 잡힘(하네스 fix 실증)(G55).
+- [ ] (★키) Step3 결합도(=계약 타이트) 스윕 — 계약 빡빡함 축으로 합의 곡선·붕괴 임계
+- [ ] (백로그) eco 잔차 분해(0.925≠1.0, SCN-004 번식) / 자율 oracle(31B가 골든까지)
 - [ ] 코어 다음 frontier = 자율 oracle × 고결합 카드 × reconcile calibration (UI/Asset는 별도 트랙, 결정적 렌더 채점법 선결)
 - [ ] (backlog) levels 등 출력표면 확장 / adversarial BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주
 

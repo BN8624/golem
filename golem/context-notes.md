@@ -673,3 +673,9 @@ RULE-10만 뺀 baseline 패킷(`studio/planning_packet_combat_baseline`, 계약 
   build_graded·reconcile 동시 적용, reconcile replay 회귀 불변(불일치 2건 동일). (A) consensus에 MIN_VOTERS=2
   가드 — 1표 자명합의(자기자신=1.0) 제외, 표 부족 시 overall=None, consensus.json에 `voters`(평균 투표수)
   병기, multiseed가 None 시드 제외+표본수 출력. combat/baseline(표 2~7)은 불변, eco 1표 시드만 영향.
+- **eco cap=22 재측정 — 결합도 가설 기각 확정(잠정→굳힘)**: 표본수를 combat급(평균 7표)으로 맞춰
+  재측정 → eco **0.925±0.054** [0.857, 0.969] vs combat **0.633±0.044** [0.565, 0.685]. Welch t=10.2,
+  Cohen d=5.89, **분포 완전 분리**(eco min 0.857 ≫ combat max 0.685). 두 고결합 카드가 정반대 합의 =
+  **결합도 크기는 합의를 예측 못 함**. 합의를 가른 변수는 계약 빡빡함(eco PHASE 1~5 명시 vs combat 종료
+  느슨). **하네스 fix 실증**: cap11 eco 0.983 → cap22 0.925 = 작은표본 인플레 +0.057을 min-voter 가드가
+  정확히 잡아냄. 다음 = Step3 결합도(=계약타이트) 스윕 / eco 잔차(0.925≠1.0, SCN-004 번식 1건) / 자율 oracle.
