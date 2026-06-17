@@ -178,7 +178,7 @@ P0 (지금, 완료):
 - [x] 검증: import OK + 헬퍼 스모크 + reconcile replay 회귀 통과
 
 P1 (다음 실험 전):
-- [ ] #8 실측 실패 fixture 회귀잠금(EDGE-011/012·고아모듈·미도달 config.js 우선)
+- [~] #8 실측 실패 fixture — `demo_fail_syntax_error` 추가(스윕 최다 실측 실패=구문오류, replay 11→12 green). 고아·미도달은 기존 unreachable_module/missing_file이 이미 커버. 남음: output-surface-skip(consensus 채점 fixture = replay 밖 별도 하네스)
 - [ ] #6 failure taxonomy 인벤토리(기존 라벨 정리 후에만 신규도입 + 라벨별 액션)
 - [ ] #4 Integration final_report 위험지표(auto_suspect·low_consensus_guarded·output_surface_skip) — frontier 부를 때
 - [ ] #5 Spec QA expected_confidence — 소비처 동시 배선 조건

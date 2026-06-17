@@ -761,3 +761,19 @@ G56의 미확립(L1→L2 p=0.148)을 eco와 동일한 cap↑ 투표수 매칭으
   길어져 게이트만 더 떨어뜨림(통과 4~8 vs L1 8~14).
 - **판정**: 정량 트랙 1~3단계 + Step3 스윕 **종결**. 확립된 것 = ① 결합도 가설 기각(eco 0.925 vs combat 0.633,
   d=5.89) ② RULE-10 효과(d≈3, 4회 재현) ③ PHASE 순서는 combat 합의 안 올림. 다음 = 자율 oracle / eco·combat 잔차.
+
+## G59 — 외부리뷰 P1 #8: 실측 실패 fixture 회귀잠금 (2026-06-18, 키0)
+
+리뷰 #8 = "상상 fixture보다 실제 반복 관측된 실패를 먼저 굳혀라". 회귀 러너 = `replay.py`
+(`fixtures/*`에서 expected.json+module_manifest.json 가진 디렉터리 자동발견 → `contract_validator.validate`
+→ 선언한 failing_check가 실제 터지는지 단언). **새 fixture = 디렉터리 하나 떨구면 자동 잠금.**
+
+- **갭 분석**: static_gate 5검사(multifile·syntax·no_npm·deterministic·reachable) 중 음성 fixture가
+  **없는 건 `syntax`(node --check 구문오류) 하나뿐**. 그런데 이게 스윕(G56·G58)에서 *가장 잦은 실측 실패*
+  ("구문 오류 main.js", failure_classes 전부 CARD=JS 생성품질). 고아·미도달은 `unreachable_module`,
+  결손은 `missing_file`이 이미 커버 — 리뷰가 우선순위로 든 고아/미도달은 이미 잠겨 있었음.
+- **추가**: `fixtures/demo_fail_syntax_error/`(미닫힘 중괄호 = 불완전 생성 패턴, node "Unexpected end of input").
+  expected failing_check=static_gate. replay **11→12 fixture, 전부 green**.
+- **surgical 판단**: extra_js·multifile 등은 스윕서 미관측이라 추가 안 함(리뷰 원칙=수 늘리기 아님). 남은
+  실측 갭 = "output surface 밖 키 많아 채점 누락"인데 이건 consensus 채점 fixture(build_graded)라 replay 밖
+  **별도 하네스** 필요 — 백로그.

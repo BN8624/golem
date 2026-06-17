@@ -1,0 +1,1 @@
+{ "ok": false, "failing_check": "static_gate", "note": "node --check 구문오류(미닫힘 중괄호) — 스윕서 가장 잦은 실측 실패 회귀잠금" }
