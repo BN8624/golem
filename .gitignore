@@ -12,6 +12,7 @@ __pycache__/
 # 생성물 (재생성 가능)
 golem/studio/build_runs/
 golem/runs/
+/runs/
 golem/studio/reconcile_report.json
 
 # Game Bank 카드 DB (바이너리·재생성 가능. 카드#1=bank_init.py)
