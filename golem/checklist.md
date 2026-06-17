@@ -22,8 +22,8 @@
 - [ ] (새 세션, ★키) **B: 고결합 카드에 계약 종료조건 박고 + oracle 교정 후 재빌드** — 합의 0.567 오르나(사다리 수렴 검증). specqa 재생성으로 `*_packet_combat` oracle 원복부터. **측정 본질로 우선.**
 - [ ] (새 세션, 키0) 저합의 가드 임계 강화 — 과반(>0.5)→절대다수(2/3↑). SCN-009(0.6) 같은 무한루프값 통과 빈틈 차단(G50)
 - [x] 정량 1단계 — B카드 multi-seed N=6 → 합의 0.633±0.044, **G52의 0.762는 +2.9σ 단발(재현X)**(G53, `studio/multiseed.py`). 곁다리: 승격 누락 `key_usage.py` 복사.
-- [ ] 정량 2단계 — **baseline(RULE-10 전) multi-seed** → 0.633±0.044와 분포 비교로 RULE-10 상승 확립 여부(★키)
-- [ ] 정량 3단계 — 동결합 다수 카드(재현성) → 결합도 스윕(임계곡선)(★키)
+- [x] 정량 2단계 — baseline(RULE-10 전) multi-seed N=6 → **RULE-10 효과 확립**: base 0.421±0.102 vs post 0.633±0.044, t=4.69 p≈0.002, d=2.71, 분포 분리, 분산 5.3배↓(G54). 사다리 방향 맞고 G52 두 숫자는 고점 운빨. baseline 패킷=`studio/planning_packet_combat_baseline`.
+- [ ] 정량 3단계 — **동결합 다수 카드**(0.633 카드별 재현성) → 결합도 스윕(임계곡선)(★키)
 - [ ] 코어 다음 frontier = 자율 oracle × 고결합 카드 × reconcile calibration (UI/Asset는 별도 트랙, 결정적 렌더 채점법 선결)
 - [ ] (backlog) levels 등 출력표면 확장 / adversarial BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주
 

@@ -1,8 +1,8 @@
 # HANDOFF.md — golem 현재 위치와 다음 액션
 
 ## ▶ 새 세션 여기부터
-- 읽는 순서: 이 파일 → **context-notes G53(정량1단계: B 0.762는 +2.9σ 단발)·G52(B완료+repr픽스)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G53) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
-- **지금 할 일 한 줄**: 정량 1단계 완료 = **B의 0.762는 재현 안 됨(N=1 운빨, +2.9σ). 진짜 B합의 = 0.63±0.04(N=6)**. 다음은 **baseline도 multi-seed**(RULE-10 상승 확립 여부) → Step2 동결합 다수 카드(재현성) → Step3 결합도 스윕(임계곡선).
+- 읽는 순서: 이 파일 → **context-notes G54(정량2단계: RULE-10 효과 결판 d=2.7)·G53(정량1단계: 0.762는 단발)·G52(B완료+repr픽스)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G54) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
+- **지금 할 일 한 줄**: 정량 1·2단계 완료 = **RULE-10 효과 확립**(baseline 0.421±0.102 vs post 0.633±0.044, Welch t=4.69 p≈0.002, d=2.71, 분포 분리, 분산 5.3배↓). G52 사다리 *방향*은 맞고 *두 숫자(0.567·0.762)는 둘 다 고점 운빨*. 다음은 **Step2 동결합 다수 카드**(0.633 카드별 재현성) → Step3 결합도 스윕(임계곡선).
 - 정량 1단계(G53): combat 카드 multi-seed N=6 → 합의 **0.633±0.044**(min 0.565 max 0.685). G52의 0.762는 분포 밖 **+2.9σ 단발**. min 0.565 ≈ "RULE-10 박기 전" baseline 0.567 → **"0.567→0.762 상승" 서사는 과장, 상승 통계적 미확립**. 도구 `studio/multiseed.py`. 곁다리: 승격 누락된 `key_usage.py` 복사(코드0).
 - B 결과(G52, ★N=1 주의): 계약 종료조건(RULE-10: tick 1000 무승부) 박고 oracle 비종료 7개를 draw로 손교정 → 합의 0.762 측정**(단발, G53서 +2.9σ 운빨로 판명)**. 2/3 저합의 가드가 SCN-003·008(0.6) 라이브 강등. **하네스 repr 버그**(oracle None/bool이 빌드 JS null/true와 거짓불일치) 발견·수정(`_js_scalar`).
 - **프로젝트 승격 완료(2026-06-17)**: golem을 arag에서 독립 저장소로 분리(`C:\Users\USER\golem`). 둥지 구조(루트에 config 등 **5파일**[config·llm·observability·run_index·**key_usage**]+.env, 그 밑 `golem/`)라 코드 0수정. 셋업·구조·정본 규칙은 루트 `README.md`. arag/golem은 레거시로 남음(원본 삭제는 사용자 확인 후). 공유 파일은 **이 저장소가 정본**, arag와 따로 진화.
@@ -46,9 +46,9 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 ## 다음 액션
 
 1. ~~(키0) AUTO검증+실패분류(G49)~~ · ~~T1 첫 스모크(G51)~~ · ~~저합의 가드(G50)~~ · ~~2/3 가드 강화~~ · ~~B 고결합(G52)~~ · ~~repr 픽스(G52)~~ · ~~프로젝트 승격(2026-06-17)~~ · ~~정량 1단계 B multi-seed(G53, 0.633±0.044)~~ — **전부 완료**.
-2. **(★키, 1순위) 정량 판정 — baseline multi-seed** — RULE-10 박기 전 계약으로도 N=6 돌려, 0.633±0.044(박은후)와 **분포 비교**. G53서 min 0.565≈baseline 0.567이라 "상승" 미확립 → 두 분포 겹치나/갈리나로 RULE-10 효과를 정량 판정. (이게 G52 사다리 정성 결론의 운명 결정.)
-3. (★키, 2순위) **Step2 동결합 다수 카드** — 새 고결합 카드 N장으로 0.633이 카드별 재현되나(분포 vs 우연).
-4. (★키, 3순위) **Step3 결합도 스윕** — 저·중·고 각 다수 카드로 합의-vs-결합도 곡선·붕괴 임계.
+2. ~~(★키) 정량 2단계 baseline multi-seed(G54)~~ — **완료. RULE-10 효과 확립**(d=2.71, p≈0.002, 분포 분리, 분산 5.3배↓). baseline 패킷 = `studio/planning_packet_combat_baseline`(RULE-10만 뺀 9 rules).
+3. **(★키, 1순위) Step2 동결합 다수 카드** — 새 고결합 카드 N장으로 0.633±0.044가 카드별 재현되나(이 카드만의 값 vs 고결합 레벨 특성). 카드 생성(bank_add_*) → planning→design→specqa→multiseed.
+4. (★키, 2순위) **Step3 결합도 스윕** — 저·중·고 각 다수 카드로 합의-vs-결합도 곡선·붕괴 임계.
 5. (선택, 키0) B 잔차 분해 — 통과 빌드 logs/winner 표기 차이 들여다보기.
 5. **코어 다음 frontier**(★키) — 자율 oracle(31B가 골든까지) × 고결합 카드 × reconcile calibration. UI/Asset/Renderer는 채점기반을 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
 6. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
