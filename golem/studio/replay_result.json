@@ -1,8 +1,8 @@
 {
   "ok": true,
   "api_calls": 0,
-  "fixtures_total": 11,
-  "fixtures_passed": 11,
+  "fixtures_total": 12,
+  "fixtures_passed": 12,
   "records": [
     {
       "fixture": "demo_fail_bare_default",
@@ -125,6 +125,23 @@
       "errors": [
         "[import_export] main.js: require가 워크스페이스 밖 참조(path escape) 금지: ../secret.js",
         "[import_export] main.js: 코드 import가 매니페스트에 없음 ['../secret.js']"
+      ]
+    },
+    {
+      "fixture": "demo_fail_syntax_error",
+      "expected": {
+        "ok": false,
+        "failing_check": "static_gate",
+        "note": "node --check 구문오류(미닫힘 중괄호) — 스윕서 가장 잦은 실측 실패 회귀잠금"
+      },
+      "result_ok": false,
+      "failed_checks": [
+        "static_gate"
+      ],
+      "assertion_ok": true,
+      "reason": "기대대로 static_gate 실패",
+      "errors": [
+        "[static_gate] 구문 오류 src/engine.js: Node.js v24.15.0"
       ]
     },
     {
