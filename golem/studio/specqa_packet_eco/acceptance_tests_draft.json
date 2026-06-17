@@ -1,0 +1,346 @@
+[
+  {
+    "id": "SCN-001",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 1,
+          "energy": 10
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 0,
+          "energy": 10
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-02",
+      "REQ-03"
+    ],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 0,
+          "energy": 14
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Predator moves 1->0. Prey tries to move away from 1 but is clamped at 0. Predation occurs at pos 0. Final energy: 10 + 5 - 1 = 14."
+    }
+  },
+  {
+    "id": "SCN-002",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 2,
+          "energy": 10
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 1,
+          "energy": 10
+        },
+        {
+          "id": 3,
+          "type": "prey",
+          "pos": 3,
+          "energy": 10
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-02"
+    ],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 1,
+          "energy": 9
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 0,
+          "energy": 9
+        },
+        {
+          "id": 3,
+          "type": "prey",
+          "pos": 4,
+          "energy": 9
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Tie-break: Predator targets lowest ID (Prey 2). Predator moves 2->1. Prey 2 moves 1->0. Prey 3 moves 3->4. No predation occurs."
+    }
+  },
+  {
+    "id": "SCN-003",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 8,
+          "energy": 10
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 9,
+          "energy": 10
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-02",
+      "REQ-03"
+    ],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 9,
+          "energy": 14
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Predator moves 8->9. Prey tries to move away from 8 but is clamped at 9. Predation occurs at pos 9. Final energy: 10 + 5 - 1 = 14."
+    }
+  },
+  {
+    "id": "SCN-004",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 10,
+        "reproCost": 5
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 5,
+          "energy": 10
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-04"
+    ],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 5,
+          "energy": 4
+        },
+        {
+          "id": 2,
+          "type": "predator",
+          "pos": 5,
+          "energy": 4
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Reproduction triggers at energy >= 10. Parent energy: 10 - 5 = 5. Child energy: 5. Hunger reduces both by 1. Final: 4 and 4."
+    }
+  },
+  {
+    "id": "SCN-005",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 5,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 5,
+          "energy": 5
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-01",
+      "REQ-05"
+    ],
+    "expected": {
+      "entities": [],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Hunger reduces energy 5 to 0. Entity dies at energy <= 0."
+    }
+  },
+  {
+    "id": "SCN-006",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 5,
+          "energy": 10
+        }
+      ],
+      "ticks": 0
+    },
+    "covers_reqs": [],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 5,
+          "energy": 10
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Simulation with 0 ticks should return initial state."
+    }
+  },
+  {
+    "id": "SCN-007",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [],
+      "ticks": 1
+    },
+    "covers_reqs": [],
+    "expected": {
+      "entities": [],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Simulation with no entities should return empty state."
+    }
+  },
+  {
+    "id": "SCN-008",
+    "input": {
+      "config": {
+        "worldSize": 10,
+        "hungerLoss": 1,
+        "eatingGain": 5,
+        "reproThreshold": 20,
+        "reproCost": 10
+      },
+      "initial_state": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 2,
+          "energy": 10
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 4,
+          "energy": 10
+        }
+      ],
+      "ticks": 1
+    },
+    "covers_reqs": [
+      "REQ-02"
+    ],
+    "expected": {
+      "entities": [
+        {
+          "id": 1,
+          "type": "predator",
+          "pos": 3,
+          "energy": 9
+        },
+        {
+          "id": 2,
+          "type": "prey",
+          "pos": 5,
+          "energy": 9
+        }
+      ],
+      "status": "FINISHED"
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": "Predator moves 2->3. Prey moves 4->5. No predation. Hunger reduces both to 9."
+    }
+  }
+]

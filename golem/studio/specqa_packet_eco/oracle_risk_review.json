@@ -1,0 +1,6 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    "Resolved all blocking questions: Execution order is Movement -> Predation -> Reproduction -> Hunger. Boundary handling is Clamping. Tie-break for predator targets is lowest ID. Reproduction triggers at energy >= threshold. Death triggers at energy <= 0."
+  ]
+}
