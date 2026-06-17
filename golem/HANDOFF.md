@@ -2,9 +2,9 @@
 
 ## ▶ 새 세션 여기부터
 - 읽는 순서: 이 파일 → **context-notes G52(B완료 0.762+repr픽스)·G51(T1 첫측정)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G52) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
-- **지금 할 일 한 줄**: B 완료(고결합 합의 0.567→0.762, frontier 핵심 질문 긍정). 다음은 **정량 판정**(★키) — multi-seed/동결합 다수 카드로 임계 기반 잰다. (또는 사용자 보류 중인 프로젝트 승격: golem을 arag에서 독립 — 아래 메모.)
+- **지금 할 일 한 줄**: B 완료(고결합 합의 0.567→0.762, frontier 핵심 질문 긍정). 다음은 **정량 판정**(★키) — multi-seed/동결합 다수 카드로 임계 기반 잰다.
 - B 결과(G52): 계약에 종료조건(RULE-10: tick 1000 무승부) 박고 oracle 비종료 7개를 draw(tick=1000)로 손교정 → 합의 **0.567→0.762**, 비종료 tick 완전수렴. specqa 재생성(플랜 ①)은 1변수 원칙으로 기각(입력 안 바꿈). 2/3 저합의 가드가 SCN-003·008(0.6) 라이브 강등. **하네스 repr 버그**(oracle None/bool이 빌드 JS null/true와 거짓불일치) 발견·수정(`_js_scalar`).
-- **프로젝트 승격 메모(사용자 검토 중)**: golem 독립 시 폴더만 옮기면 안 됨 — arag 루트의 `config.py`·`llm.py`·`observability.py`·`run_index.py` 4파일 + `.env`(키, gitignore) + `requirements.txt` 필요. `plan2.py`는 불필요(import 안 함). 코드가 "arag루트=golem의 부모" 위치를 가정(`HERE.parent`/studio는 `.parent.parent`)하므로 **둥지 구조 유지**(새저장소 루트에 4파일+.env, 그 밑에 golem/)하면 코드 0줄 수정. 고칠 곳 하나: `key_probe.py:5` 하드코딩 `C:\Users\USER\arag`. 키 쿼터는 같은 키 쓰면 ARAG와 계속 공유(별도 키라야 분리).
+- **프로젝트 승격 완료(2026-06-17)**: golem을 arag에서 독립 저장소로 분리(`C:\Users\USER\golem`). 둥지 구조(루트에 config 등 4파일+.env, 그 밑 `golem/`)라 코드 0수정. 셋업·구조·정본 규칙은 루트 `README.md`. arag/golem은 레거시로 남음(원본 삭제는 사용자 확인 후). 공유 4파일은 **이 저장소가 정본**, arag와 따로 진화.
 - T1 계측은 빌드 후 자동 기록: 실패 사전분류→`consensus.json`(failure_classes), AUTO 검증·되돌림→`reconcile_report.json`(auto_verification/low_consensus_guarded) + 카드별 `auto_fix_ledger.jsonl`. SUSPECT=confidently-wrong 후보, needs_rebuild=계약수정은 재빌드로만 검증.
 - 키 사용은 사용자 명시 go 뒤에만(메모리 no-autostart-runs).
 - 운영 가드레일은 context-notes **G46** 참조: v0.1 동결 아님(확장 유지) / 우선순위 T0→T1→T2(T2가 T0/T1 안 막음) / live build=build_graded.py / reconcile=Build↔oracle 슬라이스 / unique_issue_count는 lexical(방향성만) / --apply는 AUTO만.
