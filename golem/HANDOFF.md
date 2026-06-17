@@ -1,10 +1,11 @@
 # HANDOFF.md — golem 현재 위치와 다음 액션
 
 ## ▶ 새 세션 여기부터
-- 읽는 순서: 이 파일 → **context-notes G52(B완료 0.762+repr픽스)·G51(T1 첫측정)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G52) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
-- **지금 할 일 한 줄**: B 완료(고결합 합의 0.567→0.762, frontier 핵심 질문 긍정). 다음은 **정량 판정**(★키) — multi-seed/동결합 다수 카드로 임계 기반 잰다.
-- B 결과(G52): 계약에 종료조건(RULE-10: tick 1000 무승부) 박고 oracle 비종료 7개를 draw(tick=1000)로 손교정 → 합의 **0.567→0.762**, 비종료 tick 완전수렴. specqa 재생성(플랜 ①)은 1변수 원칙으로 기각(입력 안 바꿈). 2/3 저합의 가드가 SCN-003·008(0.6) 라이브 강등. **하네스 repr 버그**(oracle None/bool이 빌드 JS null/true와 거짓불일치) 발견·수정(`_js_scalar`).
-- **프로젝트 승격 완료(2026-06-17)**: golem을 arag에서 독립 저장소로 분리(`C:\Users\USER\golem`). 둥지 구조(루트에 config 등 4파일+.env, 그 밑 `golem/`)라 코드 0수정. 셋업·구조·정본 규칙은 루트 `README.md`. arag/golem은 레거시로 남음(원본 삭제는 사용자 확인 후). 공유 4파일은 **이 저장소가 정본**, arag와 따로 진화.
+- 읽는 순서: 이 파일 → **context-notes G53(정량1단계: B 0.762는 +2.9σ 단발)·G52(B완료+repr픽스)·G50(저합의 가드)** → 필요할 때만 `context-notes.md` 나머지(G25~G53) / `GolemStudioMode.md`(설계 정본) / `checklist.md`(진행).
+- **지금 할 일 한 줄**: 정량 1단계 완료 = **B의 0.762는 재현 안 됨(N=1 운빨, +2.9σ). 진짜 B합의 = 0.63±0.04(N=6)**. 다음은 **baseline도 multi-seed**(RULE-10 상승 확립 여부) → Step2 동결합 다수 카드(재현성) → Step3 결합도 스윕(임계곡선).
+- 정량 1단계(G53): combat 카드 multi-seed N=6 → 합의 **0.633±0.044**(min 0.565 max 0.685). G52의 0.762는 분포 밖 **+2.9σ 단발**. min 0.565 ≈ "RULE-10 박기 전" baseline 0.567 → **"0.567→0.762 상승" 서사는 과장, 상승 통계적 미확립**. 도구 `studio/multiseed.py`. 곁다리: 승격 누락된 `key_usage.py` 복사(코드0).
+- B 결과(G52, ★N=1 주의): 계약 종료조건(RULE-10: tick 1000 무승부) 박고 oracle 비종료 7개를 draw로 손교정 → 합의 0.762 측정**(단발, G53서 +2.9σ 운빨로 판명)**. 2/3 저합의 가드가 SCN-003·008(0.6) 라이브 강등. **하네스 repr 버그**(oracle None/bool이 빌드 JS null/true와 거짓불일치) 발견·수정(`_js_scalar`).
+- **프로젝트 승격 완료(2026-06-17)**: golem을 arag에서 독립 저장소로 분리(`C:\Users\USER\golem`). 둥지 구조(루트에 config 등 **5파일**[config·llm·observability·run_index·**key_usage**]+.env, 그 밑 `golem/`)라 코드 0수정. 셋업·구조·정본 규칙은 루트 `README.md`. arag/golem은 레거시로 남음(원본 삭제는 사용자 확인 후). 공유 파일은 **이 저장소가 정본**, arag와 따로 진화.
 - T1 계측은 빌드 후 자동 기록: 실패 사전분류→`consensus.json`(failure_classes), AUTO 검증·되돌림→`reconcile_report.json`(auto_verification/low_consensus_guarded) + 카드별 `auto_fix_ledger.jsonl`. SUSPECT=confidently-wrong 후보, needs_rebuild=계약수정은 재빌드로만 검증.
 - 키 사용은 사용자 명시 go 뒤에만(메모리 no-autostart-runs).
 - 운영 가드레일은 context-notes **G46** 참조: v0.1 동결 아님(확장 유지) / 우선순위 T0→T1→T2(T2가 T0/T1 안 막음) / live build=build_graded.py / reconcile=Build↔oracle 슬라이스 / unique_issue_count는 lexical(방향성만) / --apply는 AUTO만.
@@ -44,9 +45,10 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 
 ## 다음 액션
 
-1. ~~(키0) AUTO검증+실패분류(G49)~~ · ~~T1 첫 스모크(G51)~~ · ~~저합의 가드(G50)~~ · ~~2/3 가드 강화(곁다리)~~ · ~~B 고결합 합의 끌어올리기(G52, 0.567→0.762)~~ · ~~하네스 repr 픽스(G52)~~ — **전부 완료**.
-2. **(★키, 1순위) 정량 판정** — multi-seed/동결합 다수 카드로 임계 기반. (B는 N=1 정성 검증 — "오르나"는 답했고, "얼마나·재현되나"는 정량으로.)
-3. (선택, 사용자 검토 중) **프로젝트 승격** — golem을 arag에서 독립. 진입 블록의 "프로젝트 승격 메모" 참조(4파일+.env 복사, 둥지구조 유지, key_probe 하드코딩 1곳).
-4. (선택, 키0) B 잔차 분해 — 0.762가 1.0이 아닌 이유(통과 5빌드 logs/winner 표기 차이) 들여다보기.
+1. ~~(키0) AUTO검증+실패분류(G49)~~ · ~~T1 첫 스모크(G51)~~ · ~~저합의 가드(G50)~~ · ~~2/3 가드 강화~~ · ~~B 고결합(G52)~~ · ~~repr 픽스(G52)~~ · ~~프로젝트 승격(2026-06-17)~~ · ~~정량 1단계 B multi-seed(G53, 0.633±0.044)~~ — **전부 완료**.
+2. **(★키, 1순위) 정량 판정 — baseline multi-seed** — RULE-10 박기 전 계약으로도 N=6 돌려, 0.633±0.044(박은후)와 **분포 비교**. G53서 min 0.565≈baseline 0.567이라 "상승" 미확립 → 두 분포 겹치나/갈리나로 RULE-10 효과를 정량 판정. (이게 G52 사다리 정성 결론의 운명 결정.)
+3. (★키, 2순위) **Step2 동결합 다수 카드** — 새 고결합 카드 N장으로 0.633이 카드별 재현되나(분포 vs 우연).
+4. (★키, 3순위) **Step3 결합도 스윕** — 저·중·고 각 다수 카드로 합의-vs-결합도 곡선·붕괴 임계.
+5. (선택, 키0) B 잔차 분해 — 통과 빌드 logs/winner 표기 차이 들여다보기.
 5. **코어 다음 frontier**(★키) — 자율 oracle(31B가 골든까지) × 고결합 카드 × reconcile calibration. UI/Asset/Renderer는 채점기반을 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
 6. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.

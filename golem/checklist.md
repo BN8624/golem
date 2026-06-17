@@ -21,7 +21,9 @@
 - [~] **T1 일반화 실험(설계=G48)** — 첫 N=3 정성 스모크 완료(G51, ★키). 저(방치형 9/11·합의1.0)·중(발열 8/11·합의1.0) baseline diff 0. 고(턴제전투 신규 `*_packet_combat` 6/11·**합의 0.567**) 붕괴 → confidently-wrong AUTO 실측 → **저합의 가드(G50)** 추가·라이브 검증(저합의 AUTO 3건 ESCALATE 강등). 근본=계약 종료조건 부재(reconcile ESCALATE가 지목). 남은 것 ↓
 - [ ] (새 세션, ★키) **B: 고결합 카드에 계약 종료조건 박고 + oracle 교정 후 재빌드** — 합의 0.567 오르나(사다리 수렴 검증). specqa 재생성으로 `*_packet_combat` oracle 원복부터. **측정 본질로 우선.**
 - [ ] (새 세션, 키0) 저합의 가드 임계 강화 — 과반(>0.5)→절대다수(2/3↑). SCN-009(0.6) 같은 무한루프값 통과 빈틈 차단(G50)
-- [ ] 정량 판정 — multi-seed/동결합 다수 카드로 임계 기반(★키)
+- [x] 정량 1단계 — B카드 multi-seed N=6 → 합의 0.633±0.044, **G52의 0.762는 +2.9σ 단발(재현X)**(G53, `studio/multiseed.py`). 곁다리: 승격 누락 `key_usage.py` 복사.
+- [ ] 정량 2단계 — **baseline(RULE-10 전) multi-seed** → 0.633±0.044와 분포 비교로 RULE-10 상승 확립 여부(★키)
+- [ ] 정량 3단계 — 동결합 다수 카드(재현성) → 결합도 스윕(임계곡선)(★키)
 - [ ] 코어 다음 frontier = 자율 oracle × 고결합 카드 × reconcile calibration (UI/Asset는 별도 트랙, 결정적 렌더 채점법 선결)
 - [ ] (backlog) levels 등 출력표면 확장 / adversarial BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주
 
