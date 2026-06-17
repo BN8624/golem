@@ -340,8 +340,10 @@ def main(argv=None):
             if args.apply else []
         escalate = [v["id"] for v in verdicts if v.get("class") == "ESCALATE"]
         build_bugs = [v["id"] for v in verdicts if v.get("diagnosis") == "BUILD_BUG"]
+        auto_summary = reconcile.summarize_auto_verification(auto_verification)
         (base / "reconcile_report.json").write_text(json.dumps(
             {"verdicts": verdicts, "applied": applied, "auto_verification": auto_verification,
+             "auto_summary": auto_summary,
              "low_consensus_guarded": guarded, "escalate": escalate, "build_bugs": build_bugs},
             ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  [reconcile] 자동적용 {len(applied)}, ESCALATE(사람) {len(escalate)}, BUILD_BUG {len(build_bugs)}")
@@ -350,6 +352,9 @@ def main(argv=None):
         for c in auto_verification:
             flag = " ★되돌림" if c["reverted_prior"] else ""
             print(f"    [AUTO검증] {c['id']}: {c['status']} (합의율 {c['consensus_rate']}){flag}")
+        if auto_summary["green_blocked"]:
+            print(f"    ★GREEN 금지 — auto_suspect {auto_summary['auto_suspect']}건"
+                  f"(confidently-wrong 적용 후보). ESCALATE 수와 무관하게 사람 확인 필요.")
         if build_bugs:
             print(f"    ★재빌드 권장(BUILD_BUG {build_bugs}) — 계약 정본 그대로, 빌드만 다시.")
         for sid in escalate:

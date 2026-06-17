@@ -704,3 +704,37 @@ RULE-10만 뺀 baseline 패킷(`studio/planning_packet_combat_baseline`, 계약 
 - **판정**: 곡선의 단조 상승(thesis)은 재확인. 단 L1→L2 결판은 **eco가 cap=22로 해소했던 것과 똑같이
   cap↑ 재측정으로 투표수를 매칭해야** 깨끗해진다. 다음 = sweep cap↑(L2 통과표 5~7로) 재측정 / eco·combat
   잔차 / 자율 oracle.
+
+## G57 — 외부 코드리뷰 12항목 분류 + P0 4건 수행 (2026-06-17, 코드 키0)
+
+외부 리뷰("AUTO reconcile/합의를 얼마나 믿나" 명제)를 실제 파일 대조로 검증해 지금/나중/기각으로 분류.
+리뷰 핵심 방향은 옳음(핸드오프 자율 oracle frontier와 일치). 단 절반은 "이미 있음" 또는 "과장".
+
+- **지금 한 것(P0, 키0, 이번 세션 완료)**:
+  - **#1 build.py LEGACY 경고** — 헤더에 "라이브 금지, build_graded.py가 정본" 배너. 새 세션 혼동 차단.
+  - **#3 AUTO suspect 롤업 + Green 게이트** — 신규계측 아님. 이미 쌓이던 `auto_verification`(status
+    downstream_consistent/SUSPECT/needs_rebuild)를 `summarize_auto_verification()`로 카운트 롤업해
+    `reconcile_report.json`에 `auto_summary` 추가(reconcile.py·build_graded.py 양쪽). **하드룰**:
+    `auto_suspect>0 → green_blocked=True` 출력("ESCALATE 수와 무관하게 Green 금지"). confidently-wrong이
+    낮은 ESCALATE에 가려지는 게 진짜 위험이라는 리뷰 지적이 정확. accuracy_proxy=consistent/(consistent+suspect),
+    needs_rebuild는 재빌드 전 검증불가라 분모서 제외.
+  - **#7 planning_compare.md 경고** — 상단에 "unique_issue_count는 lexical heuristic, 수치격차 신뢰말것,
+    live reviewer 정책 직접근거 금지" 배너. (G46에서 알던 것을 파일에도 명문화.)
+  - **#9 schema 정본** — 리뷰 권고(A안)가 **이미 구현돼 있어 추가작업 없음**: `contract_validator.py`의
+    `_schema_drift()`가 schema.json required를 읽어 정본(`_REQUIRED_FIELDS`)과 어긋나면 warning. 죽은 문서 아님.
+  - 검증: `import reconcile,build_graded` OK + 헬퍼 스모크(suspect건 green_blocked=True) + reconcile replay
+    회귀(fixtures/reconcile_demo) 진단 동일·크래시0 통과.
+
+- **나중에(다음 실험 전, P1)**: **#8 실측 실패 fixture**(EDGE-011/012·고아모듈·미도달 config.js를 회귀잠금,
+  상상 fixture보다 우선) / **#6 taxonomy 인벤토리**(plan2 5라벨+reconcile 3진단+gate 라벨 정리 후에만 신규도입,
+  라벨별 액션 명시 — 난립 방지) / **#4 Integration 위험지표**(auto_suspect·low_consensus_guarded·output_surface_skip를
+  final_report에 — 단 자율 oracle frontier가 실제 부를 때) / **#5 Spec QA expected_confidence**(소비처[reconcile/Integration]를
+  **동시 배선할 때만** 추가 — 안 그러면 #10이 경고한 죽은 필드) / **#10 ASSUMED/DEFERRED 소비처**(생산자 존재 확인 후 배선).
+
+- **기각·보류(안 함)**: **#11 전면 포맷 커밋 — 기각**. 실측결과 최장 134~162자·80자초과 22~23%로 빽빽하지만
+  병리적 아님(한 줄 코드 아님). 실험 중 코드 전면 reformat은 git blame 파괴 = 비용>효용. 새 파일만 깔끔히로 대체.
+  **#2 build_graded 분해 — 보류**(363줄, 지금 분해 크기 아님 — "성장 금지" 가드레일로만). **#12 package화 — 보류**
+  (둥지 구조는 승격 때 코드0 위해 *의도된* 선택, 되돌릴 이유 약함, P2).
+
+- **교훈**: 리뷰의 "필드 추가" 권고(#3·#4·#5) 다수는 **원시 데이터가 이미 있고 롤업+게이트룰만 빠진 것** =
+  싼 작업. 그리고 #5(필드추가)와 #10(죽은 필드 금지)은 자기모순 — 소비처 동시 배선이 해소 조건.

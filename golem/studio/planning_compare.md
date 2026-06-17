@@ -1,5 +1,9 @@
 # Planning A/B/C 비교
 
+> ⚠ 이 파일은 초기 planning reviewer smoke 결과다. `unique_issue_count`는 의미 기반 정답이
+> 아니라 lexical heuristic이다. 방향성은 참고할 수 있지만 수치 격차의 크기는 신뢰하지 않는다.
+> A/B/C 숫자를 live reviewer 수 정책의 직접 근거로 재인용하지 않는다.
+
 - 아이디어: 작은 텍스트 로그라이크: 타일 이동 + 적 전투 + 아이템 획득
 - API 호출: 0회
 

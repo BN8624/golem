@@ -237,6 +237,27 @@ def verify_auto_fixes(verdicts, diffs, ledger_path, run_id):
     return checks
 
 
+def summarize_auto_verification(checks):
+    """AUTO 자동수정 검증을 요약 카운트로 롤업하고 Green 차단 여부를 판정한다.
+    ESCALATE가 적어도 auto_suspect>0이면 Green 금지 — confidently-wrong이 사람 눈에 안 보인 채
+    계약/오라클에 적용된 신호라 낮은 ESCALATE보다 더 위험하다. accuracy_proxy는 검증 가능한
+    건(consistent+suspect) 중 일치 비율; needs_rebuild는 재빌드 전엔 검증 불가라 분모에서 뺀다."""
+    consistent = sum(1 for c in checks if c["status"] == "downstream_consistent")
+    suspect = sum(1 for c in checks if str(c["status"]).startswith("SUSPECT"))
+    needs_rebuild = sum(1 for c in checks if c["status"] == "needs_rebuild_to_verify")
+    reverted = sum(1 for c in checks if c.get("reverted_prior"))
+    verifiable = consistent + suspect
+    return {
+        "auto_total": len(checks),
+        "auto_downstream_consistent": consistent,
+        "auto_suspect": suspect,
+        "auto_needs_rebuild": needs_rebuild,
+        "auto_reverted_prior": reverted,
+        "auto_accuracy_proxy": round(consistent / verifiable, 3) if verifiable else None,
+        "green_blocked": suspect > 0,
+    }
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--replay", default=None)
@@ -301,11 +322,13 @@ def main(argv=None):
             Path(args.run).name if args.run else "?")
     escalate = [v for v in verdicts if v.get("class") == "ESCALATE"]
 
+    auto_summary = summarize_auto_verification(auto_verification)
     if not args.replay:
         out = Path(args.specqa).parent / "reconcile_report.json"
         out.write_text(json.dumps({"run": Path(args.run).name if args.run else None,
                                    "verdicts": verdicts, "applied": applied,
                                    "auto_verification": auto_verification,
+                                   "auto_summary": auto_summary,
                                    "low_consensus_guarded": guarded,
                                    "escalate": [v["id"] for v in escalate]},
                                   ensure_ascii=False, indent=2), encoding="utf-8")
@@ -317,6 +340,9 @@ def main(argv=None):
         print(f"  [AUTO검증] {c['id']}: {c['status']} (합의율 {c['consensus_rate']}){flag}")
     for v in escalate:
         print(f"  ★ESCALATE {v['id']}: {v.get('reason', '')}")
+    if auto_summary["green_blocked"]:
+        print(f"  ★GREEN 금지 — auto_suspect {auto_summary['auto_suspect']}건"
+              f"(confidently-wrong 적용 후보). ESCALATE 수와 무관하게 사람 확인 필요.")
     return 0
 
 

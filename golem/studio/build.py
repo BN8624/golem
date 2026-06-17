@@ -1,5 +1,8 @@
 # Golem Studio Build 단계 — FROZEN 계약을 gemma가 구현, static_gate + v0.1 매니페스트 정합 + 스모크로 게이트
-"""Planning 패킷의 FROZEN 계약(interface_contract=매니페스트, data_contract=규칙)을 그대로 gemma에
+"""⚠ LEGACY SPIKE ONLY — 라이브 파이프라인에 쓰지 말 것. 라이브 빌드 하네스는 build_graded.py다.
+이 파일은 v0 스파이크 잔존물('계약대로 굴러가나'까지만, 합의 채점·정확채점 없음). 새 세션은 건드리지 말 것.
+
+Planning 패킷의 FROZEN 계약(interface_contract=매니페스트, data_contract=규칙)을 그대로 gemma에
 줘서 멀티파일 구현을 받는다. 게이트(콜0 위주):
   1) static_gate.check  — 구문·멀티파일·npm·Math.random·고아모듈
   2) contract_validator.validate — 코드가 계약 매니페스트(파일/export/import)와 정합한가 (v0.1 재사용)

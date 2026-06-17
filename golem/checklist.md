@@ -168,3 +168,23 @@
 - [x] CLAUDE.md와 GolemStudioMode.md 충돌 여부 점검
 - [x] 필요한 CLAUDE.md 우선순위 규칙 최소 반영
 - [x] 문서 재검색 및 커밋
+
+## 외부 코드리뷰 12항목 분류·수행 (2026-06-17, 키0) — 결정이유 context-notes G57
+P0 (지금, 완료):
+- [x] #1 build.py LEGACY 경고 배너(라이브 금지, build_graded.py 정본)
+- [x] #3 AUTO suspect 롤업(`summarize_auto_verification`) + Green 게이트(`auto_suspect>0→green_blocked`) — reconcile.py·build_graded.py
+- [x] #7 planning_compare.md lexical heuristic 경고 배너
+- [x] #9 schema 정본 — `_schema_drift()`로 이미 구현됨 확인(추가작업 불필요)
+- [x] 검증: import OK + 헬퍼 스모크 + reconcile replay 회귀 통과
+
+P1 (다음 실험 전):
+- [ ] #8 실측 실패 fixture 회귀잠금(EDGE-011/012·고아모듈·미도달 config.js 우선)
+- [ ] #6 failure taxonomy 인벤토리(기존 라벨 정리 후에만 신규도입 + 라벨별 액션)
+- [ ] #4 Integration final_report 위험지표(auto_suspect·low_consensus_guarded·output_surface_skip) — frontier 부를 때
+- [ ] #5 Spec QA expected_confidence — 소비처 동시 배선 조건
+- [ ] #10 ASSUMED/DEFERRED 소비처 배선 — 생산자 확인 후
+
+기각·보류:
+- [x] #11 전면 포맷 커밋 — 기각(병리적 아님, blame 파괴 비용>효용)
+- [x] #2 build_graded 분해 — 보류(363줄, 성장 금지 가드레일만)
+- [x] #12 package화 — 보류(둥지 구조는 의도된 선택, P2)
