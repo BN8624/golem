@@ -1,0 +1,1 @@
+A deterministic simulation of predator-prey dynamics on a 1D grid. The user configures the initial population and world size, then observes the system evolve through a fixed sequence of hunger, movement, predation, reproduction, and death until a termination condition is met.

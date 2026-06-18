@@ -863,3 +863,22 @@ G62 후속 = 결합도 무관·실패는 계약-모호임을 G61식으로 직접
   "계약 명세"에 산다(G41~44·G62 재확인). 원문 PHASE4가 골든과 모순이던 점은 *자율 oracle 불일치가
   계약 버그까지 잡아냄*의 실증(단순 enum 어휘 너머).
 - **다음**: reconcile 입력에 자율 oracle 배선(손-oracle 대체) / 31B self-suggest / combat 자율 oracle.
+
+## G64 — 자율 oracle self-suggest: 31B가 자기 불일치를 읽고 계약을 자율 처방, 박으니 1.0 (2026-06-18, ★키)
+
+frontier 캡스톤(G60~63 다음). G61·G63에선 모호성을 *사람*이 읽고 어느 rule을 박을지 정했다. self-suggest는
+그 read->propose를 31B가 직접 하는지 측정. 도구 `studio/self_suggest.py`. 산출
+`build_runs/selfsuggest-20260618-123930/`. 입력 = eco 원본(모호) rules + G62 런의 자기예측↔골든 불일치
+(답은 안 알려줌 — 'FINISHED'로 박으라거나 자격이 굶주림 전이라고 말 안 함).
+
+- **31B 진단(셋 다 정확)**: ① status = "rules에 미정의" → 'FINISHED' 고정 ② movement = 경계 클램프
+  `[0,worldSize-1]` 미명세 → 명시(사람이 암묵에 맡긴 것까지 잡음) ③ 번식 = SCN-004.
+- **처방이 사람보다 우아**: 사람(G63)은 번식을 두 군데 특례로 박음(자격=굶주림 전 스냅샷 + 자식=부모 cost차감
+  후). 31B는 **PHASE 순서만 바꿔** Hunger를 Reproduction *뒤*로 옮김 → 원문 "energy=cost" 손 안 대고
+  신생아도 같은 tick 굶주림 받아 둘 다 4. 최소·일관 처방.
+- **결과: 처방 패킷 `planning_packet_eco_selfsug` auto_oracle 1.0 / 8/8 / 안정성 1.0.** 자가 처방이
+  사람 처방(G63)과 동급 완전수렴.
+- **판정(frontier 종결)**: 자율 oracle 루프가 *완전히* 닫힘 — 생성(G60) → 탐지(G62) → 처방(G64) → 수렴.
+  싼 모델이 골든 자율생성 + 자기 불일치 진단 + 계약 처방까지 자율로 한다. "self-correcting"의 마지막 못.
+- **다음**: reconcile에 배선(자율 oracle+self-suggest를 reconcile AUTO/ESCALATE 자리에) / combat 자율 oracle /
+  서사 레이어(방치형 로켓 카드 A겹).
