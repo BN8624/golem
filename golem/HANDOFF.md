@@ -2,15 +2,19 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-18, G71)**: 누적 빌드 4레버(코드주입·편집모드·누적회귀·선택적컨텍스트) 전부 닫힘 + 외부 코드리뷰 반영 + CI 그린. 골렘 본선은 **31solo**(gemma-4 31B 단독, 26B는 구글 서버 불능이라 제외).
+**현재 상태 (2026-06-18, G72)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장(리뷰 #5)용 **대형카드 키0 제작·검증 완료** — ★키 A/B 런 대기.
 
-**▶▶ 다음 세션 첫 동작 = 스케일 확장 (리뷰 #5: 대형 카드로 레버4 한계 측정)**.
-- 왜: 4레버는 touched=1개짜리 프로브(rocket l4)로만 닫혔다. 진짜 천장은 모듈 여러 개·큰 컨텍스트에서 드러난다.
-- 어디서: 하드 천장(gemma-4 31B = 256K 토큰, 구글 공식)이 아니라 **소프트 천장**(무관 코드에 묻혀 편집 정확도가 먼저 흐려지는 lost-in-the-middle). 현재 로켓 카드 한 콜 ~5k 토큰 → 하드까지 ~50배라 채우는 건 무의미. 목표 = 모듈 10~20개·30~50k 토큰.
-- 어떻게: 같은 대형 카드에서 (A) 전체주입 빌드 vs (B) 레버4 선택주입 합의·회귀를 나란히. A 정확도가 떨어지는데 B가 버티면 레버4가 무는 지점 포착.
-- 갈림길(사용자 선택 대기): ① 스케일 확장(위, 본선) ② combat 자율oracle ③ 외부리뷰 P1(#10 등).
+**▶▶ 다음 세션 첫 동작 = 스케일 확장 ★키 A/B 런 (사용자 go 대기 — 키 사용)**.
+- 무엇: `station_base`(정거장 30모듈, 결정적) + EVACUATE 신기능(engine.js만 touched = 로켓 l4 ABORT의 규모확장판). 패킷·골든·게이트 전부 키0으로 검증 끝(G72).
+- 어떻게: 같은 패킷에서 두 런.
+  - **A(전체주입)**: `python golem/studio/build_graded.py --base golem/studio/station_base --packet golem/studio/planning_packet_station_l --specqa golem/studio/specqa_packet_station_l --reconcile` (콜≈14.6k 토큰, 30모듈 verbatim 재출력)
+  - **B(선택주입)**: 위 + `--inject-modules src/engine.js` (콜≈5k, engine만 본문)
+  - 비교: A 회귀/합의 정확도가 흐려지는데 B가 1.0 유지하면 레버4 소프트 천장 포착.
+- 천장 못 잡으면(둘 다 1.0): 모듈 충실화로 30k까지 키워 재측정(확장은 쌈). 잡으면 천장 ≤14.6k 결론.
+- 갈림길(곁가지): ② combat 자율oracle ③ 외부리뷰 P1(#10 등).
 
 **최근 완료 (역순)**:
+- **G72 스케일 확장 대형카드 제작(키0)**: `station_base` 정거장 30모듈(코어8+확장12 서브시스템+오케스트레이션+데이터, turn기반 결정적 스케줄·난수0) + `planning_packet_station_l`(RULE-07 EVACUATE=engine만 touched) + `specqa_packet_station_l`(시나리오10=회귀7+EVACUATE3, 골든은 참조engine node역산 `gen_station_l_golden.py`). 게이트 strict 30모듈 통과·회귀7 base==참조 바이트동일·레버4 프롬프트 키0검증(engine본문O/나머지29 시그니처+verbatim). A전체주입≈14.6k vs B선택주입≈5k 콜토큰. **판단: 30~50k 목표지만 과투자 전 ~14.6k(로켓3배)로 1차 ★키 A/B 먼저, 저하 안 보이면 확장**. (gen 버그 1건 node가 잡음: scenarios.json input 래퍼 누락→수정).
 - **G71 외부 코드리뷰 반영(키0)**: #2 게이트가 첫 시나리오만 종료코드 검사하던 실버그 → 전 시나리오 거부([build_graded.py:230]) · #1 FROZEN이 BLOCKING 흡수 수 미확인하던 오판 → 흡수 ≥ 질문 수일 때만 동결([planning.py:280]) 둘 다 픽스 + 키0 회귀잠금. #6 CI = `run_keyless.py` + `.github/workflows/keyless.yml`(push/PR마다 스위트, GitHub Actions 그린). #3(합의≠정확)·#4(oracle 동일모델)는 골렘 정답앵커가 합의 아닌 **실Node 골든**(모델독립)이라 규율로 정리 — 31B auto_oracle은 모호성 탐지기로만.
 - **G70 레버4 첫 ★키 런**(graded-20260618-191818): 게이트 11/11·합의 8/8 전부 1.0·oracle 일치. 31B가 logic 본문 못 본 채 engine만 편집 → 회귀(SCN-001~006)+ABORT(SCN-007/008) 둘 다 1.0(attempt01 logic byte-identical·engine ABORT 핸들러 확인). **+ 31solo 강제**(config generator→31B, 26B 잔재 제거; G60~G64·G66의 "31B"는 사실 26B였음을 발견·정정) **+ vocab 핀 3패킷 31B 확인런 1.0 재현**(idle/eco_vocab/eco_selfsug, 26B 원본과 동일=재실험 불필요).
 - **G68 누적 빌드 레버1~3**(graded-20260618-180934): 편집수렴·회귀무결·새기능 합의 1.0. · **G66 서사 B겹**(StoryForge, 로켓 4비트 대사+바이블, 검증 3/3). · **G65 로켓 첫 graded**(게이트 7/11, 합의 0.881, A겹 BEAT 발동·대기권→화성).

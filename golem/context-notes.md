@@ -1062,3 +1062,36 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   회귀잠금 `_freeze_blocking_keyless.py`(BLOCKING3·결정1→OPEN 등 5케이스, 키0).
 - **#6 픽스(CI)**: `run_keyless.py`(compileall + replay + 레버4 + 게이트 + FROZEN 묶음, API콜0) + `.github/workflows/
   keyless.yml`(push/PR마다 Python+Node로 스위트). 로컬 ALL PASS. **#3·#5는 다음 트랙**(대형카드 = 스케일 확장).
+
+## G72 — 스케일 확장: 정거장 대형카드 제작 (레버4 소프트 천장 측정 준비, 키0)
+
+**왜**: 레버4(선택적 컨텍스트)는 touched=1짜리 로켓 l4 프로브로만 닫혔다(G70). 진짜 천장은 무관
+모듈이 많은 대형 컨텍스트에서 lost-in-the-middle으로 드러난다(외부리뷰 #5). 변수를 컨텍스트 크기
+하나로 묶기 위해 **신기능 규칙은 로켓 l4의 ABORT를 그대로 옮긴 EVACUATE**(engine.js 한 곳만 touched).
+
+**무엇을 만들었나**:
+- `station_base/` = 결정적 정거장 운영 시뮬 **30모듈**. 코어8(power·oxygen·water·food·population·morale·
+  research·economy) + 확장12(hazards·grid·thermal·radiation·hull·maintenance·comms·cargo·crew·navigation·
+  lifesupport·derive) + 오케스트레이션(engine·actions·systems·state·format·main) + 데이터(constants·util·
+  tables·labels). 모든 위험/이벤트는 turn 기반 결정적 스케줄(난수 0). require 그래프 무순환·전부 main 도달.
+- `planning_packet_station_l/` concept+contract. **RULE-07 EVACUATE** = gameStatus 'EVACUATED'로 즉시중단,
+  그 외 불변(틱·로그·경보 없음). 출력 enum에 EVACUATED만 추가, 회귀 바이트동일.
+- `specqa_packet_station_l/` 시나리오10(회귀7 + EVACUATE3). **골든은 손계산 안 함** — 참조 engine(EVACUATE)을
+  node로 역산(`gen_station_l_golden.py`, 모델 독립). 회귀7 base==참조 바이트동일 확인.
+
+**측정 설계(★키 A/B, 한 변수=컨텍스트 크기)**:
+- A = `build_graded --base station_base ...`(전체 30모듈 본문 주입·재출력, EDIT 헤더). 콜 ≈ **14.6k 토큰**.
+- B = `... --inject-modules src/engine.js`(engine 본문만 + 29모듈 시그니처+verbatim). 콜 ≈ **5k 토큰**.
+- 가설: A 정확도가 흐려지는데(30모듈 verbatim 재출력 부담) B가 버티면 레버4가 무는 지점 포착.
+
+**판단 — 1차 프로브 후 확장**: 핸드오프 목표 30~50k 토큰이나, 손작업 비용·과투자 위험 때문에 현재 ~14.6k
+(로켓 3배)에서 멈추고 1차 ★키 A/B를 먼저 쏜다. 저하가 잡히면 천장이 ≤14.6k라는 더 강한 결론. 안 잡히면
+모듈 추가로 30k까지 키워 재측정(확장은 싸다). 모듈 수는 이미 30(목표 10~20 초과)이라 더 키울 땐 모듈
+확대보다 기존 모듈 충실화로 간다.
+
+**버그 잡은 것(node가 알려줌, 추측 안 함)**: gen 스크립트가 scenarios.json을 `[{actions}]`로 썼으나 하네스
+포맷은 `[{"input":{actions}}]`(input 래퍼). 래퍼 없자 액션 0개 실행→turn:0. 회귀 base==ref가 True였던 건
+둘 다 빈 실행이라 그랬을 뿐. `[{"input": s["input"]}]`로 수정 후 정상(WON/LOST/EVACUATED).
+
+**키0 검증 요약**: 게이트(static+contract strict) 30모듈 통과 · node 결정적 · 회귀7 바이트동일 ·
+레버4 프롬프트(engine본문O / actions·state 본문 누출X / FROZEN 시그니처O / held-out 29 verbatim / 채점10).
