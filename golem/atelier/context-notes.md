@@ -112,6 +112,24 @@ canon 5~7·decisions 8~9). 잘림이 간헐이라면 11번 중 한 번은 났어
 - 조치: 근본 수정(max_output_tokens 상향) **불필요**. 진단 덤프(`RealCaller.synth`→`runs/_synth_raw.txt`)는
   **제거하지 않고 안전망으로 유지** — 파싱 실패시만 작동하고 평소 무해. 0/11이 영구 무결 보장은 아니므로.
 
+## design 단계 출범 — setup→payoff 채점기 (2026-06-18, design-20260618-192236)
+
+frontier 3. canon_check이 양방향(거름/안 깎음)으로 닫혀 design을 얹었다. 설계 결정:
+
+- **채점기 먼저**(생산자 뒤로). canon_check가 채점기 1개로 먼저 태어나고 planning(생산자)이 뒤따른
+  선례 그대로. 측정 가치는 채점기에 있다 — "31B가 setup→payoff 실패를 짚나"가 frontier 질문이다.
+- **canon_check의 정확한 거울**. canon_check은 "동결 *사실*을 *모순*하나"를, design_check은 "동결
+  *약속*을 *회수*하나"를 잰다. 방향만 반대(모순 검출 ↔ 미회수 검출)라 검출/검증 2패스 + exact/recall/
+  오탐/안정성 기계가 그대로 돈다. `rule_id`→`setup_id`, `violations`→`unresolved`만 바뀜.
+- **골든은 심는다**(canon과 동일). 손으로 쓴 비트시트 2벌 — 클린(설정 S1~S5 전부 회수) + 미회수
+  (S2 펜던트·S4 부대몰살을 *언급은 하되 회수만 안 함*). 골든=[S2,S4]. 노골적 부재가 아니라 "도입됐는데
+  payoff 비트가 없음"이라야 진짜 frontier다(쉬운 픽스처 경계 = canon hard1과 같은 함정 설계).
+- 픽스처 연속성: 기존 FROZEN 한국어 바이블(카엘·리아 남매)을 비트시트로 이어 같은 세계를 쓴다.
+- replay_demo는 일부러 시드를 흔들어(클린 seed2가 S2 헛잡음, 미회수 seed2가 S4 놓침) exact≠1.0이
+  나오게 심었다 — 채점 수학이 *실제로 구분*하는지 키 0으로 증명(canon replay_demo와 같은 의도).
+- 키 0 검증 통과: clean exact 0.67/오탐 0.33, unresolved exact 0.67/recall S2 1.0·S4 0.667, `[S4]`→`S4`
+  정규화 작동. 수학 전부 예측과 일치. **★실콜은 사용자 go 뒤.**
+
 ## 키 규칙
 
 골렘 CLAUDE.md 준수 — 사용자 명시 go 전에는 실제 31B 런 금지. `--replay`로 키 0 검증만 완료.

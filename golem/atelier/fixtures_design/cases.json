@@ -1,0 +1,4 @@
+[
+  { "id": "clean", "draft": "beatsheet_clean.md", "golden": [] },
+  { "id": "unresolved", "draft": "beatsheet_unresolved.md", "golden": ["S2", "S4"] }
+]

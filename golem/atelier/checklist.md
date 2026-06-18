@@ -36,10 +36,21 @@
       clean exact 1.0/오탐 0, violation C1·C2 모두 1.0. **패러프레이즈 모순(왼손 고삐·피 안 섞인 남남)도 검출.**
       → frontier 1·2가 한 줄→바이블→채점으로 닫힘.
 
-## 다음 (planning 검증 뒤)
+## design 단계 (frontier 3) — setup→payoff 채점기
 
-- [~] 2패스 스트레스 픽스처 `fixtures_ko_hard2/` 작성·로딩검증 완료(키 콜 직전 정지). 다음 세션이
-      `--verify` 비교 측정 → 과교정(진짜 위반 reject) 없이 오탐만 거르나 확인. HANDOFF 첫 액션 참조.
-- [ ] design 단계: 비트시트 + setup→payoff traceability.
+- [x] `design_check.py` 출범 — canon_check의 거울(모순 검출↔약속 미회수 검출). 추적 설정 목록 +
+      비트시트 → 31B가 회수 안 된 설정을 짚나. 검출/검증 2패스 + N시드·exact·recall·오탐·안정성 그대로 재사용.
+- [x] 심은 픽스처 `fixtures_design/`: outline.json(설정 S1~S5) + 클린(전부 회수) + 미회수(S2·S4 떨굼,
+      골든) + cases.json + replay_demo.json. 미회수는 *언급은 하되 회수만 안 함*(노골적 부재 아님).
+- [x] 키 없는 `--replay`로 채점 배선 검증 — exact/fp/fn/recall/안정성 수학 정확(`[S4]`→`S4` 정규화 포함,
+      일부러 흔든 시드가 exact 0.67·S4 recall 0.667로 구분됨). design-20260618-192236.
+- [ ] ★실제 31B 런(`--n 3` [+`--verify`]) — 사용자 go 뒤에만. 미회수 검출률·오탐·2패스 효과 측정.
+- [ ] design 생산자 `design.py`(planning의 거울): FROZEN 바이블 → lead 비트시트 → 다축 리뷰 → FROZEN 아웃라인.
+- [ ] 어려운 픽스처(회수를 정황에만 숨김 / 회수처럼 보이는 함정)로 한계 깨기.
+
+## 이전 (frontier 2 마무리)
+
+- [x] 2패스 스트레스 픽스처 `fixtures_ko_hard2/3` `--verify` 비교 측정 완료 — 과교정 없음 확정 +
+      통사적 부정 한계 발견. HANDOFF·context-notes 참조.
 - [ ] 캐논 원장 누적(p0..p4 단계적 확장).
 - [ ] 어려운 캐논 픽스처로 채점기 한계 깨기(경계 확정).
