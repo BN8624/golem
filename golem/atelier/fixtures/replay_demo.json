@@ -1,0 +1,12 @@
+{
+  "clean": [
+    { "violations": [] },
+    { "violations": [] },
+    { "violations": [ { "rule_id": "C3", "evidence": "죽은 왕 에드릭의 봉인" } ] }
+  ],
+  "violation": [
+    { "violations": [ { "rule_id": "C1", "evidence": "두 손으로 검자루를" }, { "rule_id": "C2", "evidence": "대낮의 허공에서 불꽃이" } ] },
+    { "violations": [ { "rule_id": "C1", "evidence": "양팔의 근육이" } ] },
+    { "violations": [ { "rule_id": "C1", "evidence": "두 손으로" }, { "rule_id": "C2", "evidence": "한낮의 광장" } ] }
+  ]
+}
