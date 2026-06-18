@@ -63,13 +63,31 @@ violation C1·C2 모두 1.0. **패러프레이즈 모순(왼손 고삐·피 안 
 hard 검출 C3·C6 **1.0 유지**, 전체 exact 0.5→**1.0**. precision 한계는 모델 능력이 아니라 단일콜
 프레이밍 탓 — 검출/검증을 쪼개니 풀렸다(콜 약 2배). **경계 재이동: precision도 기계화 가능.** 상세 context-notes.
 
-### 다음 액션 (둘 중 택1)
+### ▶ 다음 세션 첫 액션 — 콜 직전까지 준비됨 (키만 대면 돈다)
 
-1. **design 단계 착수** (자연스러운 다음): 비트시트 + setup→payoff traceability. planning이 한국어로
-   닫혔고 채점기 precision도 2패스로 확보됐으니, FROZEN 바이블을 계약 패킷으로 받아 design이 얹힌다.
-   design 산출물(비트시트)도 같은 검출/검증 2패스 패턴으로 채점한다.
-2. **2패스 더 어렵게 검증** (★키): 지금은 trap 1개로 깬 것 — (a)타임라인 드리프트 (b)지식상태 위반 등
-   다른 함정으로 2패스가 진짜 위반을 reject(과교정)하지 않나, 검출/오탐 동시 0 유지되나 더 민다.
+**준비물**: `fixtures_ko_hard2/`(2패스 스트레스 픽스처) 작성·검증 완료. 키 콜 직전에서 멈춤.
+- `subtle_violation`(golden C1·C6): **미묘한 진짜 위반** — "두 팔 늘어뜨림"(C1=왼팔없음 위반),
+  "발타자르도 곁가지나마 옛 왕가 핏줄"(C6=발타자르 왕가아님 위반). → 2패스가 *과교정*으로 이 진짜
+  위반을 reject해 검출을 깎나?
+- `subtle_clean`(golden 없음): **위반0 함정** — "다섯 조각 중 셋"(C5 일치), 카엘이 왕가 방계로 조각
+  활성화(C3·C4 일치), 무장 은닉 국경 우회(C7 일치). → 1패스 오탐을 2패스가 제대로 거르나?
+
+**돌릴 것** (★키, 비교 측정):
+```
+python canon_check.py --fixtures fixtures_ko_hard2 --n 3            # 1패스 (오탐 기준선)
+python canon_check.py --fixtures fixtures_ko_hard2 --n 3 --verify   # 2패스
+```
+**판정**: 2패스가 subtle_clean 오탐을 0으로 거르면서 subtle_violation 검출(C1·C6)을 1.0 유지하면
+→ 2패스 robust 확정. 만약 subtle_violation 검출이 떨어지면 → **2패스의 precision↔recall 트레이드오프**
+노출(과교정). fp 계측(`false_alarm_evidence`)으로 무엇을 거르고 무엇을 놓쳤나 본다.
+
+> 한계 메모: 지식상태/타임라인 위반은 현재 canon 구조(정적 사실 7개)론 직접 채점 불가 — canon이 "X시점엔
+> Y를 모른다" 같은 시간적 사실을 안 담는다. 그 유형을 재려면 canon 스키마 확장이 선행돼야 한다(별도 안건).
+
+### 그 뒤 — design 단계
+
+planning이 한국어로 닫혔고 precision도 2패스로 확보됐으니, FROZEN 바이블을 계약 패킷으로 받아 design
+(비트시트 + setup→payoff)이 얹힌다. design 산출물도 같은 검출/검증 2패스 패턴으로 채점한다.
 
 ## 그 뒤 로드맵
 

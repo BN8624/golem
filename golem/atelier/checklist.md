@@ -38,6 +38,8 @@
 
 ## 다음 (planning 검증 뒤)
 
+- [~] 2패스 스트레스 픽스처 `fixtures_ko_hard2/` 작성·로딩검증 완료(키 콜 직전 정지). 다음 세션이
+      `--verify` 비교 측정 → 과교정(진짜 위반 reject) 없이 오탐만 거르나 확인. HANDOFF 첫 액션 참조.
 - [ ] design 단계: 비트시트 + setup→payoff traceability.
 - [ ] 캐논 원장 누적(p0..p4 단계적 확장).
 - [ ] 어려운 캐논 픽스처로 채점기 한계 깨기(경계 확정).
