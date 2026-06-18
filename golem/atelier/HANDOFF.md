@@ -21,7 +21,7 @@ python planning.py --replay fixtures/planning_replay.json --synthesize --out run
 python design.py   --replay fixtures_design/design_replay.json --out runs/demo_outline          # FROZEN 아웃라인
 ```
 
-## 현재 위치 (생산 2 + 채점 3 = 5 도구, specQA 채점기 ★실콜·hard까지 — 1패스 robust, 생산자 다음)
+## 현재 위치 (생산 3 + 채점 3 = 6 도구, specQA 생산자까지 키0 닫힘 — ★실콜 다음)
 
 - **planning.py** (기획, 생산) — 로그라인 → lead 바이블 → 10축 리뷰 → synthesis(FROZEN 바이블).
   출력 `bible.json`(premise+canon) = canon_check 입력 모양.
@@ -31,8 +31,10 @@ python design.py   --replay fixtures_design/design_replay.json --out runs/demo_o
 - **design_check.py** (구조, 채점) — 비트시트의 setup→payoff *미회수*를 31B가 잡나. canon_check의 거울.
 - **specqa_check.py** (계약, 채점) — 씬 계약 기준을 캐논(검증가능)/미학(검증불가)으로 *가르나*. 앞 둘이
   *검출*이면 이건 *격리(분류)*. fp(미학→캐논 오라벨)=금지된 합의채점 흉내라 핵심축. ★실콜·hard 완료.
+- **specqa.py** (계약, 생산) — FROZEN 아웃라인 → lead 씬 계약 → 10축 → synthesis(FROZEN). 기준 원자화 +
+  kind 태깅. 출력 contract.json(=specqa_check 입력) + cases.json(=닫힘 검증 golden). specqa_check의 거울.
 - **lib/** — 자족 인프라(config·llm·key_usage·jsonutil). 골렘 import 0. `PROJECT_ROOT`=atelier 루트.
-- 최근 커밋: `624a768`(specQA hard 실콜)·`61c1cb3`(specQA hard 픽스처)·`a913004`(specQA 실콜)·`4908e7f`(specqa_check 출범).
+- 최근 커밋: `2109aad`(specqa.py 생산자)·`c39b56c`(HANDOFF 정리)·`624a768`(specQA hard 실콜)·`61c1cb3`(specQA hard 픽스처).
 
 검증된 실측치(실 31B):
 - canon_check: 기본 exact 1.0. hard1 1패스 0.5→2패스 1.0(precision은 2패스 필요). hard3 이중부정은 2패스도 0.834(통사 한계).
@@ -61,20 +63,20 @@ python design.py   --replay fixtures_design/design_replay.json --out runs/demo_o
   fp 0(금지된 합의채점 흉내 안 나타남). 유일 오류는 혼합 기준 C6를 미학으로 흘린 fn.
 - **specQA hard 실콜** (specqa-220612/220910) — fp 함정("3단계"·"일관" 등 구체어 위장) 안 먹힘(fp 0),
   순수 원자화 캐논 recall 1.0 → **C6 미스 = 혼합 기준 탓 확정.** 격리는 1패스 충분, soft spot은 계약 원자화 몫.
+- **specQA 생산자 출범** (키0) — specqa.py(design 거울): 아웃라인 → 씬 계약. 기준 원자화 + kind 태깅으로
+  혼합 기준을 *생산 단계에서* 차단. contract.json(kind 제거)+cases.json(golden) 산출. replay에서 혼합 기준을
+  리뷰어가 잡고 synth가 둘로 쪼갬 → FROZEN(scenes 3/criteria 10). 생산물→specqa_check 닫힘 루프 키0 exact 1.0.
 
-### ▶ 다음 세션 첫 액션 — specQA 생산자 (planning/design 거울)
+### ▶ 다음 세션 첫 액션 — specQA 생산자 ★실콜 (사용자 go 필요)
 
-채점기가 4축(혼합 기준 제외) robust로 섰으니 거울 생산자를 짓는다. canon→planning, design_check→design이
-그랬듯 specqa_check→specqa(생산자) 순.
+생산자가 키0으로 FROZEN+닫힘까지 섰다. 남은 건 31B 실생산 측정.
 
-- 입력: FROZEN 아웃라인(`runs/outline_ko/outline.json` + `beatsheet.md`)을 계약 패킷으로 받는다.
-- 산출: 씬별 계약(scene contract) — premise + 각 씬의 기준 목록. **핵심: 기준을 원자화**해 사실 축(캐논)과
-  톤 축(미학)을 *한 기준에 섞지 말 것*(이번 ★실콜이 짚은 유일 soft spot = 혼합 기준을 생산 단계에서 차단).
-  출력 모양은 `specqa_check.py`의 `contract.json`(premise + scenes{scene_id:[{id,text}]}) 입력과 일치시켜
-  생산물→채점 루프를 닫는다.
-- 구조: planning.py/design.py 템플릿 — lead 1 + reviewer 10축 + synthesis + FROZEN 게이트(개수 게이트·
-  ID 중복 검사·타임스탬프 보존, 외부리뷰 반영분 그대로). 31B 핀+ROLE 가드. 키0 replay → ★실콜.
-- 닫힘 확인: 생산한 contract.json을 specqa_check `--fixtures`로 채점해 격리가 정합한지(canon-162900의 specQA판).
+- **★실콜**: `python specqa.py --outline runs/outline_ko --out runs/contract_ko` (없으면 design.py로 outline_ko
+  먼저 생성). 측정 — (1)31B가 실제로 **원자화된** 씬 계약을 낳나(혼합 기준 C6류를 스스로 안 내나),
+  (2)생산물 contract.json을 `specqa_check.py --fixtures runs/contract_ko --verify`로 채점해 **채점기 블라인드
+  분류가 생산자 의도 kind(cases.json)와 합의하나.** 합의=원자화 깨끗, 불일치=혼합/오분류 잔존.
+- 이게 닫히면 planning→design→specQA 3단계가 실데이터로 한 바퀴(canon-162900·design-195923의 specQA판).
+- 그 뒤: NovelStudioMode 매핑상 **build**(같은 씬 병렬 초고) 또는 **integration**(캐논 게이트). 4번째 frontier.
 
 ### 백로그 (리뷰 미반영 + 보류 카드)
 

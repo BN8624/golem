@@ -291,6 +291,30 @@ fp 진단 계측(어떤 미학 기준을 무슨 근거로 캐논이라 헛라벨
 문제가 아니라 **씬 계약을 원자화해 사실 축/톤 축을 분리하라는 생산자(producer) 몫**이다. → 다음 단계는
 specQA 생산자(FROZEN 아웃라인 → 원자화된 씬 계약).
 
+## specQA 생산자 specqa.py — 원자화로 soft spot 차단 (2026-06-18)
+
+design.py의 거울로 생산자를 지었다. design이 바이블→비트시트를 낳듯 specQA는 FROZEN 아웃라인을 받아
+씬별 계약을 낳는다. 같은 골격(lead 1 + reviewer 10축 + synthesis + FROZEN 게이트 + 31B 핀).
+
+**핵심 설계 결정 — kind 태깅 + 원자화로 닫힘 루프 구성.** 이번 단계의 본질은 직전 ★실콜이 짚은 유일
+soft spot(혼합 기준 = 사실+톤 융합)을 *생산 단계에서* 막는 것이다. 그래서 생산자가 각 기준을 원자화
+(한 기준=한 축)하고 kind(canon/aesthetic)를 직접 단다. 그 다음:
+
+- **contract.json**(kind 제거) = specqa_check 입력 모양 그대로. 채점기는 라벨 없이 블라인드 분류한다.
+- **cases.json**(kind=='canon'에서 뽑은 golden_canon) = 닫힘 검증용. 채점기의 블라인드 분류를 *생산자가
+  의도한 kind*와 비교한다. 둘이 일치하면 계약이 자기일관적(원자화가 깨끗)이고, 어긋나면 생산자가 혼합/
+  오분류 기준을 낸 것 — 즉 **이 루프가 원자화 품질을 측정한다**(C6 같은 혼합이 들어오면 채점기가 불일치로 드러냄).
+
+**FROZEN 게이트(design + α).** design 게이트(BLOCKING 개수 흡수·ID 중복 0)에 specQA 고유 둘을 더했다.
+scenes>=3·criteria총>=8, 그리고 **각 씬에 canon·aesthetic 둘 다 존재**(both_kinds) — 격리가 의미 있으려면
+한쪽만 있는 씬은 안 된다(순수 캐논만이면 미학 격리 대상이 없고, 순수 미학만이면 검증 계약이 빈다).
+
+**키 0 검증.** replay에 혼합 기준(sc1 C3="발타자르는 적대자이며 우호적으로 묘사돼선 안 된다", 사실+톤)을
+일부러 심었다. 1축 리뷰어가 mixed_criteria로 잡고 BLOCKING 질문 → synth가 둘로 쪼갬(C3 canon "적대자로
+등장" + C4 aesthetic "위협감 유지") → FROZEN(scenes 3/criteria 10, both_kinds True). 생산물 contract.json+
+cases.json을 specqa_check에 넣어 exact 1.0 — **design→specQA→specqa_check 닫힘 루프가 키0으로 한 바퀴.**
+실제 *합의*(31B 블라인드 분류가 생산자 의도 kind와 맞나)는 ★실콜 몫.
+
 ## 키 규칙
 
 골렘 CLAUDE.md 준수 — 사용자 명시 go 전에는 실제 31B 런 금지. `--replay`로 키 0 검증만 완료(★실콜은 go 뒤).

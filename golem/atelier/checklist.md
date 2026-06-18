@@ -108,7 +108,16 @@
       (3)2패스 과교정 0. **정직한 한계: 함정이 fp를 못 냈으므로 "2패스가 specQA fp 깎나"는 깰 fp 부재로
       미검증**(design hard1처럼 모델이 예상보다 강함). **잠정결론: 캐논/미학 격리도 31B 1패스로 충분 —
       유일 soft spot은 혼합 기준이고 그건 채점기 아닌 계약 원자화(생산자) 몫.** 상세 context-notes·HANDOFF.
-- [ ] specQA 생산자(planning/design 거울) — 그 뒤. FROZEN 아웃라인 → 씬 계약 산출.
+- [x] specQA 생산자 `specqa.py`(design.py 거울) — FROZEN 아웃라인(premise+setups+beats) → lead 씬 계약 →
+      10축 리뷰 → synthesis(FROZEN). **핵심: 기준 원자화 + kind(canon/aesthetic) 태깅으로 혼합 기준 soft
+      spot을 생산 단계에서 차단.** 산출 contract.json(kind 제거=채점기 입력) + cases.json(kind=='canon'에서
+      golden=닫힘검증용). FROZEN 게이트: BLOCKING 흡수+scenes>=3+criteria>=8+ID중복0+각 씬 canon·aesthetic
+      공존. 31B 핀+ROLE 가드.
+- [x] 키0 replay 통과 — 혼합 C3을 리뷰어가 잡고 synth가 둘(사실 canon/톤 aesthetic)로 쪼갬 → FROZEN
+      (scenes 3/criteria 10). 닫힘 루프 기계검증: 생산물 contract.json+cases.json → specqa_check exact 1.0.
+- [ ] ★실콜(`python specqa.py --outline runs/outline_ko --out runs/contract_ko`) — **사용자 go 뒤에만**.
+      31B가 실제로 원자화된 씬 계약을 낳나(혼합 기준 안 내나) + 생산물을 specqa_check `--verify`로 채점해
+      채점기가 생산자 의도 kind와 *합의*하나(canon-162900의 specQA판 end-to-end 닫힘).
 
 ## 이전 (frontier 2 마무리)
 
