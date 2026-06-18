@@ -224,4 +224,5 @@ P1 (다음 실험 전):
 - [x] **(★키) 레버4 첫 런(G70)**: graded-20260618-191818 게이트 11/11·합의 8/8 1.0·oracle 일치. 31B가 logic 본문 못 본 채 engine만 편집→회귀+ABORT 둘 다 1.0(logic verbatim·engine ABORT 핸들러 대조). **누적 빌드 4레버 전부 닫힘**
 - [x] 31solo 강제(G70): config generator 26b→31B(스튜디오 3도구가 실제 26B 돌던 잔재 제거). 이유=26B 구글 서버 1주일+ 불능. vocab 핀 3패킷 31B 확인런 1.0 재현(재실험 불필요)
 - [x] 외부 코드리뷰 반영(G71): #2 게이트 전 시나리오 종료코드 검사·#1 FROZEN BLOCKING 흡수수 확인 픽스+키0 회귀잠금(`_gate_allscenarios_keyless`·`_freeze_blocking_keyless`). #6 CI=`run_keyless.py`+GitHub Actions 그린. #3·#4=정답앵커 실Node 골든으로 정리
-- [ ] **(다음 세션 첫 동작) 스케일 확장(리뷰 #5)**: 대형 카드(모듈 10~20개·30~50k 토큰)로 레버4 소프트 천장 측정 — (A)전체주입 vs (B)선택주입 A/B 대조. 곁=combat 자율oracle / 외부리뷰 P1(#10)
+- [x] **(★키) 스케일 확장 1차 A/B(G73)**: 정거장 30모듈로 A전체주입(graded-222413,≈14.6k)·B선택주입(graded-223623,≈5k) 두 런. 둘 다 게이트 11/11·합의 1.0·golden_diff 0. EOL 정규화 대조=engine.js만 변경·29모듈 바이트동일. **레버4 천장 ~14.6k에선 미포착** → 확장 분기
+- [ ] **(다음, 키0) 카드 ~30k 확장**: station_base 본문 35.7KB→~73KB로 키워(모듈 충실화) 동일 A/B 재측정. 결정성·골든 자동역산·회귀7 base==ref 바이트동일·죽은코드 0 유지. 곁=combat 자율oracle / 외부리뷰 P1(#10)
