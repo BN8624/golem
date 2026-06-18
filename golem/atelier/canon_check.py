@@ -20,6 +20,7 @@ N시드 재실행 → 정확률 + 규칙별 검출률(recall) + 오탐(false ala
 
 import argparse
 import json
+import re
 import statistics
 import sys
 from collections import Counter
@@ -40,6 +41,21 @@ _CANON_PROMPT = """You are the CONTINUITY EDITOR for a novel. You are given the 
 draft that HARD-CONTRADICTS a listed canon fact. Judge ONLY contradictions of the listed facts —
 never style, pacing, beauty, or quality. If a fact is not contradicted, do not report it.
 
+A sentence that AGREES WITH or merely RESTATES a canon fact is NOT a violation — report a fact ONLY
+when the draft asserts something that CANNOT BE TRUE if that canon fact holds. Mentioning a fact is
+not contradicting it. When in doubt, do NOT report — an empty list is the correct answer for a draft
+that contradicts nothing.
+
+EXAMPLES (how to judge direction):
+- CANON "[C1] Mira lost her right hand." / DRAFT "Mira reached out with her left hand, the only one
+  she had." -> NO violation (the draft AGREES with C1).
+- CANON "[C1] Mira lost her right hand." / DRAFT "Mira clapped both her hands together." -> VIOLATION
+  of C1 (she cannot have two hands).
+- CANON "[C2] Sara is Tom's biological sister." / DRAFT "Sara, his sister by the same mother, wept."
+  -> NO violation (the draft AGREES with C2).
+- CANON "[C2] Sara is Tom's biological sister." / DRAFT "Sara, an orphan he had taken in with no
+  blood between them." -> VIOLATION of C2 (they are not biological siblings).
+
 FROZEN CANON:
 {canon}
 
@@ -59,11 +75,17 @@ def _ask_check(pool, canon, draft_text):
         return extract_json(LLMClient(api_key=key).generate(ROLE, prompt))
 
 
+def _norm_id(rid):
+    """모델이 '[C2]'·'C2 '처럼 형식을 흔들어도 같은 규칙으로 정규화한다(대괄호·공백 제거)."""
+    m = re.search(r"[A-Za-z]+\d+", str(rid))
+    return m.group(0).upper() if m else str(rid).strip()
+
+
 def _found_ids(pred):
-    """예측에서 위반 rule_id 집합만 뽑는다(증거 인용은 채점에 안 씀, 보고용)."""
+    """예측에서 위반 rule_id 집합만 뽑는다(정규화; 증거 인용은 채점에 안 씀, 보고용)."""
     if not pred:
         return set()
-    return {v.get("rule_id") for v in pred.get("violations", []) if v.get("rule_id")}
+    return {_norm_id(v["rule_id"]) for v in pred.get("violations", []) if v.get("rule_id")}
 
 
 def _score(pred, golden_ids):
@@ -126,6 +148,7 @@ def main(argv=None):
     for c in cases:
         golden = c["golden"]
         seed_exact, seed_found, fp_counts, fn_total = [], [], [], Counter()
+        fp_total, fp_ev = Counter(), {}   # 오탐 진단: 어떤 규칙을 무슨 근거로 헛잡나
         for i in range(args.n):
             if replay is not None:
                 seq = replay.get(c["id"], [])
@@ -138,6 +161,12 @@ def main(argv=None):
             fp_counts.append(len(sc["fp"]))
             for rid in sc["fn"]:
                 fn_total[rid] += 1
+            for rid in sc["fp"]:
+                fp_total[rid] += 1
+            for v in (pred or {}).get("violations", []):
+                rid = _norm_id(v.get("rule_id", ""))
+                if rid in sc["fp"]:
+                    fp_ev.setdefault(rid, []).append(str(v.get("evidence", "")))
         exact_rate = sum(seed_exact) / args.n
         votes = Counter(seed_found)
         stability = votes.most_common(1)[0][1] / args.n if votes else 0.0
@@ -146,6 +175,8 @@ def main(argv=None):
             "id": c["id"], "golden": golden, "exact_rate": round(exact_rate, 3),
             "stability": round(stability, 3), "mean_false_alarm": round(statistics.mean(fp_counts), 3),
             "recall_by_rule": recall_by_rule,
+            "false_alarm_by_rule": dict(fp_total),
+            "false_alarm_evidence": {rid: list(dict.fromkeys(e))[:3] for rid, e in fp_ev.items()},
         })
         print(f"  {c['id']:10s} exact {exact_rate:.2f} 안정 {stability:.2f} "
               f"오탐 {statistics.mean(fp_counts):.2f}  검출 {recall_by_rule or '(깨끗한 초고)'}")

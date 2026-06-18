@@ -48,13 +48,21 @@ python planning.py --replay fixtures/planning_replay.json --synthesize --out run
 violation C1·C2 모두 1.0. **패러프레이즈 모순(왼손 고삐·피 안 섞인 남남)도 31B가 검출.**
 → frontier 1·2 닫힘: 한 줄 로그라인 → FROZEN 바이블 → 캐논 채점이 실콜로 한 바퀴 돈다.
 
+### 채점기 한계 노출 — 캐논/미학 경계 1차 데이터 (2026-06-18, canon-20260618-170505)
+
+`fixtures_ko_hard`(함의 위반 hard + 위반0 함정 trap)로 밀어 첫 한계 확정.
+- **검출(recall) 강함**: hard의 C3·C6를 한국어 함의로 추론 검출(1.0).
+- **precision 약함(실한계)**: trap "한 어머니에게서 난 친누이"(C2와 일치)를 31B가 매번 C2 위반으로 뒤집음.
+  명시 지시·few-shot(동형 양성예시) **둘 다 불가역**. 오탐 1.0 그대로.
+- 부수 수확: rule_id 정규화 버그 픽스(`_norm_id`) + fp 진단 계측(오탐 규칙+근거를 결과 JSON에 남김).
+- 경계 1차 결론: 경계는 "검출되나"가 아니라 "거짓 경보 억제하나"에 있다. 상세 `context-notes.md`.
+
 ### 다음 액션 (둘 중 택1)
 
-1. **어려운 픽스처로 채점기 한계 깨기** (★키): 지금 픽스처는 패러프레이즈까지 다 잡혀 1.0 — 아직 쉽다.
-   `context-notes.md`가 지목한 (a) 미묘한 타임라인 드리프트, (b) 인물 지식상태 위반(아직 모를 정보를 앎),
-   (d) 장거리(여러 챕터 누적) 캐논으로 밀어 깨지는 지점 = 캐논/미학 경계의 실거리를 잰다.
-2. **design 단계 착수** (아래 로드맵): 비트시트 + setup→payoff traceability. planning이 한국어로 닫혔으니
-   그 FROZEN 바이블을 계약 패킷으로 받아 design이 얹힌다.
+1. **precision 2패스 검증** (★키): 위반 후보를 "정말 모순인가" 재확인하는 콜을 추가해 trap 오탐을 깨보기.
+   아키텍처 변경(콜 2배)이라 새 세션에서 착수. 안 깨지면 "31B 단독 precision = 미학 영역"으로 경계 확정.
+2. **design 단계 착수**: 비트시트 + setup→payoff traceability. planning이 한국어로 닫혔으니 그 FROZEN
+   바이블을 계약 패킷으로 받아 design이 얹힌다. (단 design 산출물 채점도 precision 한계를 물려받음 — 유의.)
 
 ## 그 뒤 로드맵
 
