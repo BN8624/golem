@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- 빌드 산출물(graded 로켓 카드)의 결정적 엔진 로직을 이모지로 렌더링하는 모바일 뷰어 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🚀 로켓 — Golem Studio</title>
+<style>
+  :root{ --bg:#0e1116; --surface:#171c24; --surface2:#1f2630; --text:#e8edf4; --muted:#9aa6b4; --hint:#6b7685; --amber:#EF9F27; --line:#2a3340; --ok:#5DCAA5; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap{ max-width:480px; margin:0 auto; padding:18px 16px 32px; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px; }
+  .status{ font-size:17px; font-weight:600; }
+  .turn{ font-size:13px; color:var(--hint); }
+  .turn b{ color:var(--text); }
+  .track{ display:flex; justify-content:space-between; align-items:flex-start;
+    background:var(--surface); border-radius:16px; padding:18px 10px; margin-bottom:18px; }
+  .cell{ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+  .cell .planet{ font-size:30px; line-height:1; }
+  .cell .rk{ font-size:24px; height:28px; line-height:1; }
+  .cell .nm{ font-size:11px; color:var(--muted); }
+  .arr{ font-size:14px; color:var(--hint); padding:0 1px; margin-top:8px; }
+  .fuelrow{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .fuelrow .ico{ font-size:22px; }
+  .bar{ flex:1; height:18px; background:var(--surface2); border-radius:9px; overflow:hidden; }
+  .bar>i{ display:block; height:100%; width:0; background:var(--amber); transition:width .25s; }
+  .fuelnum{ font-size:15px; font-weight:600; min-width:32px; text-align:right; }
+  .hint{ font-size:13px; color:var(--hint); margin:0 0 18px; min-height:18px; }
+  .btns{ display:flex; gap:10px; margin-bottom:18px; }
+  button{ flex:1; font-size:16px; font-weight:600; color:var(--text); background:var(--surface2);
+    border:1px solid var(--line); border-radius:14px; padding:16px 8px; cursor:pointer;
+    font-family:inherit; transition:transform .05s, opacity .15s; }
+  button:active{ transform:scale(.97); }
+  button:disabled{ opacity:.4; }
+  button .sub{ color:var(--hint); font-weight:400; font-size:13px; }
+  #reset{ flex:0 0 56px; }
+  .logttl{ font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .log{ background:var(--surface); border-radius:12px; padding:12px 14px; min-height:72px;
+    font-size:14px; line-height:1.8; }
+  .log .empty{ color:var(--hint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="status" id="status">발사 대기 중</div>
+    <div class="turn">turn <b id="turn">0</b></div>
+  </div>
+  <div class="track" id="track"></div>
+  <div class="fuelrow">
+    <span class="ico">⛽</span>
+    <div class="bar"><i id="fuelbar"></i></div>
+    <span class="fuelnum" id="fuel">0</span>
+  </div>
+  <div class="hint" id="hint">다음 단계 점화에 ⛽ 2 필요</div>
+  <div class="btns">
+    <button id="wait">⛽ 연료 충전<br><span class="sub">WAIT</span></button>
+    <button id="adv">🔥 점화 상승<br><span class="sub">ADVANCE</span></button>
+    <button id="reset" aria-label="리셋">🔄</button>
+  </div>
+  <div id="beatpanel" style="display:flex; gap:10px; align-items:flex-start; background:#15233a; border:1px solid #2a3a55; border-radius:14px; padding:14px 16px; margin:0 0 18px; min-height:60px;">
+    <span style="font-size:22px;">🛰️</span>
+    <div>
+      <div style="font-size:12px; color:#7fb0e8; font-weight:600; margin-bottom:3px;">오리온 · 항법 지원 AI</div>
+      <div id="beat" style="font-size:15px; line-height:1.6; color:#cfe0f5;">발사 대기 중… ⛽ 연료를 모아 점화하면 항해 보고가 들어옵니다.</div>
+    </div>
+  </div>
+  <div class="logttl">📜 비행 로그</div>
+  <div class="log" id="log"></div>
+</div>
+<script>
+(function(){
+  // === 빌드 산출물 규칙 그대로 (constants.js / logic.js / engine.js) ===
+  var stageCost=[2,3,4,5];
+  var stageNames=["대기권","궤도","달","화성"];
+  var nodes=[{e:"🌍",n:"발사대"},{e:"☁️",n:"대기권"},{e:"🛰️",n:"궤도"},{e:"🌙",n:"달"},{e:"🔴",n:"화성"}];
+  // === B겹 (storyforge_packet_rocket/beats.json) — 31B 생성, 구조검증 3/3 PASS ===
+  var beatText={
+    "BEAT-1":"거센 마찰과 열기가 선체를 뒤흔듭니다! 에이든, 조금만 더 버텨주십시오. 드디어 저 푸른 하늘의 장벽을 돌파합니다!",
+    "BEAT-2":"지구의 중력을 벗어나 드디어 무중력의 정적 속으로 진입했습니다. 안정적인 궤도 확보를 완료했습니다, 선장님.",
+    "BEAT-3":"우주의 관문인 달이 멀어지며 심우주의 길이 열립니다. 이제 더 깊은 곳을 향한 위대한 도약을 준비해야 합니다.",
+    "BEAT-4":"마침내 눈앞에 붉은 대지가 펼쳐집니다. 인류의 새로운 역사가 이곳 화성에서 시작됩니다."
+  };
+  var s;
+  function init(){ s={turn:0,fuel:0,stage:0,events:[],log:[],gameStatus:'PLAYING'}; }
+  function wait(){ if(s.gameStatus==='WON')return; s.turn+=1; s.fuel+=1; render(); }
+  function advance(){
+    if(s.gameStatus==='WON')return;
+    var cost=stageCost[s.stage];
+    if(s.fuel>=cost){
+      s.fuel-=cost; s.stage+=1;
+      s.events.push('BEAT-'+s.stage);
+      s.lastBeat='BEAT-'+s.stage;          // A겹 발동 → B겹 대사 표시
+      s.log.push(stageNames[s.stage-1]+' 도달  🎯 '+nodes[s.stage].e);
+      if(s.stage>=4){ s.gameStatus='WON'; s.log.push('🎉 화성 착륙! 미션 성공'); }
+    } else {
+      s.lastBeat='__nofuel__';
+      s.log.push('⚠️ Insufficient fuel — ⛽ '+s.fuel+'/'+cost);
+    }
+    render();
+  }
+  var $=function(id){return document.getElementById(id);};
+  function render(){
+    var track=$('track'); track.innerHTML='';
+    for(var i=0;i<nodes.length;i++){
+      var reached=i<=s.stage, here=i===s.stage;
+      var cell=document.createElement('div');
+      cell.className='cell'; cell.style.opacity=reached?'1':'0.32';
+      cell.innerHTML='<div class="planet">'+nodes[i].e+'</div>'+
+        '<div class="rk">'+(here?(s.gameStatus==='WON'?'🚀🎉':'🚀'):'')+'</div>'+
+        '<div class="nm">'+nodes[i].n+'</div>';
+      track.appendChild(cell);
+      if(i<nodes.length-1){
+        var a=document.createElement('div'); a.className='arr';
+        a.textContent=(i<s.stage)?'─':'┄'; track.appendChild(a);
+      }
+    }
+    var won=s.gameStatus==='WON';
+    var cost=won?0:stageCost[s.stage];
+    $('turn').textContent=s.turn;
+    $('fuel').textContent=s.fuel;
+    $('fuelbar').style.width=(won?100:Math.min(100,Math.round(s.fuel/cost*100)))+'%';
+    $('status').textContent=won?'🏆 미션 성공 — 화성 도달':('🚀 '+nodes[s.stage].n+' · stage '+s.stage);
+    $('hint').textContent=won?'모든 단계 완료! 🔄 로 다시 발사':('다음 단계 점화에 ⛽ '+cost+' 필요'+(s.fuel>=cost?' — 준비 완료 ✅':''));
+    var bt=$('beat');
+    if(s.lastBeat&&beatText[s.lastBeat]) bt.textContent=beatText[s.lastBeat];
+    else if(s.lastBeat==='__nofuel__') bt.textContent='⚠️ 연료가 부족합니다, 선장님. 점화를 보류합니다.';
+    else bt.textContent='발사 대기 중… ⛽ 연료를 모아 점화하면 항해 보고가 들어옵니다.';
+    var log=$('log');
+    log.innerHTML=s.log.length? s.log.map(function(l){return '<div>'+l+'</div>';}).join('') : '<span class="empty">⛽ 연료를 모아 🔥 점화하세요</span>';
+    $('wait').disabled=won; $('adv').disabled=won;
+  }
+  $('wait').onclick=wait; $('adv').onclick=advance;
+  $('reset').onclick=function(){ init(); render(); };
+  init(); render();
+})();
+</script>
+</body>
+</html>
