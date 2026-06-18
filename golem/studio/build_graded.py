@@ -227,9 +227,11 @@ def gate_and_run(workspace, manifest, scenarios):
                                timeout=30, stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             return False, f"smoke SCN{i}: 타임아웃", {}
-        if i == 1 and (r.returncode != 0 or ":" not in r.stdout):
-            return False, f"smoke SCN1: exit {r.returncode} out={r.stdout[:80]!r}", {}
-        outputs[sc["id"]] = _norm_output(r.stdout) if r.returncode == 0 else None
+        if r.returncode != 0:
+            return False, f"smoke SCN{i}: exit {r.returncode} out={r.stdout[:80]!r}", {}
+        if i == 1 and ":" not in r.stdout:
+            return False, f"smoke SCN1: 출력 형식 의심 out={r.stdout[:80]!r}", {}
+        outputs[sc["id"]] = _norm_output(r.stdout)
     return True, "ok", outputs
 
 
