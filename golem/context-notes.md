@@ -936,3 +936,16 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
 게이트 아님 — 기존 카드 전부 비0(idle 2·combat 3·eco 4·heat 2)이고 동일하게 build 진행함.
 (핸드오프에 잠깐 "BLOCKING 0 검증" 적었던 건 오기. 통과 기준은 validator PASS·COMPLETE.)
 다음 ★키 = build_graded --reconcile(로켓 누적빌드 첫 graded + reconcile 풀 E2E).
+
+### G65 본선 — 로켓 실빌드(build_graded --reconcile) 완료
+- 배관 픽스(키0): `specqa_packet_rocket/oracle_risk_review.json` 생성(`risky_scenarios:[]`).
+  로켓 6시나리오 전부 `oracle_risk.risk=false`라 채점가능 6, combat 패킷과 동형. build_graded.load_all이
+  이 파일을 필수로 읽는데 프로브 패킷엔 빠져 있어 첫 런이 FileNotFoundError로 멈춤 → 생성으로 해소.
+- 빌드 결과(★키, 11키 병렬, cap=11): 게이트 7/11(탈락 4는 constants.js/logic.js 고아모듈=빌더 품질
+  편차, 카드결함 아님), 합의 일치율 0.881(SCN-001~005 6/7표·SCN-006 7/7), **합의 vs oracle 전부 일치**
+  (불일치 0이라 reconcile 진단/ESCALATE 없음). 산출물 `build_runs/graded-20260618-161312`(첫 graded 카드).
+- Node 실측 검증(키0): 선정 attempt01을 6시나리오 직접 실행 — 로켓 게임 실제 작동.
+  대기권→궤도→달→화성 전진, **A겹 BEAT-1~4 발동**, 한국어 로그("대기권 도달" 등), SCN-004/005 gameStatus WON.
+  서사 발동층 라이브 = 핸드오프 ▶ "결정적 시뮬 + A겹" 입증.
+- 트랙 C 1단계 세 목표(①첫 graded 카드 ②reconcile 풀 E2E ③B겹 텍스트 토대) 모두 이 한 런으로 충족.
+  다음 = B겹 대사 저작(StoryForge) + 누적 빌드 레버.
