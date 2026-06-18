@@ -195,4 +195,12 @@ P1 (다음 실험 전):
 - [x] G61 사다리: 어휘 RULE-08 한 줄 박으니 0.879→1.0 수렴(변형 패킷 planning_packet_idle_vocab)
 - [x] G62 고결합(eco): 결합 무관(entities 7/8 무결), 실패는 또 계약-모호(status enum 8/8 + SCN-004 번식)
 - [x] 하네스: key_accuracy_by_name 추가(시나리오단위 0.0은 uniform 모호키 아티팩트)
-- [ ] (다음) eco 어휘+번식 박고 재측정(G61식 사다리) / reconcile에 자율oracle 배선 / 31B self-suggest / combat 자율oracle
+- [x] G63 eco 어휘+번식 박고 재측정: 0.875/0.0 → 1.0/8/8(변형 패킷 planning_packet_eco_vocab), 원문 PHASE4↔골든 모순까지 탐지
+- [x] G64 self-suggest: 31B가 자기 불일치 읽고 계약 자율 처방 → 1.0/8/8(도구 self_suggest.py, 패킷 eco_selfsug), 루프 종결
+- [ ] (다음) 트랙 A: reconcile에 자율oracle+self-suggest 배선(=실질 마무리) / combat 자율oracle(곁)
+
+## 확장 방향 — 큰 게임/서사/밸런스 (2026-06-18, 대화 G) — 정본 GolemStudioMode.md §21, 이유 context-notes 대화 G
+- [x] 방향 합의: 큰 게임=결정적 시뮬/전략(코에이식), 서사 2겹(A겹 발동로직/B겹 텍스트), 밸런스=config분리, 스케일=모듈+선택적컨텍스트
+- [x] 로켓 카드 키0 준비(planning_packet_rocket+specqa_packet_rocket, A겹=BEAT-N), 골든 로컬 시뮬 자가검증
+- [x] 로켓 A겹 가능성 입증: events 키 전 시나리오 3/3. 손계산 스케일 한계 실측(150틱 붕괴→18틱 재설계로 회복)
+- [ ] (트랙 C 다음) 로켓 카드 커밋 → B겹 대사 텍스트 → StoryForge 일관 바이블
