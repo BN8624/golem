@@ -2,7 +2,7 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-19, G74)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 둘 다 1.0 → 카드 1.77x(63.5KB·46모듈) 확장 → A 재측정 소켓행→킬·사후채집 A @ 63.5KB=1.0(충실도 드리프트) → **출력 32k 재프레이밍**(진짜 벽은 컨텍스트 아니라 출력, B가 스케일링 길) → 확장 카드 B=1.0·drift0 → B 입력 프로브 546모듈/입력~24k서도 B 1.0·drift0/545(천장 미포착) → **G74 패치빌드(§21.2 레버2) 배선 + ★키 3방식 비교 + 61KB 응력 완료**: 레버4 위 `--patch` 모드(touched도 통째 대신 FIND/REPLACE diff만 출력) + raw 응답 저장. 로켓 l4·station 61KB 카드 둘 다 A·B·patch ★키 런 = **셋 다 게이트 11/11·합의 1.0·golden_diff 0·patch 실패 0**. **station서 §21.5 완전 실증: 출력 raw A 51.1KB vs B/patch sub-KB(0.7/0.5), A held-out 드리프트 11/11(주석 패러프레이즈+EVACUATE 모듈경계 침범) vs B/patch 0/11.** A는 행동 1.0이어도 코드 보존 실패, B/patch는 충실도까지 안전. **다음=patch>B 출력우위 응력(큰 touched 모듈) + 여러 카드 누적 완주(레버3).**
+**현재 상태 (2026-06-19, G74)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 둘 다 1.0 → 카드 1.77x(63.5KB·46모듈) 확장 → A 재측정 소켓행→킬·사후채집 A @ 63.5KB=1.0(충실도 드리프트) → **출력 32k 재프레이밍**(진짜 벽은 컨텍스트 아니라 출력, B가 스케일링 길) → 확장 카드 B=1.0·drift0 → B 입력 프로브 546모듈/입력~24k서도 B 1.0·drift0/545(천장 미포착) → **G74 패치빌드(§21.2 레버2) 배선 + ★키 3방식 비교 + 61KB 응력 완료**: 레버4 위 `--patch` 모드(touched도 통째 대신 FIND/REPLACE diff만 출력) + raw 응답 저장. 로켓 l4·station 61KB 카드 둘 다 A·B·patch ★키 런 = **셋 다 게이트 11/11·합의 1.0·golden_diff 0·patch 실패 0**. **station서 §21.5 완전 실증: 출력 raw A 51.1KB vs B/patch sub-KB(0.7/0.5), A held-out 드리프트 11/11(주석 패러프레이즈+EVACUATE 모듈경계 침범) vs B/patch 0/11.** → patch>B 출력우위(st2: B4.06 vs patch0.47KB) → **레버3 누적 완주(l2_patch): 카드2 PING을 카드1 EVACUATE 출력 위에 patch로 얹어 13시나리오 전원 11/11·1.0·golden_diff0·EVACUATE 보존+PING 추가·누적회귀 무결.** **§21.2 누적 4레버 전부 patch로 닫힘. 다음=3장+ 체인 또는 본선 통합.**
 
 **▶▶ 핵심 재프레이밍(G73 후속, 사용자 지적) — 진짜 제약은 컨텍스트가 아니라 출력 32k(추론 포함)**.
 - **컨텍스트 창은 한계 아님**: gemma-4 31B 256k 창에 카드 입력 ~26k = 10%. 카드를 더 키워도 창은 안 참.
@@ -10,12 +10,13 @@
 - **B(선택출력/패치)는 출력이 게임 크기와 분리됨** — 모델은 touched 파일만 출력([build_graded.py:90]), 하네스가 held-out를 base verbatim 강제([build_graded.py:370-374]) → 모델 출력=수백 토큰. 입력도 ~6k(touched 본문+45 시그니처). **게임이 50KB든 500KB든 콜 출력 일정 = 유일하게 출력한도 안 건드리는 스케일링 길.**
 - **결론**: 대형 게임은 "매 턴 전체 재생성(A)"이 아니라 **"선택적 읽기 + 패치 쓰기(B)"**로 짓는 게 필연. 출력 32k가 A를 죽이지 B는 안 죽임. 레버4 측정의 의미 = **B가 스케일에서 정확도 1.0 유지함을 보이는 것**(=스케일링 메커니즘 입증). G73에서 B 1.0이라 청신호.
 
-**▶▶ 다음 세션 첫 동작 = §21.2 레버3 누적 완주 (patch가 B 상위호환임 출력·충실도 양면 확정됨)**.
-patch 배선·로켓·station 61KB 3방식·patch>B 출력우위까지 G74에서 다 닫혔다. patch가 출력을 게임 크기와도
-*touched 모듈 크기와도* 분리(st2: B 4.06KB vs patch 0.47KB, ~8.6x)하고 충실도까지 안전(A 드리프트 11/11 vs
-patch 0/11). 남은 본선 한 칸 = **§21.2 레버3 누적** — 여러 카드를 `--patch`로 순차 얹어 큰 게임 1편 완주,
-카드 N장에서 누적회귀(이전 기능 골든)가 버티나. 단일 1편집 → 다카드 누적으로.
-*(B 입력 천장 프로브는 546모듈서도 1.0으로 닫힘 — 아래 참조. 더 밀기는 한계효용↓.)*
+**▶▶ 다음 세션 첫 동작 = 레버3 3장+ 체인 더 밀기 또는 본선 통합 (누적 4레버 전부 patch로 닫힘)**.
+G74에서 patch빌드를 §21.2 4레버 전부에 걸쳐 닫았다 — 배선·로켓·station 61KB 3방식·patch>B 출력우위·
+**레버3 누적(카드2 PING을 카드1 EVACUATE 출력 위에 patch로 얹어 13시나리오 전원 1.0·EVACUATE 보존+PING
+추가·누적회귀 무결, l2_patch)**. patch가 누적 빌드의 편집수단으로 작동 확정. 남은 갈림길. ① 카드 3·4장
+체인으로 더 밀기(한계효용 보며) ② **본선 통합** — 서사 B겹(StoryForge)·밸런스 config를 patch 누적라인에
+결합해 "진짜 큰 게임 1편"으로. ③ patch 폴백 활용 다모듈 동시편집.
+*(B 입력 천장 프로브는 546모듈서도 1.0으로 닫힘. XL 1000+·combat 자율oracle·외부리뷰 P1(#10)은 곁가지.)*
 - 닫힌 것: 확장 카드(63.5KB·46모듈)서 B = 게이트 11/11·합의 1.0·drift 0(★키 graded-20260619-005137). A는 채집으로 1.0이나 출력바운드+드리프트라 **보류**. 출력 32k는 B를 안 죽이니 B축으로 키운다.
 - B 입력 lost-in-the-middle **프로브 닫힘(graded-20260619-011018)**: 생성기 `gen_station_xl.py`로 **546모듈** XL 카드(sensor 더미 500개, B 입력 ~24k·시그니처 545개) → **게이트 11/11·합의 1.0·golden_diff 0·held-out 드리프트 0/545·engine EVACUATE 정상.** engine이 545 시그니처 사이에 묻혀도 **B 천장 미포착.** → B는 모듈 수에 사실상 무관하게 정확도+충실도 1.0(출력은 항상 작음). 레버4 천장은 이 스케일 너머. XL은 gitignore, 생성기만 추적.
 - 인프라(완료): `llm.py` per-request 타임아웃 안전망(`REQUEST_TIMEOUT_MS=1800000` 30분). 커밋 466a5cb.
@@ -23,7 +24,7 @@ patch 0/11). 남은 본선 한 칸 = **§21.2 레버3 누적** — 여러 카드
 - 갈림길(곁가지): combat 자율oracle / 외부리뷰 P1(#10 등).
 
 **최근 완료 (역순)**:
-- **G74 패치빌드(§21.2 레버2) 배선 + ★키 3방식 비교 + 61KB 응력**: 레버4 위 `--patch` 모드 — touched 모듈도 통째 재출력 대신 안2(앵커/search-replace) FIND/REPLACE diff만 출력시키고 하네스가 base에 적용(`studio/patch_apply.py`). 포맷=안2(unified diff 줄번호 의존이 31B 최대 실패점이라 기각). 폴백=없음(PatchError→CARD). raw 응답 저장(`_raw_response.txt`/`_prompt.txt`) 추가. `_validate_l4_patch_keyless` ALL PASS. **★키 실측 — 로켓 l4(cmp_*)·station 61KB/46모듈(st_*) 둘 다 A·B·patch 셋 다 게이트 11/11·합의 1.0·golden_diff 0·patch 실패 0.** station서 §21.5 완전 실증: **출력 raw A 51.1KB vs B 0.7KB vs patch 0.5KB**(출력=게임크기 분리), **A held-out 드리프트 11/11**(tables.js 주석 패러프레이즈 + EVACUATE를 계약상 engine 아닌 actions.js에 재배치=모듈경계 침범) **vs B·patch 0/11**(verbatim 강제). A는 행동 1.0이어도 코드·모듈경계 보존 실패. **patch>B 출력우위 응력(st2_*): engine+tables(3.3KB) 둘 다 touched·EVACUATE 카드 → 둘 다 게이트 11/11·합의 1.0·tables verbatim, 출력 raw B 4.06KB vs patch 0.47KB(~8.6x)** — patch가 출력을 touched 모듈 크기와도 분리(B는 안 바뀐 tables까지 통째 재출력). patch모드 폴백 추가(touched 미패치=base verbatim). **patch가 B 상위호환 확정(출력·충실도 양면).** 커밋 cfc82f0(배선)·0cb272f(로켓)·632c1e3(station).
+- **G74 패치빌드(§21.2 레버2) 배선 + ★키 3방식 비교 + 61KB 응력**: 레버4 위 `--patch` 모드 — touched 모듈도 통째 재출력 대신 안2(앵커/search-replace) FIND/REPLACE diff만 출력시키고 하네스가 base에 적용(`studio/patch_apply.py`). 포맷=안2(unified diff 줄번호 의존이 31B 최대 실패점이라 기각). 폴백=없음(PatchError→CARD). raw 응답 저장(`_raw_response.txt`/`_prompt.txt`) 추가. `_validate_l4_patch_keyless` ALL PASS. **★키 실측 — 로켓 l4(cmp_*)·station 61KB/46모듈(st_*) 둘 다 A·B·patch 셋 다 게이트 11/11·합의 1.0·golden_diff 0·patch 실패 0.** station서 §21.5 완전 실증: **출력 raw A 51.1KB vs B 0.7KB vs patch 0.5KB**(출력=게임크기 분리), **A held-out 드리프트 11/11**(tables.js 주석 패러프레이즈 + EVACUATE를 계약상 engine 아닌 actions.js에 재배치=모듈경계 침범) **vs B·patch 0/11**(verbatim 강제). A는 행동 1.0이어도 코드·모듈경계 보존 실패. **patch>B 출력우위 응력(st2_*): engine+tables(3.3KB) 둘 다 touched·EVACUATE 카드 → 둘 다 게이트 11/11·합의 1.0·tables verbatim, 출력 raw B 4.06KB vs patch 0.47KB(~8.6x)** — patch가 출력을 touched 모듈 크기와도 분리. patch모드 폴백 추가(touched 미패치=base verbatim). **patch가 B 상위호환 확정.** **+ 레버3 누적 완주(l2_patch): 카드2(PING)를 카드1(EVACUATE) 출력 위에 patch로 얹어 누적 13시나리오 전원 게이트 11/11·합의 1.0·golden_diff 0, engine EVACUATE 보존+PING 추가·누적회귀 무결.** §21.2 누적 4레버 전부 patch로 닫힘. 커밋 cfc82f0(배선)·0cb272f(로켓)·632c1e3(station)·0723a75(patch>B).
 - **G73 후속 — A 재측정 행 + 출력 재프레이밍 + 사후채집(★키)**: 확장 카드(63.5KB)로 A 재측정 시도 → attempt03 소켓 무한행(`llm.py` 타임아웃 없음)·킬. **킬한 런 10 attempt를 사후 node채점(`_salvage_a_run.py` 키0)으로 A @ 63.5KB 결과 확보 — 정확도 100/100·전원합의·골든일치 1.0(A 재런 불필요, 행동적 저하 없음)**. 단 충실도 드리프트 발견: A는 verbatim 재출력에서 tables.js 주석 패러프레이즈(10/10)·EVACUATE를 actions.js로 재배치(2/10) — 행동 1.0이어도 코드 보존 못 함. **사용자 지적으로 재프레이밍**: 진짜 제약은 컨텍스트(256k,10%) 아니라 **출력 32k(추론 포함)**. A는 자기모순적 확장, **B(선택출력/패치)가 출력을 게임크기와 분리 + held-out verbatim 강제로 충실도까지 안전한 유일 스케일링 길**(build_graded:90·370-374). 측정 B 중심 전환.
 - **G73 스케일 확장 카드 제작(키0)**: `station_base` 30→46모듈(본문 35.7KB→63.5KB, 1.77x). 신규 16(battery·medical·inventory·telemetry·thermalzones·structural·science·safety·navlog·radlog·habitat·report·airlock·coolant·attitude·waste) 전부 turn결정적·게이팅(population·research·credits) 불변·alerts/log+bounded morale만 → **gameStatus 다양성 보존(PLAYING×4·WON×2·LOST×1·EVACUATED×3)**·회귀7 base==ref 바이트동일·16모듈 전부 골든 기여(죽은코드0)·strict 게이트 46모듈 통과·run_keyless ALL PASS. contract RULE-02 ORDER·manifest 동기화. (커밋 9131978)
 - **G73 레버4 스케일 1차 A/B(★키)**: 정거장 30모듈 같은 패킷 두 런 — A전체주입(graded-20260618-222413, 콜≈14.6k)·B선택주입(graded-20260618-223623, 콜≈5k). **둘 다 게이트 11/11·overall_agreement 1.0·golden_diffs 0**(회귀7+EVACUATE3 전부 1.0). EOL 정규화 대조 → engine.js만 실제 변경·held-out 29모듈 바이트동일(raw diff의 29모듈 차이는 전부 CRLF↔LF, node 채점이라 무해). **레버4 소프트 천장이 ~14.6k(로켓 3배)에선 안 잡힘** → A 흐려질 거란 가설 기각, ≤14.6k 아님이란 약한 하한만 확정. G72 판단대로 모듈 충실화로 30k 확장 후 재측정 분기.

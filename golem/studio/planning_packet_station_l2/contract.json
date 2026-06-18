@@ -1,0 +1,54 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "power": "number",
+      "oxygen": "number",
+      "water": "number",
+      "food": "number",
+      "population": "number",
+      "morale": "number",
+      "research": "number",
+      "credits": "number",
+      "alerts": "string[]",
+      "gameStatus": "string (PLAYING|WON|LOST|EVACUATED)",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: Input. Apply scenario.input.actions in order. scenario.input.constants is OPTIONAL; any top-level key it omits falls back to the defaults in src/constants.js. At start turn=0, gameStatus='PLAYING'; ONLY the WAIT action increments turn.",
+      "RULE-02: WAIT action -> turn += 1, then run exactly one full tick: src/systems.tick applies every subsystem step in the fixed ORDER (power, oxygen, water, food, population, morale, research, economy, hazards, grid, thermal, radiation, hull, maintenance, comms, cargo, crew, navigation, lifesupport, battery, medical, inventory, telemetry, thermalzones, structural, science, safety, navlog, radlog, habitat, airlock, coolant, attitude, waste, derive, report). Subsystem behavior is defined by those existing modules and MUST stay byte-for-byte unchanged.",
+      "RULE-03: BUILD action with field target in {solar,farm,recycler} -> if credits >= constants.build[target]: credits -= cost, that capacity level += 1, append 'BUILT '+target to log; otherwise append 'BUILD_FAILED '+target. BUILD does NOT change turn and runs NO tick.",
+      "RULE-04: RATION action -> toggle the rationing flag and append 'RATION ON' or 'RATION OFF' to log. RATION does NOT change turn and runs NO tick.",
+      "RULE-05: Evaluate the end check at scenario start (BEFORE any action) AND immediately AFTER each action: if population <= 0 set gameStatus='LOST' and append 'STATION_LOST'; else if research >= constants.research.goal set gameStatus='WON' and append 'MISSION_COMPLETE'. The end check only fires while gameStatus is 'PLAYING'.",
+      "RULE-06: Once gameStatus != 'PLAYING' (WON, LOST or EVACUATED), stop immediately — process no further actions from the scenario sequence; the current state is final.",
+      "RULE-07: EVACUATE action -> set gameStatus = 'EVACUATED' and stop immediately, exactly like RULE-06. EVACUATE changes NOTHING else — turn, every resource, every subsystem field, alerts and log stay exactly as they were the instant before the EVACUATE; EVACUATE runs no tick, appends no log line and pushes no alert. A scenario that never EVACUATEs prints exactly as before (regression must be byte-identical).",
+      "RULE-08: gameStatus is exactly one of the literal strings 'PLAYING', 'WON', 'LOST', 'EVACUATED'. alerts and log are string arrays kept in firing order; alerts collects per-tick subsystem warnings and log collects discrete events.",
+      "RULE-09: PING action -> append the literal string 'PING' to log, then continue with the next action. PING does NOT change turn, runs NO tick, and changes no resource, no subsystem field, no alert and not gameStatus. It is a discrete log event like RULE-04 RATION. A scenario that never PINGs prints exactly as the previous (EVACUATE) card did — regression must be byte-identical."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js",
+          "src/format.js"
+        ],
+        "description": "CLI entry point. Parses --scenario N, runs the engine, prints the final state via format.render."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runScenario"
+        ],
+        "imports": [
+          "src/actions.js",
+          "src/state.js"
+        ],
+        "description": "Deterministic action loop. EVACUATE (immediate halt) is already implemented from the previous card. THIS card adds ONLY the PING action handling; keep EVACUATE and all WAIT/BUILD/RATION dispatch intact. This is the ONLY module this card edits."
+      }
+    ]
+  }
+}
