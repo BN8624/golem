@@ -1,16 +1,16 @@
 
-## 레버4 — 선택적 컨텍스트 (G69, 키0 배선 → ★키 검증)
-- [ ] 하네스: `build_graded --inject-modules` (touched=full주입+재생성 / held-out=시그니처 스텁+verbatim 복사)
-- [ ] 인터페이스 스텁 추출 `_iface_stub` (exports 시그니처만, 본문 숨김)
-- [ ] held-out 모듈 워크스페이스 verbatim 복사 (재생성 안 함)
-- [ ] 셀렉티브 EDIT 헤더 (touched만 출력하라)
-- [ ] l4 프로브 패킷 `planning_packet_rocket_l4` (ABORT=RULE-07, engine.js만 touched)
-- [ ] l4 specqa `specqa_packet_rocket_l4` (회귀6 + ABORT 2, 골든은 rocket_base 실행 역산)
-- [ ] 키0 검증: 프롬프트에 engine 본문 O / logic 본문 X·시그니처 O / held-out verbatim 복사 / 골든 로컬재현
-- [ ] (★키) build_graded 실행 → 회귀무결+ABORT 합의 1.0이면 레버4 메커니즘 닫힘
+## 레버4 — 선택적 컨텍스트 (G69 배선 → G70 ★키 런으로 닫힘 ✅)
+- [x] 하네스: `build_graded --inject-modules` (touched=full주입+재생성 / held-out=시그니처 스텁+verbatim 복사)
+- [x] 인터페이스 스텁 추출 `_iface_stub` (exports 시그니처만, 본문 숨김)
+- [x] held-out 모듈 워크스페이스 verbatim 복사 (재생성 안 함)
+- [x] 셀렉티브 EDIT 헤더 (touched만 출력하라)
+- [x] l4 프로브 패킷 `planning_packet_rocket_l4` (ABORT=RULE-07, engine.js만 touched)
+- [x] l4 specqa `specqa_packet_rocket_l4` (회귀6 + ABORT 2, 골든은 rocket_base 실행 역산)
+- [x] 키0 검증: 프롬프트에 engine 본문 O / logic 본문 X·시그니처 O / held-out verbatim 복사 / 골든 로컬재현
+- [x] (★키) build_graded 실행 → 회귀무결+ABORT 합의 1.0 (G70 graded-20260618-191818, 레버4 메커니즘 닫힘)
 
-## 스케일 확장 — 레버4 소프트 천장 측정 (리뷰 #5, 키0 카드제작 → ★키 A/B)
-설계: 대형 카드 "정거장 OS"(16모듈), 신기능 EVACUATE(engine.js만 touched)=로켓 l4 ABORT의 규모확장판. 변수=컨텍스트 크기 하나.
+## 스케일 확장 — 레버4 소프트 천장 측정 (리뷰 #5, 키0 카드제작 ✅ → ★키 A/B 대기)
+설계: 대형 카드 "정거장 OS"(30모듈), 신기능 EVACUATE(engine.js만 touched)=로켓 l4 ABORT의 규모확장판. 변수=컨텍스트 크기 하나.
 - [x] station_base 30모듈 작성 (코어 8 + 확장 12 서브시스템 + util·tables·labels·grid 등)
 - [x] module_manifest.json (require 그래프 무순환·전부 main 도달, 30모듈)
 - [x] node로 베이스 결정적 실행 확인 (WON/LOST/회귀 결정적)

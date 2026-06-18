@@ -53,11 +53,12 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 
 **서사 2겹**: A겹=결정적 발동로직(golden 검증, 로켓 BEAT 6/6 1.0) + B겹=텍스트 저작데이터(StoryForge, 출력전용). 모호성 종류는 `GolemStudioMode.md` §6.1 모호성 사전에 등재(반응적 핀→사전 차단).
 
-읽는 순서: 이 파일 → 필요할 때 `context-notes.md`(G71·G70 최근, G60~G64 자율oracle, G46 가드레일) / `GolemStudioMode.md` §21·§6.1 / `checklist.md`.
+읽는 순서: 이 파일 → 필요할 때 `context-notes.md`(G72 대형카드·G71·G70 최근, G60~G64 자율oracle, G46 가드레일) / `GolemStudioMode.md` §21·§6.1 / `checklist.md`.
 
 ## 다음 액션
 
-1. **(다음 세션 첫 동작) 스케일 확장 (리뷰 #5)** — 대형 카드(모듈 10~20개 touched·30~50k 토큰)로 레버4 소프트 천장 측정. (A)전체주입 vs (B)레버4 선택주입 A/B 대조. 또는 곁: combat 자율oracle / 외부리뷰 P1(#10).
-2. (backlog) levels 등 출력표면 확장 / 발열 Adversarial QA·Integration 정식 완주 / CI actions Node20→최신 버전업(경고만, 실패 아님).
+1. **(다음 세션 첫 동작) 스케일 확장 ★키 A/B 런 (리뷰 #5, 사용자 go 대기)** — 대형카드 `station_base`(정거장 30모듈)는 키0 제작·검증 완료. 위 "다음 세션 첫 동작"의 A(전체주입)·B(선택주입) 명령 두 개를 돌려 레버4 소프트 천장 측정. 둘 다 1.0이면 30k까지 카드 키워 재측정.
+2. (곁가지) combat 자율oracle / 외부리뷰 P1(#10).
+3. (backlog) levels 등 출력표면 확장 / 발열 Adversarial QA·Integration 정식 완주 / CI actions Node20→최신 버전업(경고만, 실패 아님).
 
-**완료 이력(G49~G71)**: AUTO검증·저합의 가드(G49·G50) → 프로젝트 승격(2026-06-17) → 정량 트랙 multiseed·sweep(G53~G58) → 외부리뷰 P0(G57) → 자율 oracle 루프(G60~G64) → 로켓 A겹(G65 graded)·B겹(G66 StoryForge) → 누적 빌드 레버1~3(G67·G68)·레버4 배선(G69)·레버4 ★키 런+31solo(G70) → 외부리뷰 #1·#2·#6 반영+CI(G71). 상세는 context-notes 동일 G번호.
+**완료 이력(G49~G72)**: AUTO검증·저합의 가드(G49·G50) → 프로젝트 승격(2026-06-17) → 정량 트랙 multiseed·sweep(G53~G58) → 외부리뷰 P0(G57) → 자율 oracle 루프(G60~G64) → 로켓 A겹(G65 graded)·B겹(G66 StoryForge) → 누적 빌드 레버1~3(G67·G68)·레버4 배선(G69)·레버4 ★키 런+31solo(G70) → 외부리뷰 #1·#2·#6 반영+CI(G71) → 스케일 확장 대형카드(정거장 30모듈)+EVACUATE 패킷·골든 키0 제작(G72). 상세는 context-notes 동일 G번호.
