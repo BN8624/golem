@@ -31,7 +31,7 @@
 
 ## 지금 어디 (2026-06-18)
 
-**현재 핵심(2026-06-18)**: 자율 oracle frontier 종결(G60~64, 루프 닫힘) → 서사 트랙 개시. 로켓 카드로 A겹(서사 발동층) 결정적 검증 입증, reconcile에 자율 oracle 배선 완료(트랙 A). **트랙 C 본선 착수(G65)**: 로켓 실빌드 1단계 design 완료(`design_packet_rocket` 4모듈·validator PASS), 다음 ★키 = build_graded --reconcile(위 ▶ 다음 동작 참조). 방향 정본 = `GolemStudioMode.md` §21(확장)·§6.1(모호성 사전). 아래는 그 이전 §13 파이프라인 배경.
+**현재 핵심(2026-06-18, G69)**: 누적 빌드 4레버 거의 닫힘. 트랙 C 본선 = 로켓 실빌드(G65 첫 graded) → 서사 2겹(G66 StoryForge) → 누적 빌드 레버1~3 실증(G68, 편집수렴·회귀무결·새기능 합의 1.0) → 레버4 선택적 컨텍스트 배선·키0 검증(G69). **다음 세션 첫 동작 = 레버4 첫 ★키 런**(위 ▶▶ 명령): 31B가 logic 본문 못 본 채 시그니처만으로 engine 편집해 회귀+ABORT 합의 1.0이면 4레버 전부 닫힘. 방향 정본 = `GolemStudioMode.md` §21(확장)·§6.1(모호성 사전). 아래는 그 이전 §13 파이프라인 배경.
 
 Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축. 아이디어 한 줄로 **Step 1~7 전부 실제 완주**(방치형·발열 두 카드). 하네스는 계약구동으로 일반화돼 새 카드는 코드변경 0. 합의-vs-oracle 자동 해소(`reconcile.py`)+저합의 가드(G50)까지 갖춤. 산출물은 `golem/studio/`(패킷: 방치형=`*_packet`, 발열=`*_packet_heat`, **턴제전투(고결합)=`*_packet_combat`** 신규).
 
@@ -82,5 +82,8 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 14. ~~(★키) 로켓 A겹 가능성 프로브~~ — **거의 완료. A겹 작동 입증**: 방치형 로켓 카드(`studio/planning_packet_rocket`+`specqa_packet_rocket`) auto_oracle에서 **events(BEAT-N 발동) 키 전 시나리오 3/3** — 결정적 엔진에 서사 발동층 붙여도 31B가 정확 계산. 부수발견: 첫판 SCN-004/005(WAIT×150=154스텝)가 전키 0.0 붕괴 → **손계산 스케일 한계**(oracle가 머리로 150틱 못 셈, 게임 결함 아님). cost 축소로 18/22스텝 재설계하니 0.945, **events 키 6/6 전부 1.0**(fuel·stage·gameStatus도 1.0) = A겹 가능성 입증. 유일 흠 SCN-003 turn 0.667을 파보니 **또 계약 모호**(한 시드가 turn=7=ADVANCE도 카운트 — RULE-01/02가 "ADVANCE는 turn 안 올림" 미명세) — 산술지터 아님. RULE-05에 turn 정의 박으니 **1.0/6/6 완전수렴**(turn 3/3 회복) — 로켓 위 미니 사다리(탐지→진단→핀→수렴). 종류는 모호성 사전(GolemStudioMode §6.1) "카운터 증가 의미"로 등재 = 반응적 핀→사전 차단 전환.
 15. ~~(★키) 트랙 A — reconcile 자율 oracle 배선~~ — **코어 완료**: `reconcile.py`에 `--auto-oracle` 추가 — oracle 다리를 손golden(`sc["expected"]`) 대신 31B 자율생성(`fill_auto_oracle`→`auto_oracle._ask_oracle`)으로. 손-oracle 없이 Build합의 vs 자율oracle로 모호성 탐지. `--apply`는 자율 모드서 ORACLE_BUG 미적용(생성값을 golden으로 안 박음), CONTRACT_AMBIGUOUS 핀만. report에 `oracle_source`. 검증: replay 회귀(키0) 그린 + `fill_auto_oracle` 라이브 로켓 6/6 골든 일치. **잔여 = 풀 E2E(Build합의 vs 자율oracle)는 graded 빌드 런 필요**(현재 build_runs에 graded 0개) → 트랙 C에서 카드 실빌드할 때 자연 합류. combat 자율oracle은 곁.
 16. ~~(★키) 트랙 C 본선 — 로켓 실빌드(build_graded --reconcile)~~ — **완료(G65)**: 게이트 7/11, 합의 0.881, 합의 vs oracle 전부 일치. Node 실측으로 게임 실작동(A겹 BEAT-1~4 발동, 대기권→화성, SCN-004/005 WON). 첫 graded 카드 `build_runs/graded-20260618-161312`. 트랙 C 1단계 세 목표 충족.
-17. **(다음, ★키) 트랙 C 2단계 — 서사 B겹**: 로켓 B겹(대사 텍스트, BEAT-N 키에 별도 파일) → StoryForge 일관 바이블. + 누적 빌드 레버(코드 주입·편집·누적회귀·선택적 컨텍스트). **설계 정본 = `GolemStudioMode.md` §21·§6.1(모호성 사전)**, 결정 이유 = context-notes 대화 G. 사람 몫=아트·텍스트 질·재미 취향, 진짜 천장=선택적 컨텍스트. UI/Asset/Renderer는 별도 트랙.
-18. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
+17. ~~(★키) 트랙 C 2단계 — 서사 B겹(StoryForge)~~ — **완료(G66)**: `storyforge.py`, 로켓 4비트 대사 + 일관 바이블, 검증 3/3 PASS. 서사 2겹 닫힘.
+18. ~~(★키) 누적 빌드 레버1~3 — 코드주입·편집모드·누적회귀~~ — **완료(G67 배선·G68 실행)**: `build_graded --base` 편집모드. graded-20260618-180934 합의 1.0, 회귀(SCN-001~006) 6/6·새기능(SCN-007/008 UPGRADE) 2/2, 합의 vs oracle 전부 일치. 배관 픽스 = Node stdout UTF-8 디코딩(cp949 크래시 차단, 커밋 a81e2f2).
+19. ~~(키0) 누적 빌드 레버4 — 선택적 컨텍스트 배선·검증~~ — **완료(G69)**: `build_graded --inject-modules`(touched만 본문+재생성, 나머지 시그니처만+verbatim). 프로브 l4(ABORT). `_validate_l4_keyless` ALL PASS(프롬프트 가림+병합+골든 8/8 재현). 커밋 a69f0fc·593e91e.
+20. **(다음 세션 첫 동작, ★키) 레버4 첫 키 런** — 위 ▶▶ 명령. 31B가 logic 본문 못 본 채 시그니처만으로 engine 편집 → 회귀무결+ABORT 합의 1.0이면 누적 빌드 4레버 전부 닫힘. 통과 후 = 더 큰 카드(모듈 여러개·진짜 컨텍스트 천장)로 스케일 확장, 또는 combat 자율oracle / 외부리뷰 P1.
+21. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
