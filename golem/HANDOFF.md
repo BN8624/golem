@@ -1,9 +1,12 @@
 # HANDOFF.md — golem 현재 위치와 다음 액션
 
 ## ▶ 새 세션 여기부터
+- **✓ 누적 빌드 첫 ★키 런 완료 (G68, 2026-06-18, graded-20260618-180934)**: `build_graded --base rocket_base --packet planning_packet_rocket_v2 --specqa specqa_packet_rocket_v2 --reconcile` 통과. **세 실증 다 성립** — ① 편집 수렴(빌더가 scratch 아닌 base 기존코드 수정: `logic.js`가 base `constants.fuelRate`를 `state.currentFuelRate`로 오버라이드 + engine.js UPGRADE 핸들러 얹음, BEAT 로그·stageCost 구조 보존) ② 회귀 무결(SCN-001~006 6/6 일치율 1.0) ③ 새 기능(SCN-007/008 UPGRADE 골든 2/2 1.0). 합의 전체 1.0(평균 10표)·합의 vs oracle 전부 일치(reconcile 진단 0)·게이트 10/11(1개 src/logic.js 구문오류=생성품질). Node 실측 SCN-007 turn8/fuel4/stage1, SCN-008 turn4/fuel4 = 골든 일치. **배관 픽스(커밋 a81e2f2)**: build_graded subprocess.run에 `encoding="utf-8", errors="replace"` — base의 한국어 BEAT 로그 주입으로 cp949 디코딩 크래시(게이트 0/11)나던 잠복버그 차단(G65는 한글이 출력 표면에 안 닿아 안 터짐). **누적 빌드 레버1~3(코드주입·편집모드·누적회귀) 실증 닫힘.**
+- **▶ 다음(★키 또는 키0) — 누적 빌드 레버4(선택적 컨텍스트)**: 모듈만 주입(전체 base 아님)으로 큰 게임 천장 검증(§21.2-④). 곁 = combat 자율oracle / 외부리뷰 P1(#6·#4·#5·#10) / atelier 2패스 스트레스(`canon_check --fixtures fixtures_ko_hard2 --verify`, 별 트랙).
 - **▶ 트랙 C 본선 다음 동작 (G65, 로켓 실빌드 1단계 완료)**: build_graded --reconcile 완주 — 로켓 게임 코어 실제 생성·작동 확인. 산출물 `golem/studio/build_runs/graded-20260618-161312`(누적빌드 **첫 graded 카드**, .gitignore). 결과 = 게이트 7/11, 합의 0.881(SCN-001~005 6/7·SCN-006 7/7), **합의 vs oracle 전부 일치**(불일치 0→reconcile 진단 없음). Node 실측(키0)으로 6시나리오 직접 실행 = 대기권→궤도→달→화성, A겹 BEAT-1~4 발동·한국어 로그, SCN-004/005 WON. **트랙 C 1단계 세 목표(첫 graded·reconcile E2E·B겹 토대) 충족.** 배관 픽스(키0, 커밋됨): `specqa_packet_rocket/oracle_risk_review.json`(`risky_scenarios:[]`, build_graded.load_all 필수, 프로브 패킷에 빠져 있던 것).
 - **▶ 트랙 C 2단계 — 서사 B겹(StoryForge) 완료 (G66)**: `storyforge.py` 신규 — concept→비트추출(키0)→바이블 생성(31B)→비트 대사 일괄(31B, 바이블 고정컨텍스트)→구조검증(키0). 로켓 4비트(대기권/궤도/달/화성) 대사 다 채움, **검증 3/3 PASS**, STORY_STATUS=COMPLETE. 바이블 일관(선장 에이든+AI 오리온, 지구→화성 이주). 산출물 `studio/storyforge_packet_rocket/`. **서사 2겹 닫힘**(A겹 발동 G65 + B겹 대사 G66). 규율 준수=텍스트 출력전용·검증 구조만.
-- **▶▶ 새 세션 첫 동작 = 누적 빌드 첫 ★키 런 (G67, 배선 완료·키만 남음)**. 방향 확정(사용자 대화): "엔진 만드는 것 아니냐" 의문 정리 → 게임별 룰코어(O)·범용엔진 Godot(X)·그릇=웹(G2)·JS 한계는 비주얼/3D(범위 밖)뿐 → 누적 빌드로. **다음 명령(키 직전까지 키0 검증 다 통과)**:
+- **✓ 누적 빌드 첫 ★키 런 = 완료(G68, 위 참조)**. 아래는 그 배선 기록(G67).
+- **▶▶ (완료) 누적 빌드 첫 ★키 런 (G67 배선, G68 실행)**. 방향 확정(사용자 대화): "엔진 만드는 것 아니냐" 의문 정리 → 게임별 룰코어(O)·범용엔진 Godot(X)·그릇=웹(G2)·JS 한계는 비주얼/3D(범위 밖)뿐 → 누적 빌드로. **다음 명령(키 직전까지 키0 검증 다 통과)**:
   ```
   python golem/studio/build_graded.py --base golem/studio/rocket_base --packet golem/studio/planning_packet_rocket_v2 --specqa golem/studio/specqa_packet_rocket_v2 --reconcile
   ```

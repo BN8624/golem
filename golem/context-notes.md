@@ -985,3 +985,21 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   (INCREMENTAL EDIT·기존코드 주입·byte-for-byte 보존), build_prompt에 base_code 인자, argparse `--base`,
   main에서 ddir=base·base_code 조립(`**/*.js` FILE마커). 키0 프롬프트 조립 검증 5/5 통과(편집헤더·기존코드·
   RULE-06·출력계약 유지). **다음 세션 첫 동작 = 키 런(HANDOFF ▶▶ 명령).** 실증=편집수렴·회귀무결·새기능 합의.
+
+## 대화 G68 — 누적 빌드 첫 ★키 런 통과(편집 수렴 실증) + cp949 잠복버그 픽스 (2026-06-18)
+
+- **결과**: `build_graded --base rocket_base --packet planning_packet_rocket_v2 --specqa specqa_packet_rocket_v2 --reconcile` →
+  graded-20260618-180934. 합의 1.0(평균 10표), 게이트 10/11, 합의 vs oracle 전부 일치(reconcile 진단 0).
+- **세 실증 다 성립**:
+  ① 편집 수렴 — 빌더가 scratch 재작성 아니라 base 기존코드를 *수정*. `logic.js`가 base `constants.fuelRate`를
+     `state.currentFuelRate`로 오버라이드(업그레이드된 연료비율) + engine.js에 `UPGRADE` 핸들러를 얹음. base의
+     BEAT 로그·stageCost 배열 구조 보존 = 누적 편집이지 새 빌드 아님.
+  ② 회귀 무결 — 기존 SCN-001~006 6/6 일치율 1.0(출력 불변).
+  ③ 새 기능 — SCN-007/008 UPGRADE 골든 2/2 1.0. Node 실측 SCN-007 turn8/fuel4/stage1, SCN-008 turn4/fuel4 골든 일치.
+- **잠복버그 픽스(커밋 a81e2f2)**: build_graded.py:175 subprocess.run이 `text=True`만 있고 `encoding=`이 없어
+  Windows 로케일(cp949)로 Node stdout 디코딩 → base의 한국어 BEAT 로그 주입하자 UnicodeDecodeError로 하네스가
+  죽어 게이트 0/11. `encoding="utf-8", errors="replace"` 추가로 근본 차단. G65가 안 터진 건 그 빌드가 한글을
+  출력 표면(채점 키)에 안 올렸을 뿐 — 버그는 항상 있었음. 에러 로그를 읽고(추측 아님) subprocess _readerthread
+  cp949 디코딩으로 원인 특정 → env(PYTHONUTF8)가 아니라 코드 한 줄로 픽스(레거시 build.py:101 동형 버그는 미수정).
+- **의미**: 누적 빌드 레버1~3(코드주입·편집모드 `_EDIT_HEADER`·누적회귀 동시채점) 실증 닫힘. 남은 레버4(선택적
+  컨텍스트=모듈만 주입)가 큰 게임 진짜 천장(§21.2-④).
