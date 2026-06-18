@@ -56,7 +56,11 @@
       setups 6/beats 10 FROZEN. 생산물을 design_check `--verify` 채점(golden=[]) → exact **1.0**/오탐 0/
       안정 1.0(design-20260618-195923). **생산자가 setup 6개 다 회수 + 채점기 동의 = planning→design→
       design_check end-to-end 닫힘**(canon-162900의 design판).
-- [ ] 어려운 픽스처(회수를 정황에만 숨김 / 회수처럼 보이는 함정)로 2패스 한계 깨기.
+- [x] 어려운 픽스처 `fixtures_design_hard`(정황회수 fp축 + 헛회수 fn축)로 2패스 한계 측정 —
+      design-200627(1패스)/200930(2패스). **1패스가 양방향 다 깸**: subtle_clean 오탐 0(함의 회수를
+      회수로 인정), hidden_unresolved S2·S4 recall 1.0(재언급-only 헛회수를 미회수로 검출). 2패스도 1.0
+      유지(과교정 없음). **canon과 비대칭 — canon은 precision에 2패스 필요, design은 1패스부터 강함.**
+      단 이 두 함정으론 한계 미도달(더 센 함정 필요). 상세 context-notes·HANDOFF.
 
 ## 이전 (frontier 2 마무리)
 
