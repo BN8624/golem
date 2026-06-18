@@ -961,3 +961,27 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   산출물 `storyforge_packet_rocket/`(bible.json·beats.json·STORY_STATUS.md).
 - **서사 2겹 닫힘**: A겹(발동 검증 G65) + B겹(대사 저작 G66). 비트추출 버그(끝 마침표 '화성.') 키0서 잡음.
 - 다음 = 누적 빌드 레버 / 또는 룰에 선택 박은 재밌는 카드(B겹만으론 밋밋 — G65 피드백).
+
+### G67 — 누적 빌드 4레버 착수 (트랙 C 본선 / §21.2)
+- **방향 재확인(사용자 대화)**: "우리가 엔진을 만드는 것 같다, 맞나" 의문 제기 → 정리.
+  우리가 만드는 건 게임별 **룰/로직 코어**(engine.js=상태머신, 모든 게임이 가짐)지 **범용엔진(Godot)
+  아님**. 렌더/UI는 정본상 "별도 트랙"(채점기반 다름). 표류 아니라 원래 정의와 일치 = G1(룰엔진
+  오프로드)·**G2(그릇=JS/TS 웹, Godot 아님 — gemma 강점 JS·웹=폰 즉시플레이)**. JS 한계는 화려한
+  비주얼/3D(G2에서 범위 밖)뿐이고 로직중심 장르엔 거의 안 닿음. 렌더 검증 자동화 어려움은 JS탓
+  아니라 렌더링 성질(Godot도 동일). → 웹 전제 유지, 누적 빌드로 확정.
+- **Phase 1 = 레버 1(코드주입)+2(편집모드)+3(누적회귀).** 실증질문: 검증된 기존 코드를 주입받아
+  scratch 아닌 *수정*으로 기능 얹고 기존 기능 안 깨나.
+- 베이스 = `build_runs/graded-20260618-161312/attempt01` 4파일 → `studio/rocket_base/` 스냅샷
+  (build_runs gitignore라 영속 베이스 필요).
+- **첫 카드 = UPGRADE 액션**(연료5 소비→fuelRate 1→2 영구). 일석삼조: 누적수정(logic 건드림)+
+  회귀의미(기존 시나리오 UPGRADE 미사용→골든 불변)+게임성(투자 트레이드오프, G65 "선택없음" 한걸음).
+- build_graded `--base <dir>`: _PROMPT에 EXISTING CODEBASE 주입 + "수정/보존" 지시. 회귀=기존6+새N
+  채점, 기존6 골든 불변 통과 필수. 레버4(선택적 컨텍스트=큰 게임 진짜 천장)는 Phase 2.
+- **배선 완료(키0, 키 런 직전 중단=다음 세션)**: ① `rocket_base/`=graded attempt01 4파일 스냅샷, 6시나리오
+  키0 재현 확인. ② 카드 v2 패킷 — contract에 RULE-06(UPGRADE: 연료 upgradeCost=5 소비→WAIT 효율 1→2 영구,
+  내부상태라 출력 안 함=state_shape 불변), specqa에 8시나리오. **골든 자가검증(파이썬 참조 시뮬)**: 기존6에
+  upgradeCost만 추가해도 골든 불변=회귀 기준선 PASS, 새 SCN-007(WAIT5+UPGRADE+WAIT3+ADVANCE→turn8/fuel4/
+  stage1)·SCN-008(WAIT3+UPGRADE부족+WAIT1→turn4/fuel4) 손계산 일치. ③ build_graded 4곳 수정: `_EDIT_HEADER`
+  (INCREMENTAL EDIT·기존코드 주입·byte-for-byte 보존), build_prompt에 base_code 인자, argparse `--base`,
+  main에서 ddir=base·base_code 조립(`**/*.js` FILE마커). 키0 프롬프트 조립 검증 5/5 통과(편집헤더·기존코드·
+  RULE-06·출력계약 유지). **다음 세션 첫 동작 = 키 런(HANDOFF ▶▶ 명령).** 실증=편집수렴·회귀무결·새기능 합의.

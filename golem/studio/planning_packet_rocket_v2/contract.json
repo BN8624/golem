@@ -1,0 +1,37 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "fuel": "number",
+      "stage": "number",
+      "events": "string[]",
+      "log": "string[]",
+      "gameStatus": "string (PLAYING|WON)"
+    },
+    "rules": [
+      "RULE-01: WAIT action -> turn += 1; fuel += the current fuel-per-WAIT rate. This rate STARTS at constants.fuelRate and is permanently raised to 2 once an UPGRADE succeeds (see RULE-06). The rate is internal engine state and is NEVER added to the printed output.",
+      "RULE-02: ADVANCE action -> if fuel >= constants.stageCost[stage] then { fuel -= constants.stageCost[stage], stage += 1, append the string ('BEAT-' + stage) to events, append (constants.stageNames[stage-1] + ' 도달') to log } else append 'Insufficient fuel' to log.",
+      "RULE-03: Evaluate the win check at scenario start (BEFORE any action) AND immediately AFTER each action is applied: if stage >= 4, set gameStatus = 'WON'.",
+      "RULE-04: Once gameStatus == 'WON', stop immediately — process no further actions from the scenario sequence; the current turn/fuel/stage are final.",
+      "RULE-05: At scenario start (before any action), initialize turn = 0, fuel = 0, stage = 0, events = [], log = []. gameStatus is exactly one of the literal strings 'PLAYING' or 'WON'; initialize it to 'PLAYING'. Each beat id appended to events is exactly 'BEAT-<stage>' where <stage> is the stage number just arrived at; events stays in firing order. turn counts the number of WAIT actions applied; NO other action (ADVANCE or UPGRADE) changes turn.",
+      "RULE-06: UPGRADE action -> if fuel >= constants.upgradeCost then { fuel -= constants.upgradeCost; permanently set the fuel-per-WAIT rate to 2 for the rest of this scenario (RULE-01) } else append 'Insufficient fuel' to log. UPGRADE never changes turn or stage and fires no beat. The fuel-per-WAIT rate is internal state only — it is NOT part of the printed output, so a scenario that never UPGRADEs prints exactly as before."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": ["src/engine.js"],
+        "description": "CLI entry point. Parses --scenario N and invokes the engine."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": ["SimulationEngine"],
+        "imports": [],
+        "description": "Deterministic action loop: WAIT accumulates fuel (at the current rate), UPGRADE spends fuel to permanently double the WAIT rate, ADVANCE spends fuel to climb stages and fires story beats."
+      }
+    ]
+  }
+}

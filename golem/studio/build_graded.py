@@ -66,6 +66,19 @@ Output every file with EXACT markers, one per file:
 <file body>
 """
 
+_EDIT_HEADER = """You are the BUILD engineer making an INCREMENTAL EDIT to an EXISTING, WORKING codebase
+(shown below). Do NOT rewrite from scratch. MODIFY the existing files to add ONLY this card's NEW rule(s),
+keeping ALL existing behavior byte-for-byte intact — any scenario that does not use the new action MUST produce
+identical output to before. Re-output the COMPLETE content of EVERY file with the same file markers (include
+unchanged files verbatim). Keep the same module split.
+
+EXISTING CODEBASE:
+{base_code}
+
+--- Now apply the card below on top of that codebase: ---
+
+"""
+
 
 def load_all(pdir, ddir, sdir):
     contract = json.loads((pdir / "contract.json").read_text(encoding="utf-8"))
@@ -88,17 +101,20 @@ def _output_lines(state_shape):
     return "\n".join(lines)
 
 
-def build_prompt(concept, contract, manifest, sysd, scen_inputs):
+def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None):
     rules = contract.get("data_contract", {}).get("rules", [])
     state_shape = contract.get("data_contract", {}).get("state_shape", {})
     examples = json.dumps(scen_inputs[:3], ensure_ascii=False, indent=2)
     files_desc = "\n".join(
         f"- {f['path']}: exports {f.get('exports', [])}, imports {f.get('imports', [])}"
         for f in manifest.get("files", []))
-    return _PROMPT.format(concept=concept.strip() or "(none)",
+    body = _PROMPT.format(concept=concept.strip() or "(none)",
                           rules="\n".join(f"- {r}" for r in rules) or "(none)",
                           system_design=sysd.strip() or "(none)", files=files_desc,
                           input_examples=examples, output_lines=_output_lines(state_shape))
+    if base_code:  # 편집 모드(레버1·2): 기존 코드 주입 + scratch 금지 헤더
+        return _EDIT_HEADER.format(base_code=base_code) + body
+    return body
 
 
 def _norm_output(stdout):
@@ -214,6 +230,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--packet", default=str(HERE / "planning_packet"))
     ap.add_argument("--design", default=str(HERE / "design_packet"))
+    ap.add_argument("--base", default=None,
+                    help="누적 빌드(편집 모드): 기존 코드 디렉토리를 주입하고 scratch 대신 수정시킴. "
+                         "design(manifest)도 이 디렉토리에서 읽는다.")
     ap.add_argument("--specqa", default=str(HERE / "specqa_packet"))
     ap.add_argument("--cap", type=int, default=11)
     ap.add_argument("--out", default=None)
@@ -230,19 +249,28 @@ def main(argv=None):
     from llm import AllKeysExhausted, KeyPool, LLMClient
     force_utf8_stdout()
 
+    ddir = Path(args.base) if args.base else Path(args.design)
     contract, concept, manifest, sysd, scenarios, risk = load_all(
-        Path(args.packet), Path(args.design), Path(args.specqa))
+        Path(args.packet), ddir, Path(args.specqa))
     risky = set(risk.get("risky_scenarios", []))
     gradeable = [s["id"] for s in scenarios if s["id"] not in risky and s.get("expected") is not None]
     grading_keys = {"id", "expected", "oracle_risk", "covers_reqs"}
     scen_inputs = [{k: v for k, v in s.items() if k not in grading_keys} for s in scenarios]
 
+    base_code = None
+    if args.base:  # 레버1: 기존 코드(.js 전부)를 FILE 마커 형식으로 주입
+        bdir = Path(args.base)
+        base_code = "\n\n".join(
+            f"=== FILE: {p.relative_to(bdir).as_posix()} ===\n{p.read_text(encoding='utf-8')}"
+            for p in sorted(bdir.glob("**/*.js")))
+
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     base = Path(args.out) if args.out else (HERE / "build_runs" / f"graded-{run_id}")
-    prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs)
+    prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=base_code)
     pool = KeyPool(get_api_keys(), models=[MODEL_31])
-    print(f"[BUILD v1] design 4모듈 manifest, 시나리오 {len(scenarios)}(채점가능 {len(gradeable)}), "
-          f"cap={args.cap} keys={pool.size}, run={run_id}")
+    mode = "EDIT/누적" if args.base else "SCRATCH"
+    print(f"[BUILD v1/{mode}] manifest {len(manifest.get('files', []))}모듈, 시나리오 {len(scenarios)}"
+          f"(채점가능 {len(gradeable)}), cap={args.cap} keys={pool.size}, run={run_id}")
 
     manifest_v = {"schema_version": "0.1", "module_format": "commonjs", **manifest}
     lock = threading.Lock()

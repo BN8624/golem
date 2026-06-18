@@ -208,4 +208,14 @@ P1 (다음 실험 전):
 - [x] 트랙 A reconcile 자율 oracle 배선: `--auto-oracle`로 oracle 다리=31B 자율생성(손golden 대체). 검증 replay 회귀(키0)+fill_auto_oracle 라이브 로켓 6/6. 잔여=풀 E2E는 graded 빌드런 필요
 - [x] (트랙 C 본선, G65) 로켓 실빌드 1단계 design 완료: 배관 픽스(planning_packet_rocket/acceptance_tests.json 복사) + design_packet_rocket 생성(4모듈·validator PASS·COMPLETE, BLOCKING=2는 정보용 비게이트)
 - [ ] (트랙 C 다음 ★키) 로켓 build_graded --reconcile: 누적빌드 첫 graded 카드 + reconcile 풀 E2E(Build합의 vs 자율oracle)
-- [ ] (트랙 C 다음) 로켓 B겹 대사 텍스트 → StoryForge 일관 바이블 / 누적 빌드 레버(graded 런 겸 reconcile 풀 E2E)
+- [x] (트랙 C 다음 ★키) 로켓 build_graded --reconcile: 누적빌드 첫 graded 카드(게이트 7/11·합의 0.881·합의vs oracle 일치) + Node 실측 게임 작동(G65)
+- [x] (트랙 C 2단계) 로켓 B겹 → StoryForge: storyforge.py 신규, 4비트 대사+바이블, 구조검증 3/3 PASS, 서사 2겹 닫힘(G66)
+
+## 누적 빌드 4레버 (트랙 C 본선, §21.2, G67~)
+방향 재확인: 게임별 룰코어 생성(O)·범용엔진(X)·그릇=웹(G2). 실증질문=검증된 기존코드 주입받아 scratch 아닌 수정으로 기능 얹고 기존기능 안 깨나.
+- [x] (Phase1) 베이스 스냅샷 `studio/rocket_base/`(graded attempt01 4파일, 6시나리오 키0 재현 확인)
+- [x] UPGRADE 카드 패킷 v2(planning/specqa_packet_rocket_v2): RULE-06 연료5→fuelRate 1→2, state_shape 불변. 골든 자가검증=기존6 회귀 불변 PASS + 새 SCN-007/008 손계산 일치
+- [x] build_graded `--base` 편집모드: `_EDIT_HEADER`(코드주입+수정/보존) + design=base manifest. 키0 프롬프트 조립 검증 통과
+- [x] 누적 회귀(레버3): 채점 시나리오에 기존6+새2 동시 포함(자동 채점)
+- [ ] **(★키, 다음 세션 첫 동작) 누적 빌드 런 + 검증**: 편집 수렴·회귀 무결(기존6 불변)·새 UPGRADE 골든 합의. 명령은 HANDOFF ▶▶ 참조
+- [ ] (다음) 레버4 선택적 컨텍스트(모듈만 주입) = 큰 게임 진짜 천장
