@@ -122,7 +122,8 @@ REPLACE. Use this EXACT format, one or more blocks per file:
 <replacement text>
 >>>>>>> REPLACE
 
-Output NOTHING else — no prose, no whole files, no frozen modules. Any scenario not using the new action MUST
+Output NOTHING else — no prose, no whole files, no frozen modules. If a touched file needs NO change for this
+card, output NO block for it (the harness keeps it unchanged). Any scenario not using the new action MUST
 behave identically to before.
 
 TOUCHED MODULES (full source — patch these):
@@ -417,6 +418,8 @@ def main(argv=None):
                     files = patch_apply.apply_patches(selective["touched_src"], patches)
                 except patch_apply.PatchError as pe:
                     return attempt, False, f"patch: {pe}", {}
+                for rel, src in selective["touched_src"].items():  # 패치 안 한 touched=안 바꿈→base verbatim
+                    files.setdefault(rel, src)
             else:
                 files = parse_files(resp)  # {경로: 본문}
             if selective:  # 레버4: 동결 모듈은 빌더 출력 무시하고 base 원본을 verbatim 강제

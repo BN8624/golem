@@ -44,6 +44,16 @@ multi = (
 out2 = patch_apply.apply_patches(base, patch_apply.parse_patches(multi))
 expect("한 파일 여러 쌍 순차 적용", out2 == {"b.js": "X\ny\nZ\n"})
 
+# touched인데 패치 없는 파일 = base verbatim 폴백(build_graded 워커 재현)
+def merge_unpatched(touched_src, resp):
+    files = patch_apply.apply_patches(touched_src, patch_apply.parse_patches(resp))
+    for rel, src in touched_src.items():
+        files.setdefault(rel, src)
+    return files
+merged = merge_unpatched(base, "=== PATCH: a.js ===\n<<<<<<< FIND\nfind_me\n=======\nR\n>>>>>>> REPLACE\n")
+expect("touched 중 패치 안 한 b.js는 base verbatim",
+       merged["b.js"] == base["b.js"] and merged["a.js"] == "line1\nR\nline3\n")
+
 crlf = patch_apply.apply_patches(
     {"a.js": "p\r\nfind_me\r\nq\r\n"},
     patch_apply.parse_patches(resp))
