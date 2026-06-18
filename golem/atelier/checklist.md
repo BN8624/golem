@@ -101,9 +101,13 @@
       "톤 일관"·"고르게 배치"·"이음매 없이", 골든 []) + scene_atomized(순수 원자화 캐논: 등장·S2회수·
       타임라인·왼팔연속성, 골든 전부). 키0 replay 통과 — fp_trap 오탐 1.00·exact 0.33(fp 유발 확인),
       atomized exact 0.67·C4 recall 0.667(흔든 시드 구분). 채점 수학 신뢰.
-- [ ] ★실콜(`--fixtures fixtures_specqa_hard --n 3` 및 `--verify`) — **사용자 go 뒤에만**. 측정:
-      (1)fp_trap에서 1패스가 구체어 위장에 낚여 fp 내나 + **2패스가 그 fp를 깎나**(canon precision판 검증),
-      (2)atomized 순수 캐논 recall 1.0이면 C6 미스가 혼합 기준 탓이란 가설 확정.
+- [x] ★실콜(`--fixtures fixtures_specqa_hard`, `--n 3` 및 `--verify`) — specqa-220612(1패스)/220910(2패스):
+      **둘 다 exact 1.0·안정 1.0·fp 0.** (1)**함정 안 먹힘** — fp_trap의 구체어 위장("3단계"·"일관"·"고르게"·
+      "이음매")에 31B가 안 낚이고 전부 미학으로 격리(fp 0). 위험 방향은 미끼에도 robust. (2)**C6 가설 확정**
+      — atomized 순수 원자화 캐논 recall 전부 1.0 → 앞 C6 미스는 모델 한계 아닌 혼합 기준(사실+톤) 탓.
+      (3)2패스 과교정 0. **정직한 한계: 함정이 fp를 못 냈으므로 "2패스가 specQA fp 깎나"는 깰 fp 부재로
+      미검증**(design hard1처럼 모델이 예상보다 강함). **잠정결론: 캐논/미학 격리도 31B 1패스로 충분 —
+      유일 soft spot은 혼합 기준이고 그건 채점기 아닌 계약 원자화(생산자) 몫.** 상세 context-notes·HANDOFF.
 - [ ] specQA 생산자(planning/design 거울) — 그 뒤. FROZEN 아웃라인 → 씬 계약 산출.
 
 ## 이전 (frontier 2 마무리)
