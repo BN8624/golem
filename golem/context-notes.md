@@ -798,3 +798,23 @@ G56의 미확립(L1→L2 p=0.148)을 eco와 동일한 cap↑ 투표수 매칭으
 - **다음(이 프로브 위에서)**: ① 자율 oracle을 *어휘 박은 뒤* 재측정(enum/빈컬렉션 계약 한 줄 → 0.879→?
   1.0 수렴 검증, G36 사다리의 자율판) ② 고결합 카드(eco/combat)서 자율 oracle 정확률 — 결정적 계산이 깨지는
   난이도 경계 탐색 ③ 자율 oracle을 reconcile 입력으로 배선(손-oracle 대체).
+
+## G61 — 자율 oracle 사다리: 어휘 한 줄 박으니 0.879→1.0 수렴 (2026-06-18, ★키)
+
+G60 프로브 후속. G60이 짚은 두 모호성(SCN-006 gameStatus enum·SCN-002 levels 빈dict)을 계약에 RULE-08
+한 줄로 박고 재측정 → **0.879→1.0**. G36(빌드합의 0.98→1.0)의 자율-oracle 판.
+
+- **진단 정밀화**: state_shape엔 `"gameStatus":"PLAYING | WON"`이 있었으나 모델에 주는 *rules*엔 'WON' 조건만
+  있고 "기본값=PLAYING"·"levels 초기화={각 id:0}"가 없었다 = rules와 state_shape의 명세 갭. 변형 패킷
+  `planning_packet_idle_vocab`(원본+RULE-08, 1변수, 원본 무변경)에 그 갭만 박음.
+- **RULE-08**: "scenario 시작 시 gameStatus='PLAYING', levels={constants의 모든 id:0} 초기화. gameStatus는
+  'PLAYING'|'WON' 리터럴. levels는 항상 모든 constants id 포함(레벨0도)."
+- **결과**: 자율 oracle 정확률 **1.0**(완전정확 11/11), 안정성 0.939→**1.0**. SCN-006 gameStatus 0/3→**3/3**,
+  SCN-002 levels 2/3→**3/3**. 골든은 그대로(specqa_packet 무변경) — 계약만 1줄 박아 수렴 = 1변수 인과.
+- **판정(자율 oracle 사다리 확립)**: ① 싼 모델(31B)이 빌드 0줄로 oracle을 만들 수 있다. ② 그 불일치는 *공짜
+  계약-모호 탐지기*다(G60). ③ 탐지된 모호성을 계약에 박으면 자율 oracle이 1.0 수렴한다(G61) — **빌드합의
+  사다리(G33~38)와 동형, 이번엔 oracle 생성 표면에서**. 사람이 G36서 손으로 돈 루프(모호성 찾기→계약에 박기→
+  수렴)를 33콜로 자동 완주. **자율 oracle은 viable + self-correcting.**
+- **다음**: ① 고결합 카드(eco/combat) 자율 oracle — 결정적 계산이 깨지는 난이도 경계(방치형은 산술 단순) ②
+  reconcile 입력에 자율 oracle 배선(손-oracle 대체, 모호탐지→계약fix 루프 자동화) ③ 어휘갭을 self-detect까지(31B가
+  자기 불일치 보고 어느 계약줄 박을지 제안).
