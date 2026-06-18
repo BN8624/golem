@@ -908,3 +908,9 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   RULE-01/02가 "ADVANCE는 turn 안 올림" 미명세). RULE-05 핀 → 1.0/6/6. 사용자가 "땜질 괜찮냐" 물어 →
   핀은 스펙 완성이지 hack 아니나 *반응적 1개씩*은 땜질 → **모호성 종류 사전(GolemStudioMode §6.1, 6종)**
   신설해 사전 차단으로 전환. 모호성은 유한 어휘라 카드당 발견율이 0으로 포화한다는 게 근거.
+- **트랙 A reconcile 자율 oracle 배선(구현)**: `reconcile.py --auto-oracle` — oracle 다리를 손golden 대신
+  31B 자율생성(`fill_auto_oracle`→`auto_oracle._ask_oracle`, 채울 키=계약 출력키)으로 바꿈. 손-oracle 없이
+  Build합의 vs 자율oracle로 모호성 탐지 = 트랙 C 누적 빌드(카드마다 손골든 없이 회귀)의 토대. `--apply`는
+  자율 모드서 ORACLE_BUG 미적용(일회성 생성값을 golden으로 안 박음), CONTRACT_AMBIGUOUS 핀만 영구.
+  검증 = replay 회귀(키0) 그린 + `fill_auto_oracle` 라이브 로켓 6/6 골든 일치. 잔여 = 풀 E2E(Build합의 vs
+  자율oracle)는 graded 빌드런 필요(build_runs에 graded 0개) → 트랙 C 카드 실빌드 때 합류.

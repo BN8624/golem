@@ -31,6 +31,7 @@ sys.path.insert(0, str(HERE.parent.parent))
 
 from build_graded import _norm_output, _canon        # noqa: E402
 from planning import _extract_json       # noqa: E402
+import auto_oracle                       # noqa: E402  (자율 oracle 배선 — 손golden 대체)
 
 MODEL_31 = "gemma-4-31b-it"
 GRADING_KEYS = {"id", "expected", "oracle_risk", "covers_reqs"}
@@ -103,6 +104,19 @@ def diff(run_dir, scenarios, output_keys):
     return disagreements, len(valid)
 
 
+def fill_auto_oracle(rules, scenarios, output_keys, pool):
+    """oracle 다리를 손golden 대신 31B 자율생성으로 채운다(★키, 배선). 각 시나리오의 expected를
+    auto_oracle._ask_oracle로 받아 덮는다 — reconcile가 손-oracle 없이 Build합의 vs 자율oracle로
+    모호성을 잡게 한다(G64 self-suggest와 같은 31B 손계산, 채울 키=계약 출력키)."""
+    keys = sorted(output_keys)
+    for sc in scenarios:
+        sc_for = {"input": sc.get("input", _case_input(sc)),
+                  "expected": {k: None for k in keys}}
+        pred = auto_oracle._ask_oracle(pool, rules, sc_for)
+        sc["expected"] = pred or {}
+    return scenarios
+
+
 class FakeCaller:
     def __init__(self, fx):
         self.fx = {v["id"]: v for v in fx.get("verdicts", [])}
@@ -132,8 +146,10 @@ class RealCaller:
             return _extract_json(LLMClient(api_key=key).generate("critic", prompt))
 
 
-def apply_fixes(verdicts, contract_path, scen_path, scenarios):
-    """AUTO 건만 적용. ORACLE_BUG→시나리오 expected 교정, CONTRACT_AMBIGUOUS+AUTO→규칙 교체. (applied, list)."""
+def apply_fixes(verdicts, contract_path, scen_path, scenarios, oracle_is_auto=False):
+    """AUTO 건만 적용. ORACLE_BUG→시나리오 expected 교정, CONTRACT_AMBIGUOUS+AUTO→규칙 교체. (applied, list).
+    oracle_is_auto=True면 ORACLE_BUG 적용을 건너뛴다 — 자율 oracle은 저장된 golden이 아니라 일회성
+    생성값이라, 그걸 specqa에 써넣으면 안 된다(계약 수정만 영구 적용)."""
     applied = []
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     rules = contract["data_contract"]["rules"]
@@ -142,6 +158,8 @@ def apply_fixes(verdicts, contract_path, scen_path, scenarios):
         diag, cls = v.get("diagnosis"), v.get("class")
         if cls != "AUTO":
             continue
+        if diag == "ORACLE_BUG" and oracle_is_auto:
+            continue  # 자율 oracle 모드: 생성값을 golden으로 박지 않음
         if diag == "ORACLE_BUG" and v.get("correct_value"):
             sc = scen_by_id.get(v["id"])
             if sc is not None:
@@ -266,6 +284,8 @@ def main(argv=None):
     ap.add_argument("--specqa", default=str(HERE / "specqa_packet"))
     ap.add_argument("--resolve", action="store_true", help="불일치를 모델로 진단/해소(★키)")
     ap.add_argument("--apply", action="store_true", help="AUTO 건 자동 적용(ESCALATE는 제외)")
+    ap.add_argument("--auto-oracle", dest="auto_oracle", action="store_true",
+                    help="oracle 다리를 손golden 대신 31B 자율생성으로(손-oracle 대체, ★키)")
     args = ap.parse_args(argv)
 
     try:
@@ -274,6 +294,7 @@ def main(argv=None):
     except Exception:  # noqa: BLE001
         pass
 
+    oracle_source = "golden"
     if args.replay:
         fx = json.loads(Path(args.replay).read_text(encoding="utf-8"))
         rules = fx["rules"]
@@ -288,6 +309,16 @@ def main(argv=None):
         if not run or not run.exists():
             print("[RECONCILE] graded 런 필요")
             return 1
+        oracle_source = "golden"
+        if args.auto_oracle:
+            import os
+            os.environ["GENERATOR_MODEL"] = MODEL_31
+            from config import get_api_keys
+            from llm import KeyPool
+            pool = KeyPool(get_api_keys(), models=[MODEL_31])
+            print(f"[RECONCILE] 자율 oracle 생성(손golden 대체, ★키) — 시나리오 {len(scenarios)}")
+            fill_auto_oracle(rules, scenarios, output_keys_of(contract), pool)
+            oracle_source = "auto"
         disagreements, n_valid = diff(run, scenarios, output_keys_of(contract))
         caller = RealCaller() if args.resolve else None
 
@@ -316,7 +347,8 @@ def main(argv=None):
     auto_verification = []
     if args.apply and not args.replay:
         applied = apply_fixes(verdicts, Path(args.packet) / "contract.json",
-                              Path(args.specqa) / "acceptance_tests_draft.json", scenarios)
+                              Path(args.specqa) / "acceptance_tests_draft.json", scenarios,
+                              oracle_is_auto=(oracle_source == "auto"))
         auto_verification = verify_auto_fixes(
             verdicts, disagreements, Path(args.specqa) / "auto_fix_ledger.jsonl",
             Path(args.run).name if args.run else "?")
@@ -326,6 +358,7 @@ def main(argv=None):
     if not args.replay:
         out = Path(args.specqa).parent / "reconcile_report.json"
         out.write_text(json.dumps({"run": Path(args.run).name if args.run else None,
+                                   "oracle_source": oracle_source,
                                    "verdicts": verdicts, "applied": applied,
                                    "auto_verification": auto_verification,
                                    "auto_summary": auto_summary,
