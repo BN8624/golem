@@ -1,0 +1,278 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "move away from (REQ-003: direction is undefined if predator and prey occupy the same cell)"
+      ],
+      "missing_rules": [
+        "Initial energy value for newly spawned entities in REQ-005"
+      ],
+      "conflicting_rules": [
+        "REQ-003: 'move away from the nearest predator' vs 'moves toward the lower index' when distances are equal (moving toward the lower index may result in moving toward one of the predators)."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "In REQ-003, does 'moves toward the lower index' specify the final direction of movement, or does it specify which predator the prey should prioritize fleeing from?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In REQ-003, if a predator and prey are on the same cell, what is the deterministic direction for 'away'?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the starting energy of the offspring created in REQ-005?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Predation priority: if multiple predators occupy the same cell as one prey, it is unspecified which predator eats the prey.",
+        "Predation capacity: if one predator occupies the same cell as multiple prey, it is unspecified if it eats only one or all of them per tick.",
+        "Movement target absence: the behavior for predators when no prey exist (or vice versa) is not defined for the movement phase of the tick.",
+        "Newborn behavior: it is not specified if entities created via reproduction in REQ-005 are eligible for reproduction or death checks within the same tick.",
+        "Entity ID assignment: there is no rule for how unique IDs are generated for spawned entities."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumes the order of entity processing (e.g., by ID or index) does not affect the outcome of movement or predation."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "In a scenario where multiple predators are on the same cell as a single prey, who gets the energy?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Can a single predator eat multiple prey in one tick if they share a cell, or is it limited to one?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Should newborns be processed for reproduction/death in the same tick they are spawned?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The state tracks entity 'id', but there is no 'nextId' or counter in the state object to deterministically assign IDs to new entities spawned during reproduction (REQ-005). Where should the ID sequence be tracked?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "move away (when predator and prey occupy the same cell)"
+      ],
+      "missing_rules": [
+        "Entity processing order per tick (e.g., by ID or list index) to ensure deterministic results when multiple entities compete for the same prey or space"
+      ],
+      "conflicting_rules": [
+        "REQ-003: The tie-break 'move toward the lower index' may contradict the primary rule 'move away' if predators are positioned on both sides of the prey"
+      ],
+      "underspecified_outputs": [
+        "REQ-004: Which specific prey entity is removed when multiple prey occupy the same cell as a predator"
+      ],
+      "risky_assumptions": [
+        "Assuming that 'move toward/away' is possible at boundaries (e.g., prey at index 0 with predator at index 1)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "In REQ-004, since the simulation must be deterministic, which prey is targeted for removal if multiple are present on the same cell?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In REQ-003, if a prey is equidistant between two predators (one left, one right), does the tie-break 'move toward lower index' override the 'move away' directive?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that population growth will remain manageable; reproduction rules lack a population cap or spatial constraint, which could lead to state explosion in a small world."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Should there be a maximum population limit per cell or globally to prevent the entities list from growing exponentially and crashing the prototype?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "GDD Movement Rules and REQ-002/003 both specify the 1-cell movement distance and the lower-index tie-break logic.",
+        "GDD Win/Lose conditions and REQ-007 both specify the termination criteria regarding species extinction and tickCap."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "'state' (refers to the 'status' field in the GDD and the global data object/entities list in the Requirements)"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Should the term 'status' be used exclusively for the simulation phase to avoid conflict with 'state' as the global data object?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "move toward the lower index (specifically for Prey moving *away* from Predators)"
+      ],
+      "missing_rules": [
+        "Predation priority: Which predator eats the prey if multiple predators occupy the same cell?",
+        "Newborn behavior: Do entities spawned via reproduction act in the current tick or the next?",
+        "Processing order: Does the tick loop process entities sequentially (updating state immediately) or simultaneously (using a snapshot of the state for all calculations in a phase)?"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "The 'lower index' tie-breaker for Prey refers to the target predator's position rather than the resulting destination cell.",
+        "Termination 'immediately' implies the tick loop stops mid-phase, potentially skipping reproduction or death for the final survivors."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If multiple predators are on the same cell as one prey, how is the 'eating' event assigned?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "For REQ-003, does 'move toward the lower index' mean 'choose the predator with the lower index as the reference to move away from' or 'if both directions move you away from the predator, choose the direction that decreases your own index'?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Should entity movement and predation be calculated based on the state at the start of the phase (simultaneous) or based on the order of the entities list (sequential)?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "away from (specifically when predator and prey share the same cell)",
+        "Summary of populations (format not defined)"
+      ],
+      "missing_rules": [
+        "Initial energy value for entities spawned via reproduction",
+        "Predation priority: which predator eats if multiple occupy the same cell as one prey",
+        "Predation capacity: does one predator eat all prey in a cell or only one per tick",
+        "Movement behavior for predators when no prey exist",
+        "Movement behavior for prey when no predators exist"
+      ],
+      "conflicting_rules": [
+        "REQ-006 (removal at end of tick) vs REQ-007 (stop immediately upon extinction)"
+      ],
+      "underspecified_outputs": [
+        "The specific sequence of the 'fixed sequence' (hunger, movement, predation, reproduction, death) is mentioned in Concept but not explicitly mapped to the REQs"
+      ],
+      "risky_assumptions": [
+        "Execution order: whether entities resolve actions sequentially (by ID) or simultaneously",
+        "Whether newly spawned entities (REQ-005) can act within the same tick they are created"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "When a predator and prey share a cell, does the prey move 'away' based on the predator's position before or after the predator's move?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the starting energy for offspring produced via reproduction?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'stop immediately' in REQ-007 override the 'end of tick' cleanup in REQ-006?",
+          "class": "ASSUMED"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "move away from (REQ-003: direction is undefined if predator and prey occupy the same cell)",
+      "move away (when predator and prey occupy the same cell)",
+      "'state' (refers to the 'status' field in the GDD and the global data object/entities list in the Requirements)",
+      "move toward the lower index (specifically for Prey moving *away* from Predators)",
+      "away from (specifically when predator and prey share the same cell)",
+      "Summary of populations (format not defined)"
+    ],
+    "missing_rules": [
+      "Initial energy value for newly spawned entities in REQ-005",
+      "Predation priority: if multiple predators occupy the same cell as one prey, it is unspecified which predator eats the prey.",
+      "Predation capacity: if one predator occupies the same cell as multiple prey, it is unspecified if it eats only one or all of them per tick.",
+      "Movement target absence: the behavior for predators when no prey exist (or vice versa) is not defined for the movement phase of the tick.",
+      "Newborn behavior: it is not specified if entities created via reproduction in REQ-005 are eligible for reproduction or death checks within the same tick.",
+      "Entity ID assignment: there is no rule for how unique IDs are generated for spawned entities.",
+      "Entity processing order per tick (e.g., by ID or list index) to ensure deterministic results when multiple entities compete for the same prey or space",
+      "Predation priority: Which predator eats the prey if multiple predators occupy the same cell?",
+      "Newborn behavior: Do entities spawned via reproduction act in the current tick or the next?",
+      "Processing order: Does the tick loop process entities sequentially (updating state immediately) or simultaneously (using a snapshot of the state for all calculations in a phase)?",
+      "Initial energy value for entities spawned via reproduction",
+      "Predation priority: which predator eats if multiple occupy the same cell as one prey",
+      "Predation capacity: does one predator eat all prey in a cell or only one per tick",
+      "Movement behavior for predators when no prey exist",
+      "Movement behavior for prey when no predators exist"
+    ],
+    "conflicting_rules": [
+      "REQ-003: 'move away from the nearest predator' vs 'moves toward the lower index' when distances are equal (moving toward the lower index may result in moving toward one of the predators).",
+      "REQ-003: The tie-break 'move toward the lower index' may contradict the primary rule 'move away' if predators are positioned on both sides of the prey",
+      "GDD Movement Rules and REQ-002/003 both specify the 1-cell movement distance and the lower-index tie-break logic.",
+      "GDD Win/Lose conditions and REQ-007 both specify the termination criteria regarding species extinction and tickCap.",
+      "REQ-006 (removal at end of tick) vs REQ-007 (stop immediately upon extinction)"
+    ],
+    "underspecified_outputs": [
+      "REQ-004: Which specific prey entity is removed when multiple prey occupy the same cell as a predator",
+      "The specific sequence of the 'fixed sequence' (hunger, movement, predation, reproduction, death) is mentioned in Concept but not explicitly mapped to the REQs"
+    ],
+    "risky_assumptions": [
+      "Assumes the order of entity processing (e.g., by ID or index) does not affect the outcome of movement or predation.",
+      "Assuming that 'move toward/away' is possible at boundaries (e.g., prey at index 0 with predator at index 1)",
+      "Assumption that population growth will remain manageable; reproduction rules lack a population cap or spatial constraint, which could lead to state explosion in a small world.",
+      "The 'lower index' tie-breaker for Prey refers to the target predator's position rather than the resulting destination cell.",
+      "Termination 'immediately' implies the tick loop stops mid-phase, potentially skipping reproduction or death for the final survivors.",
+      "Execution order: whether entities resolve actions sequentially (by ID) or simultaneously",
+      "Whether newly spawned entities (REQ-005) can act within the same tick they are created"
+    ],
+    "BLOCKING_questions": [
+      "In REQ-003, does 'moves toward the lower index' specify the final direction of movement, or does it specify which predator the prey should prioritize fleeing from?",
+      "In REQ-003, if a predator and prey are on the same cell, what is the deterministic direction for 'away'?",
+      "What is the starting energy of the offspring created in REQ-005?",
+      "In a scenario where multiple predators are on the same cell as a single prey, who gets the energy?",
+      "Can a single predator eat multiple prey in one tick if they share a cell, or is it limited to one?",
+      "The state tracks entity 'id', but there is no 'nextId' or counter in the state object to deterministically assign IDs to new entities spawned during reproduction (REQ-005). Where should the ID sequence be tracked?",
+      "In REQ-004, since the simulation must be deterministic, which prey is targeted for removal if multiple are present on the same cell?",
+      "In REQ-003, if a prey is equidistant between two predators (one left, one right), does the tie-break 'move toward lower index' override the 'move away' directive?",
+      "If multiple predators are on the same cell as one prey, how is the 'eating' event assigned?",
+      "For REQ-003, does 'move toward the lower index' mean 'choose the predator with the lower index as the reference to move away from' or 'if both directions move you away from the predator, choose the direction that decreases your own index'?",
+      "Should entity movement and predation be calculated based on the state at the start of the phase (simultaneous) or based on the order of the entities list (sequential)?",
+      "When a predator and prey share a cell, does the prey move 'away' based on the predator's position before or after the predator's move?",
+      "What is the starting energy for offspring produced via reproduction?"
+    ]
+  }
+}

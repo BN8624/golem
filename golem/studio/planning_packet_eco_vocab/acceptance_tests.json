@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "WorldSize: 10, Pred(ID:1, pos:5, en:10), Prey(ID:2, pos:6, en:10), HungerLoss: 1, EatingGain: 5",
+    "input": "Step 1 Tick",
+    "expect": "Predator moves to 6, eats Prey 2, energy becomes 10-1+5=14. Prey 2 is removed. Status: FINISHED (Extinction)."
+  },
+  {
+    "id": "SCN-002",
+    "setup": "WorldSize: 10, Pred(ID:1, pos:2, en:10), Prey(ID:2, pos:1, en:10), Prey(ID:3, pos:3, en:10), HungerLoss: 1",
+    "input": "Step 1 Tick (Movement Phase)",
+    "expect": "Predator is equidistant to Prey 2 and 3. Moves toward lower index (pos 1)."
+  },
+  {
+    "id": "SCN-003",
+    "setup": "WorldSize: 10, Pred(ID:1, pos:0, en:10), Prey(ID:2, pos:0, en:10), HungerLoss: 1",
+    "input": "Step 1 Tick (Movement Phase)",
+    "expect": "Prey 2 is on same cell as Pred 1. Prey 2 moves toward index 0, but is already at 0, so stays at 0."
+  }
+]
