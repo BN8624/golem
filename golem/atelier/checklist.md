@@ -23,7 +23,9 @@
 - [x] 소설판 10축(동기·복선·타임라인·지식상태·세계규칙·중복인물·테마·톤·스테이크·핸드오프).
 - [x] 출력 = `bible.json`(premise + canon[{id,text}]) — **canon_check 입력 모양과 일치, 루프 닫힘**.
 - [x] 키 없는 `--replay`로 A/B/C·synthesize 배선 검증(BLOCKING 흡수→FROZEN, canon 5).
-- [ ] ★실제 31B 런(`--idea "..." --synthesize`) — 진짜 로그라인으로 바이블 생성(사용자 go 대기).
+- [x] ★실제 31B 런(영어) — BLOCKING 12 흡수 → canon 8 → FROZEN. 한 줄 아이디어가 실제로 자람.
+- [~] ★한국어 출력 — LANGUAGE 프롬프트 박음. **단 한국어 synth가 빈 패킷(OPEN) — 잘림 의심, 미해결.**
+      synth raw 덤프 계측 추가. 새 세션: `HANDOFF.md` 다음 액션 1~3 참조.
 - [ ] planning 바이블 → canon_check 실초고 채점까지 end-to-end 1회(키 필요).
 
 ## 다음 (planning 검증 뒤)

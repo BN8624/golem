@@ -55,6 +55,9 @@ internally consistent — another writer must be able to draft chapters from it 
 
 LOGLINE: {idea}
 
+LANGUAGE: Write EVERY section body AND every canon text in the SAME LANGUAGE as the LOGLINE above.
+Keep only the === SECTION === markers and JSON keys/ids in English.
+
 Write the bible using EXACT section markers:
 
 === PREMISE ===
@@ -123,7 +126,8 @@ Resolve them and FREEZE the story bible. Output ONE JSON object EXACTLY in this 
   "deferred": ["question pushed to a later draft/book"]
 }}
 HARD RULE: every BLOCKING reviewer question MUST be either answered in decisions OR moved to assumed/deferred.
-Leave NO blocking question open. canon must have >=3 checkable facts. JSON only, no prose."""
+Leave NO blocking question open. canon must have >=3 checkable facts. JSON only, no prose.
+LANGUAGE: write premise text, every canon text, decisions, assumed and deferred in the SAME LANGUAGE as the bible above (keep JSON keys/ids in English)."""
 
 _SECTION_RE = re.compile(r"^===\s*(.+?)\s*===\s*$", re.MULTILINE)
 
@@ -332,7 +336,13 @@ class RealCaller:
     def synth(self, idea, draft, issues):
         text = self._one(_SYNTHESIS_PROMPT.format(
             draft=draft, issues=json.dumps(issues, ensure_ascii=False)))
-        return extract_json(text)
+        parsed = extract_json(text)
+        if not parsed:   # 파싱 실패(잘림/형식) 진단용 raw 덤프 — runs는 gitignore
+            (HERE / "runs").mkdir(exist_ok=True)
+            (HERE / "runs" / "_synth_raw.txt").write_text(
+                f"len={len(text)}\ntail<<<\n{text[-600:]}\n>>>\nhead<<<\n{text[:600]}",
+                encoding="utf-8")
+        return parsed
 
 
 ARM_REVIEWERS = {"A": 0, "B": 3, "C": 10}
