@@ -1,0 +1,483 @@
+[
+  {
+    "id": "SCN-001",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-01",
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 2,
+      "fuel": 0,
+      "stage": 1,
+      "gameStatus": "PLAYING",
+      "events": [
+        "BEAT-1"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-002",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "ADVANCE"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 0,
+      "fuel": 0,
+      "stage": 0,
+      "gameStatus": "PLAYING",
+      "events": []
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-003",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-01",
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 5,
+      "fuel": 0,
+      "stage": 2,
+      "gameStatus": "PLAYING",
+      "events": [
+        "BEAT-1",
+        "BEAT-2"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-004",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 14,
+      "fuel": 0,
+      "stage": 4,
+      "gameStatus": "WON",
+      "events": [
+        "BEAT-1",
+        "BEAT-2",
+        "BEAT-3",
+        "BEAT-4"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-005",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 14,
+      "fuel": 0,
+      "stage": 4,
+      "gameStatus": "WON",
+      "events": [
+        "BEAT-1",
+        "BEAT-2",
+        "BEAT-3",
+        "BEAT-4"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-006",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": []
+    },
+    "covers_reqs": [
+      "RULE-05"
+    ],
+    "expected": {
+      "turn": 0,
+      "fuel": 0,
+      "stage": 0,
+      "gameStatus": "PLAYING",
+      "events": []
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-007",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "WAIT"
+        },
+        {
+          "action": "ADVANCE"
+        },
+        {
+          "action": "ABORT"
+        },
+        {
+          "action": "WAIT"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-07",
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 3,
+      "fuel": 1,
+      "stage": 1,
+      "gameStatus": "ABORTED",
+      "events": [
+        "BEAT-1"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-008",
+    "input": {
+      "constants": {
+        "fuelRate": 1,
+        "stageCost": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "stageNames": [
+          "대기권",
+          "궤도",
+          "달",
+          "화성"
+        ]
+      },
+      "actions": [
+        {
+          "action": "ABORT"
+        }
+      ]
+    },
+    "covers_reqs": [
+      "RULE-07"
+    ],
+    "expected": {
+      "turn": 0,
+      "fuel": 0,
+      "stage": 0,
+      "gameStatus": "ABORTED",
+      "events": []
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  }
+]
