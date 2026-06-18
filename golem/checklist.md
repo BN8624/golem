@@ -217,5 +217,11 @@ P1 (다음 실험 전):
 - [x] UPGRADE 카드 패킷 v2(planning/specqa_packet_rocket_v2): RULE-06 연료5→fuelRate 1→2, state_shape 불변. 골든 자가검증=기존6 회귀 불변 PASS + 새 SCN-007/008 손계산 일치
 - [x] build_graded `--base` 편집모드: `_EDIT_HEADER`(코드주입+수정/보존) + design=base manifest. 키0 프롬프트 조립 검증 통과
 - [x] 누적 회귀(레버3): 채점 시나리오에 기존6+새2 동시 포함(자동 채점)
-- [ ] **(★키, 다음 세션 첫 동작) 누적 빌드 런 + 검증**: 편집 수렴·회귀 무결(기존6 불변)·새 UPGRADE 골든 합의. 명령은 HANDOFF ▶▶ 참조
-- [ ] (다음) 레버4 선택적 컨텍스트(모듈만 주입) = 큰 게임 진짜 천장
+- [x] **(★키) 누적 빌드 런 + 검증(G68)**: graded-20260618-180934 합의 1.0, 회귀(SCN-001~006)6/6·새 UPGRADE(SCN-007/008)2/2, 합의vs oracle 일치. 배관 픽스=Node stdout UTF-8(cp949 차단)
+- [x] 레버4 선택적 컨텍스트 배선(G69): `--inject-modules`(touched만 본문+재생성, 나머지 시그니처만+verbatim). `_validate_l4_keyless` ALL PASS(가림+병합+골든8/8)
+
+## 레버4 ★키 런 + 31solo + 외부리뷰 (G70~G71)
+- [x] **(★키) 레버4 첫 런(G70)**: graded-20260618-191818 게이트 11/11·합의 8/8 1.0·oracle 일치. 31B가 logic 본문 못 본 채 engine만 편집→회귀+ABORT 둘 다 1.0(logic verbatim·engine ABORT 핸들러 대조). **누적 빌드 4레버 전부 닫힘**
+- [x] 31solo 강제(G70): config generator 26b→31B(스튜디오 3도구가 실제 26B 돌던 잔재 제거). 이유=26B 구글 서버 1주일+ 불능. vocab 핀 3패킷 31B 확인런 1.0 재현(재실험 불필요)
+- [x] 외부 코드리뷰 반영(G71): #2 게이트 전 시나리오 종료코드 검사·#1 FROZEN BLOCKING 흡수수 확인 픽스+키0 회귀잠금(`_gate_allscenarios_keyless`·`_freeze_blocking_keyless`). #6 CI=`run_keyless.py`+GitHub Actions 그린. #3·#4=정답앵커 실Node 골든으로 정리
+- [ ] **(다음 세션 첫 동작) 스케일 확장(리뷰 #5)**: 대형 카드(모듈 10~20개·30~50k 토큰)로 레버4 소프트 천장 측정 — (A)전체주입 vs (B)선택주입 A/B 대조. 곁=combat 자율oracle / 외부리뷰 P1(#10)
