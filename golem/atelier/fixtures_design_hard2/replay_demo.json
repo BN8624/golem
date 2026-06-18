@@ -1,0 +1,12 @@
+{
+  "misattributed": [
+    { "unresolved": [] },
+    { "unresolved": [ { "setup_id": "S4", "evidence": "복수는 했으나 명령자 규명 없음" } ] },
+    { "unresolved": [] }
+  ],
+  "partial": [
+    { "unresolved": [] },
+    { "unresolved": [] },
+    { "unresolved": [ { "setup_id": "S3", "evidence": "다섯째 조각 못 되찾음" } ] }
+  ]
+}
