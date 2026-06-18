@@ -202,5 +202,5 @@ P1 (다음 실험 전):
 ## 확장 방향 — 큰 게임/서사/밸런스 (2026-06-18, 대화 G) — 정본 GolemStudioMode.md §21, 이유 context-notes 대화 G
 - [x] 방향 합의: 큰 게임=결정적 시뮬/전략(코에이식), 서사 2겹(A겹 발동로직/B겹 텍스트), 밸런스=config분리, 스케일=모듈+선택적컨텍스트
 - [x] 로켓 카드 키0 준비(planning_packet_rocket+specqa_packet_rocket, A겹=BEAT-N), 골든 로컬 시뮬 자가검증
-- [x] 로켓 A겹 가능성 입증: events 키 전 시나리오 3/3. 손계산 스케일 한계 실측(150틱 붕괴→18틱 재설계로 회복)
+- [x] 로켓 A겹 가능성 입증: 최종 0.945, events 키 6/6 전부 1.0(fuel·stage·gameStatus도 1.0, SCN-003 turn만 한 시드 지터). 손계산 스케일 한계 실측(150틱 붕괴→18틱 재설계로 회복)
 - [ ] (트랙 C 다음) 로켓 카드 커밋 → B겹 대사 텍스트 → StoryForge 일관 바이블
