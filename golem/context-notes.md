@@ -949,3 +949,15 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   서사 발동층 라이브 = 핸드오프 ▶ "결정적 시뮬 + A겹" 입증.
 - 트랙 C 1단계 세 목표(①첫 graded 카드 ②reconcile 풀 E2E ③B겹 텍스트 토대) 모두 이 한 런으로 충족.
   다음 = B겹 대사 저작(StoryForge) + 누적 빌드 레버.
+
+### G66 — 트랙 C 2단계 B겹(StoryForge) 완료
+- `storyforge.py` 신규(§21.3 정본 구현): concept→비트추출(키0) → 바이블 생성(31B 1콜) →
+  비트 대사 일괄(31B 1콜, 바이블 고정 컨텍스트) → 구조 검증(키0). 키 2콜.
+- 로켓 4비트(BEAT-1~4=대기권/궤도/달/화성) 전부 대사 채움. **검증 3/3 PASS**
+  (bible_covers_engine·text_covers_engine·all_text_nonempty), STORY_STATUS=COMPLETE.
+- 바이블 일관: 선장 에이든+항법AI 오리온, 황폐 지구→화성 이주 아크. 독립 생성 대사가
+  바이블 한 컨텍스트로 묶여 표류 안 함(= StoryForge의 존재 이유).
+- 규율 준수: 텍스트는 출력 전용(상태로 안 돌아감 = 결정성 보존), 검증은 구조만(문장 질 안 잼=사람 몫).
+  산출물 `storyforge_packet_rocket/`(bible.json·beats.json·STORY_STATUS.md).
+- **서사 2겹 닫힘**: A겹(발동 검증 G65) + B겹(대사 저작 G66). 비트추출 버그(끝 마침표 '화성.') 키0서 잡음.
+- 다음 = 누적 빌드 레버 / 또는 룰에 선택 박은 재밌는 카드(B겹만으론 밋밋 — G65 피드백).
