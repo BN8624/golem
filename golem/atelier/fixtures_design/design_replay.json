@@ -1,0 +1,50 @@
+{
+  "bible": {
+    "premise": "왼팔을 잃고 몰락한 검사 카엘과 친여동생 리아가 전대 왕의 죽음에 숨겨진 진실을 추적한다. 숨겨진 왕가 방계 혈통인 남매는 5개의 '영혼의 조각'을 모아 섭정 발타자르의 음모를 밝히고 제국을 되찾으려 한다.",
+    "canon": [
+      { "id": "C1", "text": "카엘은 왼쪽 팔이 없다." },
+      { "id": "C2", "text": "리아는 카엘의 친여동생이다." },
+      { "id": "C3", "text": "마법 사용과 영혼의 조각 활성화에는 반드시 왕가의 피가 필요하다." },
+      { "id": "C4", "text": "전대 왕의 비밀은 총 5개의 '영혼의 조각'에 나누어 기록되어 있다." }
+    ]
+  },
+  "lead_draft": "=== SETUPS ===\n[{\"id\":\"S1\",\"text\":\"전대 왕이 카엘에게 남긴 봉인된 편지 — 그 내용이 밝혀져야 한다.\"},{\"id\":\"S2\",\"text\":\"리아가 어머니에게서 물려받은 은펜던트 — 그 정체가 회수돼야 한다.\"},{\"id\":\"S3\",\"text\":\"흩어진 5개의 영혼의 조각 — 모두 모여야 한다.\"},{\"id\":\"S4\",\"text\":\"발타자르가 카엘의 옛 부대를 몰살시킨 사건 — 누가 명령했는지 밝혀져야 한다.\"},{\"id\":\"S5\",\"text\":\"잃은 왼팔을 대신할 고대 의수 소문 — 실현되거나 부정돼야 한다.\"}]\n\n=== BEATS ===\n[B1] 카엘이 변두리 주막에서 전대 왕의 인장이 찍힌 봉인된 편지를 전달받는다.\n[B2] 여동생 리아가 어머니의 은펜던트를 걸고 카엘을 찾아온다.\n[B3] 발타자르의 추격대가 둘을 덮치고, 카엘은 옛 부대 몰살의 악몽을 떠올린다.\n[B4] 늙은 대장장이가 왕가의 피로만 끼는 고대 의수 소문을 들려준다.\n[B5] 남매가 첫 번째 영혼의 조각을 손에 넣고, 리아의 피에 반응해 빛난다.\n[B6] 두세 번째 조각을 회수하며 지도의 일부가 드러난다.\n[B7] 카엘이 봉인된 편지를 뜯어 전대 왕의 고백을 읽는다.\n[B8] 리아의 은펜던트가 네 번째 조각과 맞물려 열리고 왕가 문장이 드러난다.\n[B9] 고대 의수가 실재함이 드러나 카엘이 왼팔을 되찾는다.\n[B10] 남매가 다섯 번째 조각까지 모아 발타자르의 음모를 공표한다.",
+  "reviews": [
+    {"unresolved_setups": ["S4(부대 몰살 명령자)가 어느 비트에서도 회수되지 않는다 — B3에서 언급만 되고 끝"], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": [], "questions_for_lead": [{"q": "부대 몰살을 누가 명령했는지 어느 비트에서 밝히나", "class": "BLOCKING"}]},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": ["B7 편지 고백이 독자가 못 본 정보를 갑자기 드러내는 반전이 될 수 있다"], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": ["B5~B6에 조각 회수가 몰려 페이싱이 급하다"], "risky_assumptions": [], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": ["B9 의수 활성화에 왕가의 피가 쓰였는지 비트에 명시 없음(C3)"], "contradictions": [], "weak_pacing": [], "risky_assumptions": [], "questions_for_lead": [{"q": "의수 활성화도 왕가의 피 규칙을 따르나", "class": "BLOCKING"}]},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": ["다음 단계(집필)가 발타자르를 단순 악역으로 오독할 수 있다"], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": ["후반 B8~B10에 회수가 한꺼번에 몰린다"], "risky_assumptions": [], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": ["스테이크: 조각을 못 모으면 무엇을 잃는지 비트에서 불명확"], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": [], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": ["B3 추격대와 B10 공표 사이 발타자르의 적대 행위가 비어 긴장이 끊긴다"], "questions_for_lead": []},
+    {"unresolved_setups": [], "missing_beats": [], "contradictions": [], "weak_pacing": [], "risky_assumptions": [], "questions_for_lead": []}
+  ],
+  "synthesis": {
+    "decisions": ["S4 회수: B7 편지 고백에 '부대 몰살을 명령한 자가 발타자르였다'를 포함해 누가 명령했는지 밝힌다.", "B9 의수 활성화는 카엘의 왕가 피로 이뤄진다고 명시해 C3을 지킨다.", "B5~B6 조각 회수 페이싱을 분산하고 B3과 B10 사이에 발타자르의 적대 행위 비트를 보강한다."],
+    "premise": "왼팔을 잃고 몰락한 검사 카엘과 친여동생 리아가, 전대 왕이 5개의 영혼의 조각에 남긴 진실을 좇아 섭정 발타자르의 음모를 밝히고 제국을 되찾는다.",
+    "setups": [
+      { "id": "S1", "text": "전대 왕이 남긴 봉인된 편지의 내용." },
+      { "id": "S2", "text": "리아의 은펜던트의 정체." },
+      { "id": "S3", "text": "흩어진 5개의 영혼의 조각." },
+      { "id": "S4", "text": "옛 부대 몰살을 명령한 자의 정체." },
+      { "id": "S5", "text": "왼팔을 대신할 고대 의수." }
+    ],
+    "beats": [
+      "[B1] 카엘이 전대 왕의 인장이 찍힌 봉인된 편지를 전달받는다.",
+      "[B2] 리아가 어머니의 은펜던트를 걸고 카엘을 찾아온다.",
+      "[B3] 발타자르의 추격대가 둘을 덮치고, 카엘은 옛 부대 몰살의 악몽을 떠올린다.",
+      "[B4] 늙은 대장장이가 왕가의 피로만 끼는 고대 의수 소문을 들려준다.",
+      "[B5] 남매가 첫 번째 영혼의 조각을 손에 넣고 리아의 피에 반응해 빛난다.",
+      "[B6] 발타자르가 직접 자객을 보내 압박하며 남매의 정체를 캐낸다.",
+      "[B7] 두세 번째 조각을 회수하며 지도의 일부가 드러난다.",
+      "[B8] 카엘이 편지를 뜯어, 발타자르가 왕을 독살하고 부대 몰살을 명령했다는 고백을 읽는다(S4 회수).",
+      "[B9] 리아의 은펜던트가 네 번째 조각과 맞물려 열리고 왕가 문장이 드러난다.",
+      "[B10] 카엘이 왕가의 피로 고대 의수를 활성화해 왼팔을 되찾는다.",
+      "[B11] 남매가 다섯 번째 조각까지 모아 발타자르의 음모를 제국에 공표한다."
+    ],
+    "assumed": ["발타자르의 추격대는 한 명이 아니라 휘하 조직으로 가정한다."],
+    "deferred": ["영혼의 조각이 모두 모였을 때의 최종 효과는 다음 책으로 미룬다."]
+  }
+}

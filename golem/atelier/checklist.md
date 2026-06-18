@@ -44,9 +44,17 @@
       골든) + cases.json + replay_demo.json. 미회수는 *언급은 하되 회수만 안 함*(노골적 부재 아님).
 - [x] 키 없는 `--replay`로 채점 배선 검증 — exact/fp/fn/recall/안정성 수학 정확(`[S4]`→`S4` 정규화 포함,
       일부러 흔든 시드가 exact 0.67·S4 recall 0.667로 구분됨). design-20260618-192236.
-- [ ] ★실제 31B 런(`--n 3` [+`--verify`]) — 사용자 go 뒤에만. 미회수 검출률·오탐·2패스 효과 측정.
-- [ ] design 생산자 `design.py`(planning의 거울): FROZEN 바이블 → lead 비트시트 → 다축 리뷰 → FROZEN 아웃라인.
-- [ ] 어려운 픽스처(회수를 정황에만 숨김 / 회수처럼 보이는 함정)로 한계 깨기.
+- [x] ★실제 31B 런(`--n 3`·`--verify`) — design-20260618-193115/193408: exact **1.0**, S2·S4 recall 1.0,
+      2패스도 1.0 유지(과교정 없음). 단 1패스가 이미 완벽해 2패스 측정 가치 0(canon hard2와 동일 상황) →
+      어려운 픽스처 필요.
+- [x] 31B 핀 가드 — canon_check·design_check 실콜 경로에 `GENERATOR_MODEL`·`CRITIC_MODEL`=31B 핀 +
+      `ROLE!=critic` 가드. 26B 전수조사 호출 0 확인 뒤 잠복 위험 차단. (commit f567e0a)
+- [x] design 생산자 `design.py`(planning의 거울): FROZEN 바이블 → lead 비트시트 → 10축 리뷰 → synthesis.
+      출력 `outline.json`(premise + setups[{id,text}]) + `beatsheet.md` = design_check 입력 모양. 31B 핀 포함.
+      키리스 `--replay` 통과 — BLOCKING 2 흡수, setups 5/beats 11, OUTLINE_STATUS FROZEN.
+- [ ] ★design 실생산(`--bible runs/bible_packet_ko/bible.json`) → 생산물을 design_check으로 채점
+      (golden=[], 생산자가 정말 다 회수했나) = design→design_check end-to-end. 사용자 go 뒤에만.
+- [ ] 어려운 픽스처(회수를 정황에만 숨김 / 회수처럼 보이는 함정)로 2패스 한계 깨기.
 
 ## 이전 (frontier 2 마무리)
 

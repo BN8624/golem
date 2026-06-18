@@ -24,8 +24,11 @@ python planning.py --replay fixtures/planning_replay.json --synthesize --out run
 - **planning.py** (기획팀) — 로그라인 → lead 바이블 초안 → 10축 독립리뷰 → synthesis(BLOCKING 흡수→FROZEN).
   출력 `bible.json`(premise + canon[{id,text}]) = canon_check 입력 모양 → **두 단계 루프가 닫힘**.
 - **canon_check.py** (QA팀) — 동결 바이블 대비 챕터 초고의 캐논 위반을 31B가 잡나. N시드·exact·recall·오탐.
-- **design_check.py** (구조팀, 신규) — 비트시트의 setup→payoff 미회수를 31B가 잡나. canon_check의 거울
-  (모순 검출↔미회수 검출), 같은 2패스·채점 기계. 키 0 배선 검증만 완료(생산자 design.py는 미착수).
+- **design_check.py** (구조팀, 채점) — 비트시트의 setup→payoff 미회수를 31B가 잡나. canon_check의 거울
+  (모순 검출↔미회수 검출), 같은 2패스·채점 기계. ★실콜 exact 1.0(S2·S4 recall 1.0, 과교정 없음).
+- **design.py** (구조팀, 생산, 신규) — FROZEN 바이블 → lead 비트시트 → 10축 리뷰 → synthesis(FROZEN
+  아웃라인). planning.py의 거울. 출력 `outline.json`(premise+setups) = design_check 입력 모양 → 루프 모양 닫힘.
+  키 0 `--replay` 통과(setups 5/beats 11 FROZEN). 31B 핀+ROLE 가드 포함.
 - **lib/** — 자족 인프라(config·llm·key_usage·jsonutil). 골렘 import 0. `PROJECT_ROOT`=atelier 루트.
 - 커밋됨: `2882c90`(planning)·`9711990`(자족화)·`94cf9a7`(canon_check 출범)·`8b16314` 등.
 
@@ -90,16 +93,24 @@ frontier 3 시작. 사용자가 "2(design 본류)"를 골랐다. canon_check의 
 - **키 0 검증 통과**: `--replay`로 채점 수학 정확 — clean exact 0.67/오탐 0.33, unresolved exact 0.67/
   recall S2 1.0·S4 0.667, `[S4]`→`S4` 정규화 작동. 일부러 흔든 시드가 구분돼 수학 신뢰됨. 상세 context-notes.
 
-### ▶ 다음 세션 첫 액션 — design ★실런 (키 필요, 사용자 go)
+### ✓ design 채점기 ★실런 + 생산자 design.py (2026-06-18)
 
-1. **design_check ★실콜**(본류 다음 칸): `python design_check.py --n 3` 그리고 `--verify` 비교.
-   미회수 검출률·오탐·2패스 효과를 캐논과 같은 방식으로 측정. 미회수(S2·S4)를 *정황에만 숨긴* 설계라
-   1패스가 헛잡거나 놓치는지가 frontier — canon hard3처럼 한계가 나오면 어려운 픽스처로 더 민다.
-2. **design 생산자 `design.py`**(planning의 거울): FROZEN 바이블 → lead 비트시트 초안 → 다축 리뷰 →
-   FROZEN 아웃라인. 그래야 planning→design→canon_check 3단 루프가 닫힌다(지금은 채점기만 섰다).
+- design_check ★실콜: exact 1.0(design-193115/193408), S2·S4 recall 1.0, 2패스 과교정 없음. 단 1패스가
+  이미 완벽해 2패스 *차이*는 0(canon hard2 상황) — 어려운 픽스처가 있어야 2패스 가치가 측정된다.
+- 31B 핀 가드 추가(canon_check·design_check 실콜 경로) — 26B 전수조사 호출 0 확인 후 잠복 위험 차단.
+- design.py(planning 거울) 출범 — 바이블 → 비트시트 → 10축 → FROZEN 아웃라인. 키 0 replay FROZEN 통과.
 
-> 권고: 1을 먼저(★키로 채점기 신호 확보) → 2로 루프 닫기. 보류 카드: 통사적 부정 한계 공략
-> (hard3 subtle_clean 오탐 0.33→0, 검증 프롬프트에 "부정문 방향 먼저" 명시) — 별도 안건, 필요할 때.
+### ▶ 다음 세션 첫 액션 — design end-to-end ★실콜 (키 필요, 사용자 go)
+
+1. **design 실생산 → 실채점**(루프 닫기 마무리): `python design.py --bible runs/bible_packet_ko/bible.json
+   --out runs/outline_ko` 로 실제 비트시트 생산 → 생산물(outline.json+beatsheet)을 design_check으로
+   golden=[] 채점(임시 cases.json 1줄). "생산자가 정말 모든 setup을 회수했나"가 통과하면 planning→design→
+   design_check end-to-end가 닫힌다(canon-162900의 design판).
+2. **어려운 design 픽스처**(2패스 한계 측정): 회수를 정황에만 숨기거나(미회수를 1패스가 놓치게) 회수처럼
+   보이는 함정(헛회수를 1패스가 오인하게)을 깔아, design_check 2패스가 canon처럼 precision을 끌어올리나 본다.
+
+> 권고: 1을 먼저(루프 닫기) → 2로 한계 측정. 보류 카드: 통사적 부정 한계 공략(canon hard3 subtle_clean
+> 오탐 0.33→0, 검증 프롬프트에 "부정문 방향 먼저" 명시) — 별도 안건, 필요할 때.
 
 > 한계 메모: 지식상태/타임라인 위반은 현재 canon 구조(정적 사실 7개)론 직접 채점 불가 — canon이 "X시점엔
 > Y를 모른다" 같은 시간적 사실을 안 담는다. 그 유형을 재려면 canon 스키마 확장이 선행돼야 한다(별도 안건).
