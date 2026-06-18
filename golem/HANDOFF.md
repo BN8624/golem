@@ -2,7 +2,7 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-18, G73)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 둘 다 1.0(천장 ~14.6k 미포착) → 카드 1.77x(63.5KB·46모듈) 확장 → **확장 카드 A 재측정 시도 중 출력바운드/소켓행 확인 → 방향 재프레이밍(아래).**
+**현재 상태 (2026-06-18, G73)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 둘 다 1.0(천장 ~14.6k 미포착) → 카드 1.77x(63.5KB·46모듈) 확장 → 확장 카드 A 재측정 소켓행→킬·**사후채집으로 A @ 63.5KB = 1.0 확보**(충실도 드리프트 발견) → **출력 32k 재프레이밍, 측정 B 중심 전환(아래). 다음=확장 카드 B ★키 측정.**
 
 **▶▶ 핵심 재프레이밍(G73 후속, 사용자 지적) — 진짜 제약은 컨텍스트가 아니라 출력 32k(추론 포함)**.
 - **컨텍스트 창은 한계 아님**: gemma-4 31B 256k 창에 카드 입력 ~26k = 10%. 카드를 더 키워도 창은 안 참.
@@ -16,7 +16,7 @@
 - 갈림길(곁가지): ② combat 자율oracle ③ 외부리뷰 P1(#10 등).
 
 **최근 완료 (역순)**:
-- **G73 후속 — A 재측정 행 + 출력 재프레이밍(★키 일부)**: 확장 카드(63.5KB)로 A 재측정 시도 → attempt03이 응답 없는 소켓에 물려 행(`llm.py` per-request 타임아웃 없음). 킬. 건강한 A 콜 ~11분(최대 24분)·~20k 출력토큰 실측 = 본래 무거움·출력바운드. **사용자 지적으로 방향 재프레이밍**: 진짜 제약은 컨텍스트(256k, 10%)가 아니라 **출력 32k(추론 포함)**. A는 자기모순적 확장, **B(선택출력/패치)가 출력을 게임크기와 분리하는 유일한 스케일링 길**(코드 확인 build_graded:90·370-374). 측정 B 중심으로 전환.
+- **G73 후속 — A 재측정 행 + 출력 재프레이밍 + 사후채집(★키)**: 확장 카드(63.5KB)로 A 재측정 시도 → attempt03 소켓 무한행(`llm.py` 타임아웃 없음)·킬. **킬한 런 10 attempt를 사후 node채점(`_salvage_a_run.py` 키0)으로 A @ 63.5KB 결과 확보 — 정확도 100/100·전원합의·골든일치 1.0(A 재런 불필요, 행동적 저하 없음)**. 단 충실도 드리프트 발견: A는 verbatim 재출력에서 tables.js 주석 패러프레이즈(10/10)·EVACUATE를 actions.js로 재배치(2/10) — 행동 1.0이어도 코드 보존 못 함. **사용자 지적으로 재프레이밍**: 진짜 제약은 컨텍스트(256k,10%) 아니라 **출력 32k(추론 포함)**. A는 자기모순적 확장, **B(선택출력/패치)가 출력을 게임크기와 분리 + held-out verbatim 강제로 충실도까지 안전한 유일 스케일링 길**(build_graded:90·370-374). 측정 B 중심 전환.
 - **G73 스케일 확장 카드 제작(키0)**: `station_base` 30→46모듈(본문 35.7KB→63.5KB, 1.77x). 신규 16(battery·medical·inventory·telemetry·thermalzones·structural·science·safety·navlog·radlog·habitat·report·airlock·coolant·attitude·waste) 전부 turn결정적·게이팅(population·research·credits) 불변·alerts/log+bounded morale만 → **gameStatus 다양성 보존(PLAYING×4·WON×2·LOST×1·EVACUATED×3)**·회귀7 base==ref 바이트동일·16모듈 전부 골든 기여(죽은코드0)·strict 게이트 46모듈 통과·run_keyless ALL PASS. contract RULE-02 ORDER·manifest 동기화. (커밋 9131978)
 - **G73 레버4 스케일 1차 A/B(★키)**: 정거장 30모듈 같은 패킷 두 런 — A전체주입(graded-20260618-222413, 콜≈14.6k)·B선택주입(graded-20260618-223623, 콜≈5k). **둘 다 게이트 11/11·overall_agreement 1.0·golden_diffs 0**(회귀7+EVACUATE3 전부 1.0). EOL 정규화 대조 → engine.js만 실제 변경·held-out 29모듈 바이트동일(raw diff의 29모듈 차이는 전부 CRLF↔LF, node 채점이라 무해). **레버4 소프트 천장이 ~14.6k(로켓 3배)에선 안 잡힘** → A 흐려질 거란 가설 기각, ≤14.6k 아님이란 약한 하한만 확정. G72 판단대로 모듈 충실화로 30k 확장 후 재측정 분기.
 - **G72 스케일 확장 대형카드 제작(키0)**: `station_base` 정거장 30모듈(코어8+확장12 서브시스템+오케스트레이션+데이터, turn기반 결정적 스케줄·난수0) + `planning_packet_station_l`(RULE-07 EVACUATE=engine만 touched) + `specqa_packet_station_l`(시나리오10=회귀7+EVACUATE3, 골든은 참조engine node역산 `gen_station_l_golden.py`). 게이트 strict 30모듈 통과·회귀7 base==참조 바이트동일·레버4 프롬프트 키0검증(engine본문O/나머지29 시그니처+verbatim). A전체주입≈14.6k vs B선택주입≈5k 콜토큰. **판단: 30~50k 목표지만 과투자 전 ~14.6k(로켓3배)로 1차 ★키 A/B 먼저, 저하 안 보이면 확장**. (gen 버그 1건 node가 잡음: scenarios.json input 래퍼 누락→수정).
