@@ -1,0 +1,31 @@
+{
+  "scene_fp_trap": [
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "'3단계'로 끊겨 단계 수를 셀 수 있어 검증돼 보임" },
+      { "criterion_id": "C2", "reason": "'일관'이라니 톤 비교로 검증돼 보임" }
+    ] },
+    { "verifiable": [
+      { "criterion_id": "C2", "reason": "톤 일관성을 비교 검증" }
+    ] },
+    { "verifiable": [] }
+  ],
+  "scene_atomized": [
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "등장 여부 = 사실" },
+      { "criterion_id": "C2", "reason": "S2 회수 = 복선 payoff" },
+      { "criterion_id": "C3", "reason": "조각 1개 선행 = 타임라인" },
+      { "criterion_id": "C4", "reason": "왼팔 부재 = 연속성, 양손 동작 검증" }
+    ] },
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "등장 사실" },
+      { "criterion_id": "C2", "reason": "S2 회수" },
+      { "criterion_id": "C3", "reason": "타임라인" },
+      { "criterion_id": "C4", "reason": "왼팔 연속성" }
+    ] },
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "등장 사실" },
+      { "criterion_id": "C2", "reason": "S2 회수" },
+      { "criterion_id": "C3", "reason": "타임라인" }
+    ] }
+  ]
+}

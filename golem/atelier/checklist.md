@@ -97,8 +97,13 @@
       묘사 금지)을 안정적(3/3)으로 미학으로 흘린 fn — 안전한 방향(과격리). **2패스 측정가치 0이되 canon과
       이유가 다름**: verify는 fp(과대주장) 억제용인데 specQA 오류는 fn(과소주장)이라 verify가 구조적으로
       못 건드림(과교정도 0, C1/C3/C4 유지). 경계는 *혼합 기준*(사실+톤)에 있다. 상세 context-notes·HANDOFF.
-- [ ] 어려운 픽스처 — C6 가설 확인용: **원자화된 캐논 vs 혼합 기준(사실+톤)** 분리 + 미학을 구체어로
-      위장한 fp 함정 + 캐논을 부드럽게 쓴 fn 함정. 격리 한계가 정말 혼합 기준에 몰리나.
+- [x] 어려운 픽스처 `fixtures_specqa_hard` 심음 — scene_fp_trap(미학을 구체어로 위장: "3단계 점층"·
+      "톤 일관"·"고르게 배치"·"이음매 없이", 골든 []) + scene_atomized(순수 원자화 캐논: 등장·S2회수·
+      타임라인·왼팔연속성, 골든 전부). 키0 replay 통과 — fp_trap 오탐 1.00·exact 0.33(fp 유발 확인),
+      atomized exact 0.67·C4 recall 0.667(흔든 시드 구분). 채점 수학 신뢰.
+- [ ] ★실콜(`--fixtures fixtures_specqa_hard --n 3` 및 `--verify`) — **사용자 go 뒤에만**. 측정:
+      (1)fp_trap에서 1패스가 구체어 위장에 낚여 fp 내나 + **2패스가 그 fp를 깎나**(canon precision판 검증),
+      (2)atomized 순수 캐논 recall 1.0이면 C6 미스가 혼합 기준 탓이란 가설 확정.
 - [ ] specQA 생산자(planning/design 거울) — 그 뒤. FROZEN 아웃라인 → 씬 계약 산출.
 
 ## 이전 (frontier 2 마무리)
