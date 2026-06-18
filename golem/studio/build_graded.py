@@ -409,6 +409,7 @@ def main(argv=None):
             return attempt, False, f"infra: gen {type(e).__name__}: {e}", {}
         ws = base / f"attempt{attempt:02d}" / "workspace"
         ws.mkdir(parents=True, exist_ok=True)
+        (ws.parent / "_raw_response.txt").write_text(resp, encoding="utf-8")  # 출력토큰 정량 대조용
         try:  # 파싱·쓰기·게이트는 우리 하네스 — 여기 크래시는 HARNESS(카드 탓 아님), 런 안 깨고 기록
             if args.patch:  # 레버4 패치모드: FIND/REPLACE diff를 base touched 본문에 적용해 전체 복원
                 try:
@@ -457,6 +458,7 @@ def main(argv=None):
     voters = {"min_voters": MIN_VOTERS, "scenarios_scored": len(scored),
               "mean_voters": round(sum(scored) / len(scored), 2) if scored else 0}
     base.mkdir(parents=True, exist_ok=True)
+    (base / "_prompt.txt").write_text(prompt, encoding="utf-8")  # 입력크기 대조용(런당 1개)
     (base / "consensus.json").write_text(json.dumps(
         {"gate_passed": len(passed_outputs), "cap": args.cap,
          "gradeable": gradeable, "overall_agreement": overall, "voters": voters,
