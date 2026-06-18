@@ -1,0 +1,12 @@
+{
+  "subtle_clean": [
+    { "unresolved": [ { "setup_id": "S1", "evidence": "편지 내용이 직접 진술되지 않음" }, { "setup_id": "S4", "evidence": "명령자가 명시되지 않음" } ] },
+    { "unresolved": [ { "setup_id": "S1", "evidence": "편지를 읽었다고만 함" } ] },
+    { "unresolved": [ { "setup_id": "S2", "evidence": "펜던트 정체 불명" }, { "setup_id": "S4", "evidence": "발타자르 서명은 정황일 뿐" } ] }
+  ],
+  "hidden_unresolved": [
+    { "unresolved": [] },
+    { "unresolved": [ { "setup_id": "S4", "evidence": "동료 이름만 부름" } ] },
+    { "unresolved": [] }
+  ]
+}
