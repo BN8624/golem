@@ -21,3 +21,6 @@ golem/game_bank.sqlite
 # 로그·임시
 *.log
 golem/_*.log
+
+# GPT↔Claude 회의 기록 (미추적, 디스크에만 보관)
+/meetings/
