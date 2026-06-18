@@ -173,7 +173,8 @@ def gate_and_run(workspace, manifest, scenarios):
     for i, sc in enumerate(scenarios, 1):
         try:
             r = subprocess.run(["node", "main.js", "--scenario", str(i)], cwd=str(workspace),
-                               capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL)
+                               capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=30, stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             return False, f"smoke SCN{i}: 타임아웃", {}
         if i == 1 and (r.returncode != 0 or ":" not in r.stdout):
