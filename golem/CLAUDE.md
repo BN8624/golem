@@ -8,6 +8,15 @@
 - 진행 체크는 `checklist.md`에만 기록한다.
 - 이 문서와 `GolemStudioMode.md`가 충돌하면, Golem Studio 구현 범위에서는 `GolemStudioMode.md`와 `HANDOFF.md`를 우선한다.
 
+## MEETING 협업 (GPT↔Claude↔Codex↔사용자)
+
+- 사용자가 `meetings/<파일>.md`를 가리키면 먼저 그 파일을 읽는다. 운영 규칙 정본은 `meetings/MEETING 운영 템플릿.md`다.
+- 한 파일 = 한 안건 = 한 왕복이다. 끝난 파일에 내용을 누적하지 않는다.
+- Claude는 `Claude Response`·`Claude Objections`·`Open Questions`·`Proposed Next Action` 섹션만 채운다. GPT 구역(Context/Proposal/Questions/Constraints)과 기존 내용은 삭제·수정하지 않는다.
+- 답변은 한국어로 쓰고, `[코드]`(실제 파일 확인)와 `[의견]`(판단)을 구분한다. 추측은 추측이라고 표시한다.
+- `Constraints`에 코드 수정 허용이 명시되지 않으면 코드는 건드리지 않고 답변만 추가한다.
+- `meetings/`는 gitignore(미추적)다.
+
 ## 사용자 방식
 
 - 사용자는 바이브코더다. 코드보다 “되나/안되나”와 사람 말 요약으로 판단한다.
