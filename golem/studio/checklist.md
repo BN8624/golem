@@ -21,4 +21,11 @@
 - [x] 회귀 시나리오 base==참조 바이트동일 확인 (7/7)
 - [x] 베이스 토큰량 측정 — A(전체주입)≈14.6k·B(선택주입)≈5k 콜토큰 (로켓 3배). 30k는 1차 저하시 추가확장
 - [x] 레버4 프롬프트 키0 검증 (engine 본문O / 나머지29 시그니처+verbatim / 채점10)
-- [ ] (★키) A: build_graded --base만 / B: --base --inject-modules src/engine.js → 정확도 대조
+- [x] (★키) 1차 A/B @ ~14.6k: 둘 다 게이트11/11·합의1.0·golden_diff0(graded-222413/223623). 천장 미포착(G73)
+- [x] 카드 1.77x 확장(46모듈, 신규16 진단서브시스템): 다양성 보존·죽은코드0·strict46통과·run_keyless ALL PASS(커밋9131978)
+- [x] A 재측정 소켓행→킬→사후채집: A@63.5KB=정확도100/100·1.0. 단 verbatim 드리프트(tables주석10/10·EVACUATE재배치2/10)
+- [x] **출력 32k 재프레이밍**: 진짜 벽=컨텍스트(256k,10%) 아니라 출력. A는 자기모순, B(선택출력)가 스케일링 길(GolemStudioMode §21.5 정정)
+- [x] (★키) 확장 카드 B @ 46모듈: 게이트11/11·합의1.0·golden_diff0·held-out 드리프트0(graded-005137)
+- [x] (★키) B 입력 lost-in-the-middle 프로브: gen_station_xl.py로 546모듈(입력~24k)·B=1.0·drift0/545(graded-011018). B는 모듈 수 무관
+- [x] llm.py per-request 타임아웃 안전망(30분)·좀비소켓 무한행 차단(커밋466a5cb)
+- [ ] (다음) 패치빌드(파일별/diff) 라인을 §21 대형게임 정본과 정합 — B로 진짜 큰 게임 짓기
