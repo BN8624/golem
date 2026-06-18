@@ -188,3 +188,11 @@ P1 (다음 실험 전):
 - [x] #11 전면 포맷 커밋 — 기각(병리적 아님, blame 파괴 비용>효용)
 - [x] #2 build_graded 분해 — 보류(363줄, 성장 금지 가드레일만)
 - [x] #12 package화 — 보류(둥지 구조는 의도된 선택, P2)
+
+## 자율 oracle frontier (2026-06-18, ★키) — 결정이유 context-notes G60~G62
+도구 `studio/auto_oracle.py`(31B가 빌드 0줄로 rules+입력만으로 골든 자율 생성 → 키별 _canon 대조).
+- [x] G60 프로브 1차(방치형): 정확률 0.879, 두 실패 다 계약-모호(enum·빈dict) = 공짜 모호탐지기
+- [x] G61 사다리: 어휘 RULE-08 한 줄 박으니 0.879→1.0 수렴(변형 패킷 planning_packet_idle_vocab)
+- [x] G62 고결합(eco): 결합 무관(entities 7/8 무결), 실패는 또 계약-모호(status enum 8/8 + SCN-004 번식)
+- [x] 하네스: key_accuracy_by_name 추가(시나리오단위 0.0은 uniform 모호키 아티팩트)
+- [ ] (다음) eco 어휘+번식 박고 재측정(G61식 사다리) / reconcile에 자율oracle 배선 / 31B self-suggest / combat 자율oracle
