@@ -53,5 +53,6 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 6. ~~(★키) Step3 계약-타이트 스윕 1차(G56)~~ — **완료. 합의 곡선 단조 상승 재확인**: L0 0.37→L1 0.65→L2 0.80(같은 combat 카드, 현재 하네스 동일조건). 도구 `studio/sweep.py`, 럽 = baseline/combat/`*_combat_phased`(RULE-11 PHASE 순서). L0→L1(RULE-10) p=0.004 3번째 재현. **L1→L2(RULE-11)는 미확립**(p=0.148, L2 투표수↓ 소표본 인플레).
 7. ~~(★키) Step3 스윕 cap↑ 재측정(G58)~~ — **완료. L1→L2 상승 아님으로 결판**: cap=22로 L2 투표수 5.71표(자명합의 소거)로 매칭하자 합의 0.640→0.607(Δ−0.03, p=0.69, 분포 겹침). G56의 0.80은 cap=11 소표본 인플레였음 확정. L0→L1(RULE-10)은 11표로 더 강한 4번째 재현(d=2.98). thesis 정정 = 사다리는 규칙 종류 의존(종료조항 올림, PHASE 순서 안 올림).
 8. ~~(키0) 외부 코드리뷰 P0 4건(G57)~~ — **완료**: #1 build.py legacy 경고·#3 AUTO suspect 롤업+Green게이트·#7 planning_compare 경고·#9 schema(이미 됨). P1 5건(#8·#6·#4·#5·#10)은 다음 실험 전 백로그(checklist).
-9. **(다음 frontier, ★키)** 자율 oracle(31B가 골든까지) × 고결합 카드 × reconcile calibration / eco 잔차(0.925≠1.0, SCN-004 번식) / combat 잔차 / 외부리뷰 P1(#8 실측 fixture 우선). UI/Asset/Renderer는 채점기반을 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
-10. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
+9. ~~(★키) 자율 oracle 프로브 1차(G60)~~ — **완료. 31B 자율 oracle 정확률 0.879**(완전정확 9/11, 안정성 0.94). 결정적 산술 11/11 무결, **두 실패 다 계약-모호(enum 라벨·빈 dict 관례)** = reconcile CONTRACT_AMBIGUOUS 표면. 자율 oracle 가능 + 불일치=공짜 모호탐지기. 도구 `studio/auto_oracle.py`.
+10. **(다음, ★키) 자율 oracle 프로브 위에서**: ① 어휘 박은 뒤 재측정(enum/빈컬렉션 계약 한 줄 → 0.879→1.0 수렴? G36 사다리의 자율판) ② 고결합 카드(eco/combat) 자율 oracle 정확률(결정적 계산 깨지는 경계) ③ reconcile 입력으로 배선(손-oracle 대체). 곁: eco·combat 잔차 / 외부리뷰 P1(#6 taxonomy·#4·#5·#10). UI/Asset/Renderer는 채점기반 바꾸므로 **별도 트랙**(결정적 렌더 채점법 선결).
+11. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
