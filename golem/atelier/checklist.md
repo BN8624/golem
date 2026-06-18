@@ -66,6 +66,23 @@
       recall 1.0. **4축(정황회수·헛회수·오회수·부분회수) 모두 1패스 robust. 잠정결론: setup→payoff는
       31B 1패스로 충분.** 남은 미시도: 장거리·setup충돌(후자는 canon 범위). 상세 context-notes.
 
+## 외부 리뷰 반영 (계약 동결 토대 점검)
+
+- [x] (리뷰 1) **FROZEN 게이트 거짓 수정** — `resolved=bool(decisions or assumed or deferred)`는 BLOCKING
+      여럿 중 하나만 답해도 통과 + STATUS가 미해소 0 거짓보고. 개수 게이트(흡수≥BLOCKING)로 교체, STATUS
+      실제 미해소 수. planning·design 동일. 단위테스트+회귀 통과. (commit 1095172)
+- [x] (리뷰 2) canon/setup ID 중복 검사 추가 — frozen 조건에 `and not dup_ids`, STATUS 보고.
+- [x] (리뷰 5) planning 결과 타임스탬프 보존 — `planning-{stamp}.json` + `planning_result.json` 포인터.
+- [ ] (리뷰 3) evidence 실문장 근거 검증 — 우선순위 낮음(채점 정확도 무관). 보류.
+- [ ] (리뷰 4) 생산·검증 독립화 — 26B/사람 표본 비교 측정설계(코드수정 아님). 보류.
+- [ ] (리뷰 6) vendoring 분기 — atelier 독립이전 시점 정리. 보류.
+
+## ▶ 다음 — specQA 단계 (frontier 4)
+
+- [ ] `NovelStudioMode.md` specQA 행 읽기 → `specqa_check.py`부터(채점기 먼저). FROZEN 아웃라인 → 씬 계약,
+      "검증 가능 기준 vs 미학(검증 불가)"을 31B가 옳게 가르나. 심은 골든 + 키0 replay → ★실콜. 2패스 옵션.
+- [ ] specQA 생산자(planning/design 거울) — 그 뒤.
+
 ## 이전 (frontier 2 마무리)
 
 - [x] 2패스 스트레스 픽스처 `fixtures_ko_hard2/3` `--verify` 비교 측정 완료 — 과교정 없음 확정 +
