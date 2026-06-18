@@ -47,7 +47,7 @@ def _get_pacer(api_key: str) -> dict:
 # 오픈라우터 유료 단가 (USD / 1M tokens, 2026-06 기준). thinking은 출력으로 과금.
 # 실제 사용은 AI Studio 무료지만, "유료였다면 얼마"를 REPORT에 환산 표기한다.
 OPENROUTER_PRICES = {
-    "generator": {"input": 0.06, "output": 0.33},   # gemma-4-26b-a4b
+    "generator": {"input": 0.12, "output": 0.36},   # gemma-4-31b (golem=31solo)
     "critic":    {"input": 0.12, "output": 0.36},   # gemma-4-31b
 }
 MAX_RETRIES = 4
