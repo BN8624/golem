@@ -1,0 +1,29 @@
+{
+  "scene_mixed": [
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "왼팔 부재 = 인물사실, 동작 묘사로 검증" },
+      { "criterion_id": "C3", "reason": "S1 편지 낭독 = 복선 회수, 회수 여부 검증" },
+      { "criterion_id": "C4", "reason": "씬 시점 순서 = 타임라인, 순서 검증" },
+      { "criterion_id": "C6", "reason": "발타자르=적대자 = 인물사실, 묘사로 검증" }
+    ] },
+    { "verifiable": [
+      { "criterion_id": "C3", "reason": "S1 회수 여부 객관 검증" },
+      { "criterion_id": "C1", "reason": "왼팔 연속성" },
+      { "criterion_id": "C6", "reason": "적대자 사실" },
+      { "criterion_id": "C4", "reason": "타임라인 순서" }
+    ] },
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "왼팔 연속성" },
+      { "criterion_id": "C2", "reason": "긴장이 '점층'한다니 단계가 있어 검증 가능해 보임" },
+      { "criterion_id": "C3", "reason": "S1 회수" },
+      { "criterion_id": "C6", "reason": "적대자 사실" }
+    ] }
+  ],
+  "scene_aesthetic": [
+    { "verifiable": [] },
+    { "verifiable": [] },
+    { "verifiable": [
+      { "criterion_id": "C1", "reason": "신뢰가 '전달'되는지 보면 되니 검증 가능해 보임" }
+    ] }
+  ]
+}

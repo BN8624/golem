@@ -77,11 +77,24 @@
 - [ ] (리뷰 4) 생산·검증 독립화 — 26B/사람 표본 비교 측정설계(코드수정 아님). 보류.
 - [ ] (리뷰 6) vendoring 분기 — atelier 독립이전 시점 정리. 보류.
 
-## ▶ 다음 — specQA 단계 (frontier 4)
+## specQA 단계 (frontier 4) — 캐논/미학 격리 채점기
 
-- [ ] `NovelStudioMode.md` specQA 행 읽기 → `specqa_check.py`부터(채점기 먼저). FROZEN 아웃라인 → 씬 계약,
-      "검증 가능 기준 vs 미학(검증 불가)"을 31B가 옳게 가르나. 심은 골든 + 키0 replay → ★실콜. 2패스 옵션.
-- [ ] specQA 생산자(planning/design 거울) — 그 뒤.
+- [x] `NovelStudioMode.md` specQA 행 읽음 → **분류(격리) 과제**로 확정(검출 아님): 씬 계약 기준을
+      캐논(검증가능)/미학(검증불가)으로 가르기. "초고 검증"은 build/integration 범위라 제외. 상세 context-notes.
+- [x] `specqa_check.py` 출범 — canon_check·design_check의 형제(검출↔격리). 입력=premise+씬 기준목록,
+      출력=31B가 캐논이라 라벨한 집합, 골든=심은 캐논 ID. detect/verify 2패스·N시드·exact·recall·fp·안정성
+      기계 재사용(`verifiable`/`criterion_id`만 다름). **fp(미학→캐논 오라벨)=금지된 합의채점 흉내라 핵심
+      측정축**, 보수적 기본값 "의심되면 미학". 31B 핀+ROLE 가드 포함.
+- [x] 심은 픽스처 `fixtures_specqa/`: contract.json(scene_mixed C1·C3·C4·C6=캐논/C2·C5=미학 +
+      scene_aesthetic 전부 미학) + cases.json(골든 [C1,C3,C4,C6]·[]) + replay_demo.json. 후자는 design
+      clean(빈 골든)의 거울이되 반대 실패(검증가능 지어내기)를 잼.
+- [x] 키 없는 `--replay`로 채점 배선 검증 — specqa-20260618-214057: scene_mixed exact 0.667(흔든 시드
+      C4누락+C2헛라벨), C4 recall 0.667·나머지 1.0, fp 0.33. scene_aesthetic exact 0.667(C1 헛라벨),
+      "(전부 미학 계약)" 출력. fp 진단 계측도 결과 JSON에 기록. 일부러 흔든 시드가 구분돼 수학 신뢰됨.
+- [ ] ★실제 31B 런(`--n 3`·`--verify`) — 사용자 go 뒤에만. frontier 질문: 31B가 격리를 옳게 하나 +
+      미학→캐논 오라벨을 2패스가 깎나(canon precision 한계의 specQA판인지 비대칭인지 측정).
+- [ ] 어려운 픽스처(미학을 구체어로 위장한 fp 함정 + 캐논을 부드럽게 쓴 fn 함정)로 격리 한계 측정.
+- [ ] specQA 생산자(planning/design 거울) — 그 뒤. FROZEN 아웃라인 → 씬 계약 산출.
 
 ## 이전 (frontier 2 마무리)
 
