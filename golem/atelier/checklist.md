@@ -61,6 +61,10 @@
       회수로 인정), hidden_unresolved S2·S4 recall 1.0(재언급-only 헛회수를 미회수로 검출). 2패스도 1.0
       유지(과교정 없음). **canon과 비대칭 — canon은 precision에 2패스 필요, design은 1패스부터 강함.**
       단 이 두 함정으론 한계 미도달(더 센 함정 필요). 상세 context-notes·HANDOFF.
+- [x] hard2 `fixtures_design_hard2`(오회수·부분회수 = 가짜 payoff)로 한 번 더 밀기 — design-202038/202419.
+      misattributed(던져탈출·복수처럼 쓰이나 정체/명령자X) recall 1.0·2패스 과교정 0, partial(4/5 조각)
+      recall 1.0. **4축(정황회수·헛회수·오회수·부분회수) 모두 1패스 robust. 잠정결론: setup→payoff는
+      31B 1패스로 충분.** 남은 미시도: 장거리·setup충돌(후자는 canon 범위). 상세 context-notes.
 
 ## 이전 (frontier 2 마무리)
 
