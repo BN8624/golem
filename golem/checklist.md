@@ -206,4 +206,5 @@ P1 (다음 실험 전):
 - [x] SCN-003 turn 0.667 파보니 산술지터 아니라 계약모호(ADVANCE도 turn 올리나 미명세) → RULE-05에 turn 정의 핀 → 1.0/6/6 완전수렴
 - [x] 모호성 종류 사전 신설(GolemStudioMode §6.1): G60~64 실측 6종(enum·컬렉션·경계·순서/타이밍·카운터·빈입력) — 반응적 핀→사전 차단
 - [x] 트랙 A reconcile 자율 oracle 배선: `--auto-oracle`로 oracle 다리=31B 자율생성(손golden 대체). 검증 replay 회귀(키0)+fill_auto_oracle 라이브 로켓 6/6. 잔여=풀 E2E는 graded 빌드런 필요
+- [~] (트랙 C 본선, G65, IN-FLIGHT) 로켓 실빌드 착수: 배관 픽스 완료(planning_packet_rocket/acceptance_tests.json 복사) → design.py 백그라운드 실행 중 세션 종료. 새 세션 = design_packet_rocket 검증 후 build_graded --reconcile(★키, 누적빌드 첫 graded + reconcile 풀 E2E)
 - [ ] (트랙 C 다음) 로켓 B겹 대사 텍스트 → StoryForge 일관 바이블 / 누적 빌드 레버(graded 런 겸 reconcile 풀 E2E)

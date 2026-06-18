@@ -914,3 +914,18 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   자율 모드서 ORACLE_BUG 미적용(일회성 생성값을 golden으로 안 박음), CONTRACT_AMBIGUOUS 핀만 영구.
   검증 = replay 회귀(키0) 그린 + `fill_auto_oracle` 라이브 로켓 6/6 골든 일치. 잔여 = 풀 E2E(Build합의 vs
   자율oracle)는 graded 빌드런 필요(build_runs에 graded 0개) → 트랙 C 카드 실빌드 때 합류.
+
+## G65 — 트랙 C 본선 착수: 로켓 실빌드(IN-FLIGHT, design 백그라운드 중 세션 종료)
+**무엇**: 트랙 C(서사 본선) 첫 실빌드 시작. 체인 = design.py(★키) → build_graded --reconcile(★키).
+- **배관 픽스(키0)**: 로켓 planning 패킷이 A겹 프로브용 최소(concept.md+contract.json만)라, design.py가
+  `load_planning`에서 요구하는 `acceptance_tests.json`이 없어 FileNotFoundError(키 소모 전 실패). 정식 카드들은
+  planning 패킷에 acceptance_tests.json을 두는 구조라, `specqa_packet_rocket/acceptance_tests_draft.json`을
+  `planning_packet_rocket/acceptance_tests.json`으로 복사. design.py는 거기서 `t["id"]`만 읽어 test_ids로 쓰므로
+  draft의 풍부한 형식과 호환(6시나리오 SCN-001~006). build_graded는 별개로 specqa의 draft를 직접 읽으니 영향 없음.
+- **IN-FLIGHT**: 픽스 후 `design.py --packet planning_packet_rocket --out design_packet_rocket`(★키) 백그라운드 실행
+  중 사용자가 새 세션 전환 지시 → design 미완(산출물 미생성, 31B lead→8축 병렬reviews→synth 도는 중)으로 종료.
+  design.py는 실시간 로그 없이 끝에 일괄 출력(events.jsonl은 build 런 전용)이라 중간 진척 훅 없음.
+- **새 세션 첫 동작**: `ls golem/studio/design_packet_rocket/` — 있으면 산출물 검증(module_manifest ≥3·traceability
+  BLOCKING 0) 후 build_graded로, 없으면 design.py 재실행(픽스 적용돼 있으니 그대로). 상세 = HANDOFF ⚠ IN-FLIGHT.
+- **왜 이 한 런이 중요**: design_packet_rocket이 생기면 build_graded 한 런으로 ①누적빌드 첫 graded 카드
+  ②reconcile 풀 E2E(Build합의 vs 자율oracle, 지금까지 graded 빌드런 0개라 미실증) ③B겹 대사 토대를 동시 해결.
