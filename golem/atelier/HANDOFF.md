@@ -30,25 +30,31 @@ python planning.py --replay fixtures/planning_replay.json --synthesize --out run
 검증된 실측치:
 - canon_check 실 31B: exact 1.0 / 2-of-2 / 안정 1.0 / 오탐 0 (단, 픽스처가 쉬워 당연에 가까움).
 - planning 실 31B(영어): BLOCKING 12 흡수 → canon 8 → FROZEN. 한 줄 아이디어가 실제로 자람(Soul-Echo 등).
+- planning 실 31B(한국어): BLOCKING 10 흡수 → canon 7 → FROZEN. synth 11병렬 빈패킷 0/11 = 한국어 안정.
 
-## ⚠ 진행 중 이슈 — 한국어 synthesis가 빈 패킷 반환 (미해결)
+## ✓ 해소됨 — 한국어 synthesis 빈 패킷 (재현 안 됨, 2026-06-18)
 
-`planning.py` 프롬프트에 "로그라인과 같은 언어로 써라"(LANGUAGE 줄)를 박은 뒤, **한국어** 로그라인으로
-synthesize하면 synth가 빈 dict를 반환해 `decisions/canon 0 → OPEN → exit 1`. **영어 출력일 땐 정상(FROZEN)**.
+이전 핸드오프가 "한국어 = 빈 패킷(OPEN)"이라 단정했으나 **코드 수정 없이 재현 실패**. synth만 11키 병렬로
+재서 **빈 패킷 0/11**(단발 1 + 병렬 11 = 12/12 FROZEN, canon 5~7). 잘림이 간헐이면 11번 중 한 번은
+났어야 하는데 0이다. → 코드 결함 아니라 그때 모델/서버 일시 상태로 판단(이번에도 5xx 재시도 복구).
 
-- 유력 원인: 한국어 synthesis JSON(긴 premise+canon+decisions)이 **출력 토큰 상한에 잘려** brace 매칭 실패.
-- 진단 계측 추가됨(미커밋 아님, 커밋됨): `RealCaller.synth`가 파싱 실패 시 `runs/_synth_raw.txt`에
-  raw 응답(len·head·tail)을 덤프한다.
+- 근본 수정(max_output_tokens 상향) 불필요. 진단 덤프(`RealCaller.synth`→`runs/_synth_raw.txt`)는
+  안전망으로 **유지**(실패시만 작동, 무해). 자세한 근거는 `context-notes.md`.
+- 산출물: `runs/bible_packet_ko/`(한국어 FROZEN 바이블, canon 7축 — 카엘·리아 남매, 영혼의 조각 5개 등).
 
-### 다음 액션 (순서대로)
+### end-to-end 닫힘 (2026-06-18, canon-20260618-162900)
 
-1. **재실행 + 원인 확정**: `python planning.py --idea "전쟁에서 왼팔을 잃은 검사와 그의 여동생이 죽은 왕의 비밀을 좇는다." --synthesize --out runs/bible_packet_ko`
-   → 실패하면 `runs/_synth_raw.txt`를 읽는다. `len`이 상한 근처고 `tail`이 JSON 중간에서 끊겼으면 **잘림 확정**.
-2. **고치기** (잘림이면): `lib/llm.py` generate config에 `max_output_tokens` 상향, 또는 synthesis를
-   2콜로 분할(canon 따로), 또는 synthesis JSON을 줄인다(terms/scope 생략). 가장 싼 건 출력 상한 상향.
-3. 고쳐서 한국어 FROZEN 바이블이 나오면 **진단 덤프(synth raw) 코드 제거**.
-4. **end-to-end 1회**(★키): 생성된 한국어 바이블의 canon 일부를 일부러 위반하는 초고 + `cases.json`을 만들어
-   `python canon_check.py --fixtures <그 폴더> --n 3` → planning→QA 사슬을 실콜로 증명.
+`fixtures_ko/`(한국어 바이블 canon 7축 + 위반/클린 초고) 실콜 채점 → clean exact 1.0/오탐 0,
+violation C1·C2 모두 1.0. **패러프레이즈 모순(왼손 고삐·피 안 섞인 남남)도 31B가 검출.**
+→ frontier 1·2 닫힘: 한 줄 로그라인 → FROZEN 바이블 → 캐논 채점이 실콜로 한 바퀴 돈다.
+
+### 다음 액션 (둘 중 택1)
+
+1. **어려운 픽스처로 채점기 한계 깨기** (★키): 지금 픽스처는 패러프레이즈까지 다 잡혀 1.0 — 아직 쉽다.
+   `context-notes.md`가 지목한 (a) 미묘한 타임라인 드리프트, (b) 인물 지식상태 위반(아직 모를 정보를 앎),
+   (d) 장거리(여러 챕터 누적) 캐논으로 밀어 깨지는 지점 = 캐논/미학 경계의 실거리를 잰다.
+2. **design 단계 착수** (아래 로드맵): 비트시트 + setup→payoff traceability. planning이 한국어로 닫혔으니
+   그 FROZEN 바이블을 계약 패킷으로 받아 design이 얹힌다.
 
 ## 그 뒤 로드맵
 

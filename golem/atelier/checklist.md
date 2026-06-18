@@ -24,9 +24,12 @@
 - [x] 출력 = `bible.json`(premise + canon[{id,text}]) — **canon_check 입력 모양과 일치, 루프 닫힘**.
 - [x] 키 없는 `--replay`로 A/B/C·synthesize 배선 검증(BLOCKING 흡수→FROZEN, canon 5).
 - [x] ★실제 31B 런(영어) — BLOCKING 12 흡수 → canon 8 → FROZEN. 한 줄 아이디어가 실제로 자람.
-- [~] ★한국어 출력 — LANGUAGE 프롬프트 박음. **단 한국어 synth가 빈 패킷(OPEN) — 잘림 의심, 미해결.**
-      synth raw 덤프 계측 추가. 새 세션: `HANDOFF.md` 다음 액션 1~3 참조.
-- [ ] planning 바이블 → canon_check 실초고 채점까지 end-to-end 1회(키 필요).
+- [x] ★한국어 출력 — LANGUAGE 프롬프트 박음. **빈 패킷 버그 재현 안 됨: synth 11키 병렬 0/11 빈패킷
+      (단발 1 + 병렬 11 = 12/12 FROZEN, canon 5~7).** 코드 수정 없이 통과 → 그때 모델/서버 일시 상태로 판단.
+      진단 덤프(`_synth_raw.txt`)는 안전망으로 유지(실패시만 작동, 무해). 측정 2026-06-18.
+- [x] ★planning 바이블 → canon_check 실초고 채점 end-to-end(한국어, `fixtures_ko/`, canon-20260618-162900):
+      clean exact 1.0/오탐 0, violation C1·C2 모두 1.0. **패러프레이즈 모순(왼손 고삐·피 안 섞인 남남)도 검출.**
+      → frontier 1·2가 한 줄→바이블→채점으로 닫힘.
 
 ## 다음 (planning 검증 뒤)
 
