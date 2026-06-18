@@ -52,8 +52,10 @@
 - [x] design 생산자 `design.py`(planning의 거울): FROZEN 바이블 → lead 비트시트 → 10축 리뷰 → synthesis.
       출력 `outline.json`(premise + setups[{id,text}]) + `beatsheet.md` = design_check 입력 모양. 31B 핀 포함.
       키리스 `--replay` 통과 — BLOCKING 2 흡수, setups 5/beats 11, OUTLINE_STATUS FROZEN.
-- [ ] ★design 실생산(`--bible runs/bible_packet_ko/bible.json`) → 생산물을 design_check으로 채점
-      (golden=[], 생산자가 정말 다 회수했나) = design→design_check end-to-end. 사용자 go 뒤에만.
+- [x] ★design 실생산(`--bible runs/bible_packet_ko/bible.json`, runs/outline_ko) — BLOCKING 5 흡수,
+      setups 6/beats 10 FROZEN. 생산물을 design_check `--verify` 채점(golden=[]) → exact **1.0**/오탐 0/
+      안정 1.0(design-20260618-195923). **생산자가 setup 6개 다 회수 + 채점기 동의 = planning→design→
+      design_check end-to-end 닫힘**(canon-162900의 design판).
 - [ ] 어려운 픽스처(회수를 정황에만 숨김 / 회수처럼 보이는 함정)로 2패스 한계 깨기.
 
 ## 이전 (frontier 2 마무리)

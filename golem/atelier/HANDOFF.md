@@ -100,17 +100,26 @@ frontier 3 시작. 사용자가 "2(design 본류)"를 골랐다. canon_check의 
 - 31B 핀 가드 추가(canon_check·design_check 실콜 경로) — 26B 전수조사 호출 0 확인 후 잠복 위험 차단.
 - design.py(planning 거울) 출범 — 바이블 → 비트시트 → 10축 → FROZEN 아웃라인. 키 0 replay FROZEN 통과.
 
-### ▶ 다음 세션 첫 액션 — design end-to-end ★실콜 (키 필요, 사용자 go)
+### ✓ design end-to-end 닫힘 (2026-06-18, design-195923)
 
-1. **design 실생산 → 실채점**(루프 닫기 마무리): `python design.py --bible runs/bible_packet_ko/bible.json
-   --out runs/outline_ko` 로 실제 비트시트 생산 → 생산물(outline.json+beatsheet)을 design_check으로
-   golden=[] 채점(임시 cases.json 1줄). "생산자가 정말 모든 setup을 회수했나"가 통과하면 planning→design→
-   design_check end-to-end가 닫힌다(canon-162900의 design판).
-2. **어려운 design 픽스처**(2패스 한계 측정): 회수를 정황에만 숨기거나(미회수를 1패스가 놓치게) 회수처럼
-   보이는 함정(헛회수를 1패스가 오인하게)을 깔아, design_check 2패스가 canon처럼 precision을 끌어올리나 본다.
+`design.py --bible bible_packet_ko/bible.json` 실생산(BLOCKING 5 흡수, setups 6/beats 10 FROZEN) →
+생산물을 design_check `--verify`로 golden=[] 채점 → exact **1.0**/오탐 0/안정 1.0. 생산자가 setup 6개를
+실제로 다 회수 + 채점기 동의 → **planning → design → design_check가 실데이터로 한 바퀴**(canon-162900의
+design판). 단 생산자 synth가 "다 회수하라"를 강제받아 미회수가 잘 안 난다 — 이 루프는 *합의 확인*이지
+*채점기 한계 측정*은 아니다(한계는 심은 픽스처 몫).
 
-> 권고: 1을 먼저(루프 닫기) → 2로 한계 측정. 보류 카드: 통사적 부정 한계 공략(canon hard3 subtle_clean
-> 오탐 0.33→0, 검증 프롬프트에 "부정문 방향 먼저" 명시) — 별도 안건, 필요할 때.
+### ▶ 다음 세션 첫 액션 — 두 갈래 (사용자 선택)
+
+1. **어려운 design 픽스처로 2패스 한계 측정**(키 필요): 지금 design_check은 쉬운 픽스처라 1패스가 이미
+   1.0이라 2패스 가치가 0. 회수를 정황에만 숨기거나(1패스가 놓치게) 회수처럼 보이는 함정(1패스가 오인하게)을
+   깔아, design_check 2패스가 canon처럼 precision을 끌어올리나/한계가 어디서 깨지나 본다. → canon/design
+   경계의 실거리. (canon hard1·hard3의 design 대응.)
+2. **specQA 단계로 진행**(다음 frontier): NovelStudioMode 매핑상 design 다음은 specQA(씬 계약 + 캐논/미학
+   위험 분리). FROZEN 아웃라인을 받아 씬별 계약 패킷을 만들고 "검증 불가 기준=미학으로 격리"를 같은 패턴으로.
+
+> 권고: planning·design 둘 다 *쉬운 픽스처 1.0*에 머물러 있다(canon만 hard로 한계까지 밀어봤다). 1로
+> design 채점기를 hard까지 밀어 경계를 데이터로 긋는 게 본질에 충실. 2는 범위를 넓히는 길. 사용자 판단.
+> 보류 카드: 통사적 부정 한계 공략(canon hard3 subtle_clean 오탐 0.33→0) — 별도 안건, 필요할 때.
 
 > 한계 메모: 지식상태/타임라인 위반은 현재 canon 구조(정적 사실 7개)론 직접 채점 불가 — canon이 "X시점엔
 > Y를 모른다" 같은 시간적 사실을 안 담는다. 그 유형을 재려면 canon 스키마 확장이 선행돼야 한다(별도 안건).
