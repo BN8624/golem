@@ -57,6 +57,9 @@ BACKOFF_500_SEC = 5.0    # 서버 5xx 지수백오프: 5→10→20→40s
 # (키당 1콜/2분 = 720/일 < RPD 1500이라 쿼터 안전. 서버 폭풍·일시 RPM은 시간이 약.)
 SLOW_RETRY_SEC = 120.0   # 백오프 소진 후 무한 재시도 간격
 EMPTY_RETRIES = 2        # 빈 응답 재시도 상한
+# per-request 타임아웃(ms). 응답 없는 좀비 소켓을 끊어 transient 재시도로 빠지게 하는 안전망.
+# 정상 콜 최대 실측 ~24분(대형카드 verbatim 재출력)이라 30분 위로 잡아 정상 콜은 안 끊는다.
+REQUEST_TIMEOUT_MS = 1800000  # 30분
 
 
 class AllKeysExhausted(Exception):
@@ -185,6 +188,10 @@ def _is_transient(err: Exception) -> bool:
                               "connection aborted", "connection refused",
                               "timed out", "deadline exceeded")):
         return True
+    # httpx 타임아웃 예외(ReadTimeout/ConnectTimeout 등)는 str()이 비어 메시지 매칭이 샌다 —
+    # 타입명으로도 잡는다(per-request 타임아웃이 좀비 소켓을 끊으면 transient로 재시도되게).
+    if "timeout" in type(err).__name__.lower():
+        return True
     return isinstance(err, (ConnectionError, TimeoutError, socket.error,
                             OSError))
 
@@ -194,10 +201,15 @@ class LLMClient:
                  api_key: str | None = None):
         # import을 여기서 해서, API를 안 쓰는 코드(게이트 등)는 SDK 없이도 돈다
         from google import genai
+        from google.genai import types
 
         # api_key를 주입하면 그 키에 바인딩(워커=키). 안 주면 풀의 첫 키(단일키 모드).
         self._api_key = api_key or get_api_key()
-        self._client = genai.Client(api_key=self._api_key)
+        # http_options 타임아웃 = 좀비 소켓 안전망(REQUEST_TIMEOUT_MS). 끊기면 _is_transient→백오프 재시도.
+        self._client = genai.Client(
+            api_key=self._api_key,
+            http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS),
+        )
         self.call_count = 0
         self.max_calls = max_calls
         # 녹음: 경로를 지정하면 콜마다 응답 전문을 jsonl로 기록 (replay 재현용)
