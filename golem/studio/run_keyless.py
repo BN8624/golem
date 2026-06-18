@@ -7,9 +7,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PKG = HERE.parent  # 내부 golem 패키지 디렉토리
 
-# (이름, 스크립트) — 전부 키0. 게이트 테스트만 Node 필요.
+# (이름, 스크립트) — 전부 키0. 게이트/역산은 Node 필요.
+# _derive_l4_goldens는 _validate_l4_keyless가 읽는 참조 산출물(build_runs, gitignore)을 키0으로 재생성한다.
 TESTS = [
     ("contract replay", "replay.py"),
+    ("레버4 골든 역산(setup)", "_derive_l4_goldens.py"),
     ("레버4 selective keyless", "_validate_l4_keyless.py"),
     ("게이트 전 시나리오 검사(외부리뷰 #2)", "_gate_allscenarios_keyless.py"),
     ("FROZEN BLOCKING 흡수(외부리뷰 #1)", "_freeze_blocking_keyless.py"),
