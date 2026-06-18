@@ -13,6 +13,7 @@
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -79,6 +80,50 @@ EXISTING CODEBASE:
 
 """
 
+# 레버4: 선택적 컨텍스트. 건드리는 모듈만 본문 주입, 나머지는 동결 인터페이스(시그니처)만.
+_EDIT_HEADER_SELECTIVE = """You are the BUILD engineer making an INCREMENTAL EDIT to an EXISTING, WORKING
+codebase. Do NOT rewrite from scratch. You are shown ONLY the modules this card touches, in full. The OTHER
+modules are FROZEN and already verified — you see ONLY their public interface (signatures), never their bodies.
+Call the frozen modules exactly by those signatures; assume they behave correctly. Keep every existing export
+name/signature of the touched modules intact so the frozen modules keep working.
+
+OUTPUT RULE: re-output ONLY these touched files, with file markers — {touched_list}. Do NOT output the frozen
+modules; they are supplied unchanged by the harness. Any scenario not using the new action MUST produce output
+identical to before.
+
+TOUCHED MODULES (full source — edit these):
+{touched_code}
+
+FROZEN MODULES (interface only — call, do not reimplement, do not output):
+{frozen_iface}
+
+--- Now apply the card below on top of that codebase: ---
+
+"""
+
+
+def _iface_stub(path, src, exports):
+    """held-out 모듈을 본문 없이 시그니처만으로 표현(레버4). exports 각 이름의 `exports.NAME = ...`
+    선언 첫 줄에서 화살표 파라미터만 남기고 본문은 가린다. 데이터(객체) export는 값을 가린다(런타임엔
+    verbatim 복사본의 실제 값이 들어간다)."""
+    lines = src.splitlines()
+    out = [f"// {path} (FROZEN — 검증된 모듈, 본문 비공개. 시그니처대로 호출만. 이 파일은 출력하지 마라.)"]
+    for name in exports:
+        sig = None
+        for ln in lines:
+            m = re.match(rf"\s*exports\.{re.escape(name)}\s*=\s*(.*)", ln)
+            if not m:
+                continue
+            rhs = m.group(1)
+            if "=>" in rhs:
+                params = rhs.split("=>", 1)[0].strip()
+                sig = f"exports.{name} = {params} => {{ /* 본문 비공개 */ }};"
+            else:
+                sig = f"exports.{name} = /* 값 비공개(런타임에 실제 값 주입) */;"
+            break
+        out.append(sig or f"exports.{name} = /* 시그니처 미확인 */;")
+    return "\n".join(out)
+
 
 def load_all(pdir, ddir, sdir):
     contract = json.loads((pdir / "contract.json").read_text(encoding="utf-8"))
@@ -101,7 +146,7 @@ def _output_lines(state_shape):
     return "\n".join(lines)
 
 
-def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None):
+def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None, selective=None):
     rules = contract.get("data_contract", {}).get("rules", [])
     state_shape = contract.get("data_contract", {}).get("state_shape", {})
     examples = json.dumps(scen_inputs[:3], ensure_ascii=False, indent=2)
@@ -112,6 +157,11 @@ def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None)
                           rules="\n".join(f"- {r}" for r in rules) or "(none)",
                           system_design=sysd.strip() or "(none)", files=files_desc,
                           input_examples=examples, output_lines=_output_lines(state_shape))
+    if selective:  # 레버4: 건드리는 모듈만 본문 + 나머지 동결 인터페이스
+        return _EDIT_HEADER_SELECTIVE.format(
+            touched_list=", ".join(selective["touched_paths"]),
+            touched_code=selective["touched_code"],
+            frozen_iface=selective["frozen_iface"]) + body
     if base_code:  # 편집 모드(레버1·2): 기존 코드 주입 + scratch 금지 헤더
         return _EDIT_HEADER.format(base_code=base_code) + body
     return body
@@ -234,6 +284,9 @@ def main(argv=None):
     ap.add_argument("--base", default=None,
                     help="누적 빌드(편집 모드): 기존 코드 디렉토리를 주입하고 scratch 대신 수정시킴. "
                          "design(manifest)도 이 디렉토리에서 읽는다.")
+    ap.add_argument("--inject-modules", default=None,
+                    help="레버4(선택적 컨텍스트): 이번 카드가 건드리는 모듈만 본문 주입(쉼표구분, base 기준 "
+                         "상대경로). 나머지 base 모듈은 시그니처만 주고 verbatim 복사한다. --base 필요.")
     ap.add_argument("--specqa", default=str(HERE / "specqa_packet"))
     ap.add_argument("--cap", type=int, default=11)
     ap.add_argument("--out", default=None)
@@ -259,19 +312,40 @@ def main(argv=None):
     scen_inputs = [{k: v for k, v in s.items() if k not in grading_keys} for s in scenarios]
 
     base_code = None
-    if args.base:  # 레버1: 기존 코드(.js 전부)를 FILE 마커 형식으로 주입
+    selective = None
+    held_out = []  # 레버4: (상대경로, 원본소스) — 워크스페이스에 verbatim 복사
+    if args.base:
         bdir = Path(args.base)
-        base_code = "\n\n".join(
-            f"=== FILE: {p.relative_to(bdir).as_posix()} ===\n{p.read_text(encoding='utf-8')}"
-            for p in sorted(bdir.glob("**/*.js")))
+        all_js = sorted(bdir.glob("**/*.js"))
+        if args.inject_modules:  # 레버4: 건드리는 모듈만 본문, 나머지는 시그니처+verbatim
+            touched_paths = [m.strip().replace("\\", "/") for m in args.inject_modules.split(",")]
+            exports_by_path = {f["path"]: f.get("exports", []) for f in manifest.get("files", [])}
+            touched_chunks, frozen_chunks = [], []
+            for p in all_js:
+                rel = p.relative_to(bdir).as_posix()
+                src = p.read_text(encoding="utf-8")
+                if rel in touched_paths:
+                    touched_chunks.append(f"=== FILE: {rel} ===\n{src}")
+                else:
+                    frozen_chunks.append(_iface_stub(rel, src, exports_by_path.get(rel, [])))
+                    held_out.append((rel, src))
+            selective = {"touched_paths": touched_paths,
+                         "touched_code": "\n\n".join(touched_chunks),
+                         "frozen_iface": "\n\n".join(frozen_chunks)}
+        else:  # 레버1: 기존 코드(.js 전부)를 FILE 마커 형식으로 주입
+            base_code = "\n\n".join(
+                f"=== FILE: {p.relative_to(bdir).as_posix()} ===\n{p.read_text(encoding='utf-8')}"
+                for p in all_js)
 
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     base = Path(args.out) if args.out else (HERE / "build_runs" / f"graded-{run_id}")
-    prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=base_code)
+    prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs,
+                          base_code=base_code, selective=selective)
     pool = KeyPool(get_api_keys(), models=[MODEL_31])
-    mode = "EDIT/누적" if args.base else "SCRATCH"
+    mode = "EDIT/선택적" if selective else ("EDIT/누적" if args.base else "SCRATCH")
+    extra = f" touched={selective['touched_paths']} frozen={len(held_out)}" if selective else ""
     print(f"[BUILD v1/{mode}] manifest {len(manifest.get('files', []))}모듈, 시나리오 {len(scenarios)}"
-          f"(채점가능 {len(gradeable)}), cap={args.cap} keys={pool.size}, run={run_id}")
+          f"(채점가능 {len(gradeable)}), cap={args.cap} keys={pool.size}, run={run_id}{extra}")
 
     manifest_v = {"schema_version": "0.1", "module_format": "commonjs", **manifest}
     lock = threading.Lock()
@@ -290,7 +364,13 @@ def main(argv=None):
         ws = base / f"attempt{attempt:02d}" / "workspace"
         ws.mkdir(parents=True, exist_ok=True)
         try:  # 파싱·쓰기·게이트는 우리 하네스 — 여기 크래시는 HARNESS(카드 탓 아님), 런 안 깨고 기록
-            write_candidate(ws, parse_files(resp))
+            files = parse_files(resp)  # {경로: 본문}
+            if selective:  # 레버4: 동결 모듈은 빌더 출력 무시하고 base 원본을 verbatim 강제
+                touched = set(selective["touched_paths"])
+                files = {n: b for n, b in files.items() if n.replace("\\", "/") in touched}
+                for rel, src in held_out:
+                    files[rel] = src
+            write_candidate(ws, files)
             (ws / "scenarios.json").write_text(json.dumps(scen_inputs, ensure_ascii=False), encoding="utf-8")
             ok, reason, outputs = gate_and_run(ws, manifest_v, scenarios)
         except Exception as e:  # noqa: BLE001
