@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "module_format": "commonjs",
+  "entry": "main.js",
+  "files": [
+    { "path": "main.js", "exports": [], "imports": ["src/engine.js", "src/format.js"] },
+    { "path": "src/engine.js", "exports": ["runScenario"], "imports": ["src/actions.js", "src/state.js"] },
+    { "path": "src/actions.js", "exports": ["apply"], "imports": ["src/constants.js", "src/state.js", "src/systems.js"] },
+    { "path": "src/systems.js", "exports": ["tick"], "imports": ["src/power.js", "src/oxygen.js", "src/water.js", "src/food.js", "src/population.js", "src/morale.js", "src/research.js", "src/economy.js"] },
+    { "path": "src/state.js", "exports": ["createInitialState", "clone", "checkEnd"], "imports": ["src/constants.js"] },
+    { "path": "src/format.js", "exports": ["render"], "imports": [] },
+    { "path": "src/power.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/oxygen.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/water.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/food.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/population.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/morale.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/research.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/economy.js", "exports": ["step"], "imports": ["src/constants.js", "src/util.js"] },
+    { "path": "src/util.js", "exports": ["clamp", "floorDiv"], "imports": [] },
+    { "path": "src/constants.js", "exports": ["constants"], "imports": [] }
+  ]
+}
