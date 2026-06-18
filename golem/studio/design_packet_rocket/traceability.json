@@ -1,0 +1,69 @@
+{
+  "RULE-01": {
+    "text": "WAIT action -> turn += 1, fuel += constants.fuelRate.",
+    "design_modules": [
+      "src/logic.js"
+    ],
+    "exports": [
+      "applyWait"
+    ],
+    "tests": [
+      "SCN-001"
+    ],
+    "status": "covered"
+  },
+  "RULE-02": {
+    "text": "ADVANCE action -> cost check, stage increment, BEAT-N event, and log update.",
+    "design_modules": [
+      "src/logic.js"
+    ],
+    "exports": [
+      "applyAdvance"
+    ],
+    "tests": [
+      "SCN-002"
+    ],
+    "status": "covered"
+  },
+  "RULE-03": {
+    "text": "Evaluate win check at scenario start AND immediately AFTER each action: if stage >= 4, gameStatus = 'WON'.",
+    "design_modules": [
+      "src/engine.js"
+    ],
+    "exports": [
+      "runScenario"
+    ],
+    "tests": [
+      "SCN-003"
+    ],
+    "status": "covered"
+  },
+  "RULE-04": {
+    "text": "Once gameStatus == 'WON', stop immediately — process no further actions.",
+    "design_modules": [
+      "src/engine.js"
+    ],
+    "exports": [
+      "runScenario"
+    ],
+    "tests": [
+      "SCN-004"
+    ],
+    "status": "covered"
+  },
+  "RULE-05": {
+    "text": "Initialization of state (turn=0, fuel=0, stage=0, etc.) and turn increment restriction.",
+    "design_modules": [
+      "src/logic.js"
+    ],
+    "exports": [
+      "createInitialState",
+      "applyWait"
+    ],
+    "tests": [
+      "SCN-005",
+      "SCN-006"
+    ],
+    "status": "covered"
+  }
+}

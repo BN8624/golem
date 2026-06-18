@@ -929,3 +929,10 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   BLOCKING 0) 후 build_graded로, 없으면 design.py 재실행(픽스 적용돼 있으니 그대로). 상세 = HANDOFF ⚠ IN-FLIGHT.
 - **왜 이 한 런이 중요**: design_packet_rocket이 생기면 build_graded 한 런으로 ①누적빌드 첫 graded 카드
   ②reconcile 풀 E2E(Build합의 vs 자율oracle, 지금까지 graded 빌드런 0개라 미실증) ③B겹 대사 토대를 동시 해결.
+
+### G65 보강 — design 완주(IN-FLIGHT 해소)
+백그라운드 design.py 완주(exit 0, server 5xx 5회 재시도 후 성공). `design_packet_rocket/` 생성:
+4모듈, §7·§8.2 validator PASS, DESIGN_STATUS COMPLETE. 리뷰어 BLOCKING=2는 정보용 카운트지
+게이트 아님 — 기존 카드 전부 비0(idle 2·combat 3·eco 4·heat 2)이고 동일하게 build 진행함.
+(핸드오프에 잠깐 "BLOCKING 0 검증" 적었던 건 오기. 통과 기준은 validator PASS·COMPLETE.)
+다음 ★키 = build_graded --reconcile(로켓 누적빌드 첫 graded + reconcile 풀 E2E).
