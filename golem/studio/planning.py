@@ -277,19 +277,21 @@ def _write_packet(idea, draft, reviews, issues, packet, outdir):
         ensure_ascii=False, indent=2), encoding="utf-8")
 
     # BLOCKING은 synthesis가 decisions/assumed/deferred로 흡수해야 0이 된다.
-    resolved = bool(decisions or assumed or deferred)
-    frozen = resolved
+    # 흡수 항목 수가 BLOCKING 질문 수 이상이어야 FROZEN — 질문 여럿인데 결정 하나면 OPEN(외부리뷰 #1).
+    n_resolved = len(decisions) + len(assumed) + len(deferred)
+    n_open = max(0, n_block - n_resolved)
+    frozen = n_open == 0
     status = ["# STATUS", "",
               f"- 아이디어: {idea}",
               f"- 리뷰어가 올린 BLOCKING 원본: {n_block}",
               f"- 흡수: decisions {len(decisions)} / assumed {len(assumed)} / deferred {len(deferred)}",
-              f"- 미해소 BLOCKING: {0 if resolved else n_block}",
+              f"- 미해소 BLOCKING(흡수 부족분): {n_open}",
               f"- interface_contract 파일 수: {len(packet.get('interface_contract', {}).get('files', []))}",
               f"- acceptance_tests 수: {len(packet.get('acceptance_tests', []))}",
               "",
               f"CONTRACT_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소)'}"]
     (outdir / "STATUS.md").write_text("\n".join(status) + "\n", encoding="utf-8")
-    return {"frozen": frozen, "blocking_original": n_block,
+    return {"frozen": frozen, "blocking_original": n_block, "blocking_open": n_open,
             "decisions": len(decisions), "assumed": len(assumed), "deferred": len(deferred),
             "interface_files": len(packet.get("interface_contract", {}).get("files", [])),
             "acceptance_tests": len(packet.get("acceptance_tests", []))}
