@@ -17,8 +17,17 @@
       print도 상수 대신 `get_model`로 실제 모델 출력. **주의: 앞 1.0 런은 사실 26B였다.**
 - [x] ★31B로 재실행 — exact 1.0 / 2-of-2 / 안정 1.0 / 오탐 0 (canon-20260618-150843). 정직한 31B 수치.
 
-## 다음 (코어 검증 뒤)
+## planning 단계 (frontier 2)
 
-- [ ] planning 단계: 로그라인 → 바이블 초안 + 다축 ambiguity(연속성) 리뷰.
+- [x] `golem/studio/planning.py` → `planning.py` 포팅(자족 lib, 31B critic). A/B/C arm + synthesis.
+- [x] 소설판 10축(동기·복선·타임라인·지식상태·세계규칙·중복인물·테마·톤·스테이크·핸드오프).
+- [x] 출력 = `bible.json`(premise + canon[{id,text}]) — **canon_check 입력 모양과 일치, 루프 닫힘**.
+- [x] 키 없는 `--replay`로 A/B/C·synthesize 배선 검증(BLOCKING 흡수→FROZEN, canon 5).
+- [ ] ★실제 31B 런(`--idea "..." --synthesize`) — 진짜 로그라인으로 바이블 생성(사용자 go 대기).
+- [ ] planning 바이블 → canon_check 실초고 채점까지 end-to-end 1회(키 필요).
+
+## 다음 (planning 검증 뒤)
+
 - [ ] design 단계: 비트시트 + setup→payoff traceability.
 - [ ] 캐논 원장 누적(p0..p4 단계적 확장).
+- [ ] 어려운 캐논 픽스처로 채점기 한계 깨기(경계 확정).
