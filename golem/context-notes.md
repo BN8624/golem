@@ -1113,3 +1113,24 @@ golden_diffs **0** · failure_classes 없음. 회귀7(SCN-001~006,009) + EVACUAT
 **판독**: 레버4 소프트 천장이 ~14.6k(로켓 3배)에선 **안 잡힘**(A가 흐려질 거란 가설 기각). G72 판단대로
 "저하 안 보이면 모듈 충실화로 30k까지 키워 재측정" 분기 진입. 천장이 ≤14.6k가 아니라는 약한 하한만 확정 —
 진짜 천장 측정엔 더 큰 컨텍스트가 필요. **다음(키0): 카드 본문 35.7KB→~73KB(≈30k 토큰)로 확장 후 동일 A/B 재측정.**
+
+**확장 실행(키0, 커밋 9131978)**: station_base 30→46모듈, 본문 35.7KB→63.5KB(1.77x). 신규 16서브시스템
+추가 — 1차 12(battery·medical·inventory·telemetry·thermalzones·structural·science·safety·navlog·radlog·
+habitat·report) + 2차 4(airlock·coolant·attitude·waste). 전부 turn기반 결정적(난수0), 기존 idiom `step(state,c)`.
+
+**다양성 보존 불변식(핵심 설계)**: 신규 모듈은 게이팅 변수(`population`·`research`)와 BUILD를 가르는
+`credits`를 **절대 안 건드리고** 출력키 중 `alerts`·`log`·`morale`(게이트 무관, medical/habitat만 bounded)만
+쓴다 → WON/LOST/EVACUATED 결과가 구조적으로 불변. 실측 확인: 확장 전후 gameStatus 동일
+(PLAYING×4·WON×2·LOST×1·EVACUATED×3). 각 모듈은 기존 내부상태(temperature·radiation·hull·wear·fatigue
+·navDrift 등)를 읽어 진단을 내므로 죽은코드 0(16모듈 전부 골든 alerts/logs에 실제 등장 확인 — medical은
+건강이 mild 시나리오선 안 떨어져 정기검진 `CHECKUP` 로그로 live화).
+
+**G72 노트와의 차이(의도)**: G72는 "더 키울 땐 모듈 확대보다 기존 모듈 충실화"라 적었으나, 사용자 G73 계획은
+신규 모듈 추가를 명시. 신규 모듈이 lost-in-the-middle 스트레서로 더 충실(touched engine을 더 많은 무관
+모듈 사이에 묻음)하고, alerts/log만 쓰는 진단 모듈은 다양성 위험이 없어 채택. 회귀·골든 자동보존은 gen
+구조상 공짜(ref=base 복사+engine만 교체)라 신규 모듈도 양쪽 동일.
+
+**73KB 목표 대비 멈춘 이유(§2)**: 16모듈 전부 물리적으로 구별되는 진짜 서브시스템·전부 live. 63.5KB는
+목표 73KB의 ~87%(콜 추정 ~26k). 더 키우려면 중복/죽은코드 위험이 커져, 패딩 대신 여기서 멈추고 재측정
+우선. 재측정도 둘 다 1.0이면 그때 기존 모듈 충실화로 73KB까지(확장은 쌈). 검증: strict 게이트 46모듈 통과
+·회귀7 바이트동일·run_keyless ALL PASS.

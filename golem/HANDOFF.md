@@ -2,18 +2,19 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-18, G73)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 런 완료 — **둘 다 1.0, 레버4 천장 ~14.6k에선 미포착** → 카드를 ~30k로 키워 재측정하는 분기.
+**현재 상태 (2026-06-18, G73)**: 누적 빌드 4레버 전부 닫힘 + 외부리뷰 반영 + CI 그린. 본선은 **31solo**(gemma-4 31B 단독). 스케일 확장 1차 A/B ★키 둘 다 1.0(천장 ~14.6k 미포착) → **카드를 1.77x(63.5KB, 46모듈)로 확장 완료(키0)** — ★키 A/B 재측정 대기.
 
-**▶▶ 다음 세션 첫 동작 = 카드 ~30k 확장 (키0 작업, ★키 불필요)**.
-- 무엇: `station_base` 본문을 35.7KB → ~73KB(≈30k 토큰)로 충실화(새 서브시스템 모듈 추가). 레버4 진짜 천장을 더 큰 컨텍스트에서 다시 친다.
-- 제약 4: ① 결정성(turn기반·난수0, 기존 idiom `step(state,c)`) ② 골든 자동 재역산(`gen_station_l_golden.py`로 base+REF_ENGINE node 역산, 손계산 0) ③ 회귀7 base==ref 바이트동일 유지(새 로직 base·ref 양쪽 동일, EVACUATE만 engine 레벨에서 갈림) ④ 죽은코드 0(새 로직 전부 출력키 morale·research·credits·alerts·logs 등에 작게·조건부 반영).
-- 검증 순서: (1) 새 모듈+배선 → node 10시나리오 무오류·골든 재역산 (2) `gen_station_l_golden.py` 회귀7 바이트동일·시나리오 다양성(WON/LOST/EVACUATED 혼재) 유지 (3) `python golem/studio/run_keyless.py` ALL PASS + 게이트 strict 늘어난 모듈 통과 (4) **(★키, go 후)** 동일 A/B 재측정 @ ~30k.
-- 확장 후 A/B 재측정 명령(참고, G73과 동일 패킷):
-  - **A(전체주입)**: `python golem/studio/build_graded.py --base golem/studio/station_base --packet golem/studio/planning_packet_station_l --specqa golem/studio/specqa_packet_station_l --reconcile`
-  - **B(선택주입)**: 위 + `--inject-modules src/engine.js`
+**▶▶ 다음 세션 첫 동작 = 확장 카드로 ★키 A/B 재측정 (사용자 go 대기 — 키 사용)**.
+- 무엇: `station_base` 정거장 46모듈(35.7KB→63.5KB, 1.77x). 신규 16서브시스템은 전부 turn결정적·alerts/log(+medical/habitat만 bounded morale)에만 반영 → 게이팅 불변·다양성 보존. EVACUATE 신기능은 그대로 engine.js만 touched.
+- 어떻게: 같은 패킷에서 두 런(G73과 동일 명령).
+  - **A(전체주입)**: `python golem/studio/build_graded.py --base golem/studio/station_base --packet golem/studio/planning_packet_station_l --specqa golem/studio/specqa_packet_station_l --reconcile` (콜 추정 ≈26k, 46모듈 verbatim 재출력)
+  - **B(선택주입)**: 위 + `--inject-modules src/engine.js` (콜 추정 ≈6k, engine만 본문)
+  - 비교: A 회귀/합의 정확도가 흐려지는데 B가 1.0 유지하면 레버4 소프트 천장 포착. G73(~14.6k)에선 둘 다 1.0이었음.
+- 크기 메모: 목표 ~73KB(~30k)의 ~87%(63.5KB/~26k). 16모듈 전부 live(죽은코드0)·중복 회피로 여기서 멈춤 — 재측정도 둘 다 1.0이면 그때 모듈 충실화로 73KB까지 더 키운다(확장은 쌈).
 - 갈림길(곁가지): ② combat 자율oracle ③ 외부리뷰 P1(#10 등).
 
 **최근 완료 (역순)**:
+- **G73 스케일 확장 카드 제작(키0)**: `station_base` 30→46모듈(본문 35.7KB→63.5KB, 1.77x). 신규 16(battery·medical·inventory·telemetry·thermalzones·structural·science·safety·navlog·radlog·habitat·report·airlock·coolant·attitude·waste) 전부 turn결정적·게이팅(population·research·credits) 불변·alerts/log+bounded morale만 → **gameStatus 다양성 보존(PLAYING×4·WON×2·LOST×1·EVACUATED×3)**·회귀7 base==ref 바이트동일·16모듈 전부 골든 기여(죽은코드0)·strict 게이트 46모듈 통과·run_keyless ALL PASS. contract RULE-02 ORDER·manifest 동기화. (커밋 9131978)
 - **G73 레버4 스케일 1차 A/B(★키)**: 정거장 30모듈 같은 패킷 두 런 — A전체주입(graded-20260618-222413, 콜≈14.6k)·B선택주입(graded-20260618-223623, 콜≈5k). **둘 다 게이트 11/11·overall_agreement 1.0·golden_diffs 0**(회귀7+EVACUATE3 전부 1.0). EOL 정규화 대조 → engine.js만 실제 변경·held-out 29모듈 바이트동일(raw diff의 29모듈 차이는 전부 CRLF↔LF, node 채점이라 무해). **레버4 소프트 천장이 ~14.6k(로켓 3배)에선 안 잡힘** → A 흐려질 거란 가설 기각, ≤14.6k 아님이란 약한 하한만 확정. G72 판단대로 모듈 충실화로 30k 확장 후 재측정 분기.
 - **G72 스케일 확장 대형카드 제작(키0)**: `station_base` 정거장 30모듈(코어8+확장12 서브시스템+오케스트레이션+데이터, turn기반 결정적 스케줄·난수0) + `planning_packet_station_l`(RULE-07 EVACUATE=engine만 touched) + `specqa_packet_station_l`(시나리오10=회귀7+EVACUATE3, 골든은 참조engine node역산 `gen_station_l_golden.py`). 게이트 strict 30모듈 통과·회귀7 base==참조 바이트동일·레버4 프롬프트 키0검증(engine본문O/나머지29 시그니처+verbatim). A전체주입≈14.6k vs B선택주입≈5k 콜토큰. **판단: 30~50k 목표지만 과투자 전 ~14.6k(로켓3배)로 1차 ★키 A/B 먼저, 저하 안 보이면 확장**. (gen 버그 1건 node가 잡음: scenarios.json input 래퍼 누락→수정).
 - **G71 외부 코드리뷰 반영(키0)**: #2 게이트가 첫 시나리오만 종료코드 검사하던 실버그 → 전 시나리오 거부([build_graded.py:230]) · #1 FROZEN이 BLOCKING 흡수 수 미확인하던 오판 → 흡수 ≥ 질문 수일 때만 동결([planning.py:280]) 둘 다 픽스 + 키0 회귀잠금. #6 CI = `run_keyless.py` + `.github/workflows/keyless.yml`(push/PR마다 스위트, GitHub Actions 그린). #3(합의≠정확)·#4(oracle 동일모델)는 골렘 정답앵커가 합의 아닌 **실Node 골든**(모델독립)이라 규율로 정리 — 31B auto_oracle은 모호성 탐지기로만.
@@ -58,7 +59,7 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 
 ## 다음 액션
 
-1. **(다음 세션 첫 동작) 카드 ~30k 확장 (키0)** — G73 A/B가 둘 다 1.0이라 천장 ~14.6k에선 미포착. 위 "다음 세션 첫 동작"의 제약 4·검증 순서대로 `station_base` 본문을 ~73KB(≈30k 토큰)로 키운 뒤 동일 A/B 재측정(★키, go 후).
+1. **(다음 세션 첫 동작) 확장 카드로 ★키 A/B 재측정 (사용자 go 대기)** — `station_base`를 1.77x(63.5KB·46모듈)로 확장 완료(키0·검증 끝). 위 "다음 세션 첫 동작"의 A(전체주입)·B(선택주입) 명령으로 레버4 천장 재측정. 둘 다 1.0이면 73KB까지 더 키워 재측정.
 2. (곁가지) combat 자율oracle / 외부리뷰 P1(#10).
 3. (backlog) levels 등 출력표면 확장 / 발열 Adversarial QA·Integration 정식 완주 / CI actions Node20→최신 버전업(경고만, 실패 아님).
 

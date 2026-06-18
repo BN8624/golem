@@ -225,4 +225,5 @@ P1 (다음 실험 전):
 - [x] 31solo 강제(G70): config generator 26b→31B(스튜디오 3도구가 실제 26B 돌던 잔재 제거). 이유=26B 구글 서버 1주일+ 불능. vocab 핀 3패킷 31B 확인런 1.0 재현(재실험 불필요)
 - [x] 외부 코드리뷰 반영(G71): #2 게이트 전 시나리오 종료코드 검사·#1 FROZEN BLOCKING 흡수수 확인 픽스+키0 회귀잠금(`_gate_allscenarios_keyless`·`_freeze_blocking_keyless`). #6 CI=`run_keyless.py`+GitHub Actions 그린. #3·#4=정답앵커 실Node 골든으로 정리
 - [x] **(★키) 스케일 확장 1차 A/B(G73)**: 정거장 30모듈로 A전체주입(graded-222413,≈14.6k)·B선택주입(graded-223623,≈5k) 두 런. 둘 다 게이트 11/11·합의 1.0·golden_diff 0. EOL 정규화 대조=engine.js만 변경·29모듈 바이트동일. **레버4 천장 ~14.6k에선 미포착** → 확장 분기
-- [ ] **(다음, 키0) 카드 ~30k 확장**: station_base 본문 35.7KB→~73KB로 키워(모듈 충실화) 동일 A/B 재측정. 결정성·골든 자동역산·회귀7 base==ref 바이트동일·죽은코드 0 유지. 곁=combat 자율oracle / 외부리뷰 P1(#10)
+- [x] **(키0) 카드 스케일 확장(G73)**: station_base 30→46모듈(본문 35.7KB→63.5KB, 1.77x). 신규 16서브시스템 전부 turn결정적·alerts/log+bounded morale만 → 게이팅 불변·다양성 보존(PLAYING×4·WON×2·LOST×1·EVACUATED×3). 회귀7 base==ref 바이트동일·16모듈 전부 골든 기여(죽은코드0)·strict 게이트 46모듈·run_keyless ALL PASS. 목표 73KB의 ~87%(중복 회피로 멈춤). 커밋 9131978
+- [ ] **(다음 ★키) 확장 카드 A/B 재측정**: 동일 패킷 A전체주입(≈26k)·B선택주입(≈6k)로 레버4 천장 재측정. 둘 다 1.0이면 73KB까지 더 키움. 곁=combat 자율oracle / 외부리뷰 P1(#10)
