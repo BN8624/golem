@@ -27,14 +27,13 @@ from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE.parent))               # golem
-sys.path.insert(0, str(HERE.parent.parent))        # 루트 (llm, config)
-sys.path.insert(0, str(HERE.parent / "studio"))    # planning._extract_json 재사용
+sys.path.insert(0, str(HERE / "lib"))   # vendored 인프라(config·llm·key_usage·jsonutil) — golem 폴더 비의존
 
-from planning import _extract_json                  # noqa: E402
+from jsonutil import extract_json        # noqa: E402
 
-MODEL_31 = "gemma-4-31b-it"
+# 캐논 일관성 판단은 '머리' 일이다 → critic 역할(=gemma 31B). 실제 모델 ID는 get_model이 준다
+# (역할→모델 매핑은 lib/config.py·.env가 정본; 여기 문자열을 박지 않아 print가 실제와 안 어긋난다).
+ROLE = "critic"
 
 _CANON_PROMPT = """You are the CONTINUITY EDITOR for a novel. You are given the FROZEN CANON
 (established facts that must NEVER be contradicted) and a CHAPTER DRAFT. Find every place in the
@@ -57,7 +56,7 @@ def _ask_check(pool, canon, draft_text):
     canon_str = "\n".join(f'- [{r["id"]}] {r["text"]}' for r in canon)
     prompt = _CANON_PROMPT.format(canon=canon_str, draft=draft_text)
     with pool.checkout() as key:
-        return _extract_json(LLMClient(api_key=key).generate("generator", prompt))
+        return extract_json(LLMClient(api_key=key).generate(ROLE, prompt))
 
 
 def _found_ids(pred):
@@ -101,23 +100,23 @@ def main(argv=None):
 
     replay = None
     pool = None
+    model_id = None
     if args.replay:
         replay = json.loads((HERE / args.replay).read_text(encoding="utf-8"))
         print(f"[CANON-CHECK · REPLAY] 키 안 씀 | 케이스 {len(cases)} × {args.n}시드\n")
     else:
-        from config import get_api_keys, load_env
+        from config import get_api_keys, get_model, load_env
         from llm import KeyPool
         env_path = HERE / ".env"
         if not env_path.exists():
             raise SystemExit(f"[CANON-CHECK] atelier 전용 키가 없다 — {env_path} 에 "
-                             "GOOGLE_API_KEY_1..N 을 넣어라 (골렘 루트 키와 섞이지 않게).")
-        # atelier 전용 키를 먼저 로드한다. load_env는 이미 설정된 환경변수를 덮어쓰지 않으므로
-        # (config.py:63), 뒤이어 get_api_keys()가 루트 .env를 읽어도 atelier 키가 우선한다.
+                             "GOOGLE_API_KEY_1..N 을 넣어라 (golem 키와 섞이지 않게).")
         load_env(env_path)
         keys = get_api_keys()
-        pool = KeyPool(keys, models=[MODEL_31])
+        model_id = get_model(ROLE)
+        pool = KeyPool(keys, models=[model_id])
         print(f"[CANON-CHECK] atelier 전용 키 {len(keys)}개 ({env_path}) | "
-              f"케이스 {len(cases)} × {args.n}시드 | 모델 {MODEL_31}\n")
+              f"케이스 {len(cases)} × {args.n}시드 | 모델 {model_id}\n")
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     base = HERE / "runs" / f"canon-{stamp}"
@@ -159,7 +158,7 @@ def main(argv=None):
     recall_by_name = {rid: round(statistics.mean(v), 3) for rid, v in by_rule.items()}
     summary = {
         "fixtures": args.fixtures, "n_seeds": args.n, "cases": len(per_case),
-        "model": (None if replay is not None else MODEL_31),
+        "model": model_id,
         "exact_rate_mean": round(statistics.mean(exact_all), 3) if exact_all else None,
         "fully_exact_cases": sum(1 for p in per_case if p["exact_rate"] == 1.0),
         "recall_by_rule": recall_by_name,

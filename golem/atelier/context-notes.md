@@ -20,6 +20,33 @@
   캐논 채점에서 누락만큼 치명적이기 때문이다(작가에게 거짓 경보를 주면 신뢰를 잃는다).
 - 규칙별 recall로 "어떤 종류 캐논이 놓치기 쉬운가"를 분리한다(auto_oracle의 key_accuracy_by_name 대응).
 
+## 첫 실런 결과 (2026-06-18, canon-20260618-145250)
+
+exact 1.0 / 2-of-2 완전정확 / 안정 1.0 / 오탐 0. **단, 이건 배선과 쉬운 케이스가 된다는 증거일 뿐**이다.
+픽스처가 노골적(양손↔왼팔없음, 낮↔밤마법, 4규칙)이라 1.0은 당연에 가깝다. 골렘 G39~G64처럼
+**어려운 케이스로 밀어 한계를 깨야** 진짜 신호다 — 다음 픽스처: (a) 미묘한 타임라인 드리프트,
+(b) 인물 지식상태 위반(아직 모를 정보를 앎), (c) 직접 인용이 아닌 패러프레이즈된 모순,
+(d) 장거리(여러 챕터 누적) 캐논. 여기서 깨지는 지점이 캐논/미학 경계의 실거리다.
+
+## 자족화 — 골렘 폴더 비의존 (2026-06-18)
+
+atelier는 나중에 독립 프로젝트로 *다른 폴더로 이전*한다. 지금 골렘 밑에 둔 건 골렘이 크는 동안
+거기서 나온 아이디어(auto_oracle 등)를 바로 차용하려는 임시 위치일 뿐. 그래서 코드 의존을 끊었다.
+
+- golem이 한 방식 그대로(README "config/llm은 복사 사본, 여기가 정본") 인프라를 `lib/`에 vendoring.
+  닫힌 의존: config ← (llm, key_usage), + jsonutil(planning._extract_json 발췌). 전부 stdlib+config만.
+- `lib/config.py` PROJECT_ROOT = `parent.parent`(=atelier 루트). .env·runs/key_usage.json이 atelier에
+  놓여 폴더째 이동해도 따라온다. golem 경로를 다 뺀 격리 import로 이동성 증명.
+- canon_check은 `sys.path`에 `lib`만 넣고 golem 경로 0.
+
+## 모델 정직화 — generate 역할 교정
+
+물려받은 auto_oracle 패턴은 `generate("generator")`를 불렀는데 기본값이 26B('손')다(31B는 'critic'=
+'머리'). .env의 GENERATOR_MODEL이 주석이라 **첫 1.0 런은 31B가 아니라 26B가 낸 것**이었다. print의
+"gemma-4-31b-it"도 실제 호출 모델이 아닌 박힌 상수였다. 교정: `ROLE="critic"`(31B)로 호출하고,
+print/summary는 `get_model(ROLE)`로 실제 모델 ID를 낸다. (golem auto_oracle에도 같은 불일치가 있으나
+사용자 영역이라 건드리지 않고 짚어만 둠.) → 31B 실수치는 재실행 필요.
+
 ## 키 규칙
 
 골렘 CLAUDE.md 준수 — 사용자 명시 go 전에는 실제 31B 런 금지. `--replay`로 키 0 검증만 완료.
