@@ -1024,3 +1024,24 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   (FROZEN MODULES 미포함 확인). manifest는 base(rocket_base)에서 읽으므로 exports_by_path가 시그니처 소스.
 - **다음**: ★키 런(HANDOFF ▶▶). 합의 1.0+골든 일치면 레버4 닫힘 = 누적 빌드 4레버 전부 실증. 회귀 깨지면
   인터페이스만으로 기존 동작 보존 실패(트레이드오프 노출).
+
+## G70 — 레버4 첫 ★키 런 통과 + 26B 잔재 발견·제거(31solo 강제) (2026-06-18, ★키)
+- **레버4 런(graded-20260618-191818)**: `build_graded --base rocket_base --packet planning_packet_rocket_l4
+  --specqa specqa_packet_rocket_l4 --inject-modules src/engine.js --reconcile` → 게이트 11/11·합의 8/8 전부
+  1.0·합의 vs oracle 전부 일치. attempt01 직접 대조: logic.js = base와 byte-identical(verbatim), engine.js에만
+  ABORT 핸들러(RULE-07). 31B가 logic 본문 못 본 채 engine만 편집해 회귀(SCN-001~006)+ABORT(SCN-007/008) 둘 다
+  1.0. **누적 빌드 4레버(코드주입·편집모드·누적회귀·선택적컨텍스트) 전부 닫힘.**
+- **26B 잔재 발견**: 사용자 질문("256k 맞나")에서 출발 → 모델 점검 중 발견. golem은 독립승격(커밋 9803fb8,
+  2026-06-17)부터 `driver.py:33` "31solo"로 31B 단독 결정. 그런데 그 핀은 driver 경유에만 걸리고, **스튜디오는
+  driver 안 거치고 `LLMClient.generate(role)` 직접 호출**. `config.py` 기본값 generator=26b + `.env` 오버라이드
+  주석처리 → `generate("generator")` 부르는 도구 3종(`auto_oracle`·`self_suggest`·`storyforge`)이 **실제 26B로
+  돌았음**. 즉 G60~G64(자율 oracle·self-suggest)·G66(StoryForge)의 "31B" 라벨은 사실 26B. 빌드 본선
+  (build_graded·planning·design·specqa·reconcile)은 `generate("critic")`=31B라 정상 → G65·G67~G70은 31B.
+  결정타: `auto_oracle._ask_oracle` docstring "31B에 받는다"인데 코드는 generator(26B), summary도 model=MODEL_31
+  라벨만 31B — 라벨/현실 불일치. key_usage 태평양날짜 버킷에 26B ~193콜(KST 0618=PT 0617)로 교차확인.
+- **수정(31solo 강제)**: `config.py` generator→31B(두 role 다 31B), `llm.py` 가격주석·`.env` 예시·README 동기화.
+  atelier(별 트랙)·key_usage 과거로그·driver.py 결정마커는 보존.
+- **확인런(31B 재측정)**: vocab 핀이 26B 실수에 과적합됐는지 우려 → 핀 패킷 3개를 31B로 auto_oracle n=3 재측정.
+  idle_vocab 1.0/11·eco_vocab 1.0/8·eco_selfsug 1.0/8 — **셋 다 26B 원본(G61/G63/G64)과 동일 1.0**. 핀은
+  모호성 제거 규칙이라 더 센 모델도 그대로 따름. **결론: 재실험 불필요(26B 성공은 "싼 모델+빡빡계약=수렴"의 더 강한
+  증거). 라벨만 정정. 31solo 사다리 닫힘 확정.** 산출 autooracle-20260618-{194121,195838,201413}.

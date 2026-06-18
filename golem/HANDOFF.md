@@ -2,11 +2,13 @@
 
 ## ▶ 새 세션 여기부터
 - **✓ 누적 빌드 첫 ★키 런 완료 (G68, 2026-06-18, graded-20260618-180934)**: `build_graded --base rocket_base --packet planning_packet_rocket_v2 --specqa specqa_packet_rocket_v2 --reconcile` 통과. **세 실증 다 성립** — ① 편집 수렴(빌더가 scratch 아닌 base 기존코드 수정: `logic.js`가 base `constants.fuelRate`를 `state.currentFuelRate`로 오버라이드 + engine.js UPGRADE 핸들러 얹음, BEAT 로그·stageCost 구조 보존) ② 회귀 무결(SCN-001~006 6/6 일치율 1.0) ③ 새 기능(SCN-007/008 UPGRADE 골든 2/2 1.0). 합의 전체 1.0(평균 10표)·합의 vs oracle 전부 일치(reconcile 진단 0)·게이트 10/11(1개 src/logic.js 구문오류=생성품질). Node 실측 SCN-007 turn8/fuel4/stage1, SCN-008 turn4/fuel4 = 골든 일치. **배관 픽스(커밋 a81e2f2)**: build_graded subprocess.run에 `encoding="utf-8", errors="replace"` — base의 한국어 BEAT 로그 주입으로 cp949 디코딩 크래시(게이트 0/11)나던 잠복버그 차단(G65는 한글이 출력 표면에 안 닿아 안 터짐). **누적 빌드 레버1~3(코드주입·편집모드·누적회귀) 실증 닫힘.**
-- **▶▶ 새 세션 첫 동작 = 레버4 첫 ★키 런 (G69 배선·키0 검증 완료, 키만 남음)**. 명령:
+- **✓ 레버4 첫 ★키 런 완료 (G70, 2026-06-18, graded-20260618-191818)**: `build_graded --base rocket_base --packet planning_packet_rocket_l4 --specqa specqa_packet_rocket_l4 --inject-modules src/engine.js --reconcile` 통과. **게이트 11/11·합의 전체 1.0(8시나리오 평균 11.0표)·합의 vs oracle 전부 일치.** 31B 빌더가 **logic.js 본문을 한 번도 못 본 채**(시그니처 stub만 받음) engine.js만 편집해 ① 회귀 무결(SCN-001~006 1.0) ② 새 기능 ABORT(SCN-007/008 1.0) 둘 다 냄. 직접 대조: attempt01 `logic.js` = base와 byte-identical(verbatim), `engine.js`에 ABORT 핸들러(`action==='ABORT'`→`gameStatus:'ABORTED'`, RULE-07) 얹힘. **누적 빌드 4레버(코드주입·편집모드·누적회귀·선택적컨텍스트) 전부 닫힘.** 큰 게임 천장(모듈 여러개·진짜 컨텍스트 한계) 해소 토대 완성.
+- **✓ 31solo 강제 + 26B 잔재 제거 (G70, 2026-06-18)**: golem은 `driver.py:33` "31solo"(독립승격부터)인데, 스튜디오가 driver 안 거치고 `config.py` 기본값(generator=26b)을 직접 써서 `generate("generator")` 부르는 도구 3종(`auto_oracle`·`self_suggest`·`storyforge`)이 **실제 26B로 돌고 있었음** → G60~G64·G66의 "31B" 라벨은 사실 26B(빌드 본선 G65·G67~G70은 critic=31B라 정상). `config.py` generator→31B로 막음(llm.py·.env·README 동기화). **확인런**: vocab 핀 패킷 3개를 31B로 auto_oracle 재측정 → idle_vocab 1.0/11·eco_vocab 1.0/8·eco_selfsug 1.0/8, **셋 다 26B 원본(G61/G63/G64)과 동일 1.0**. 핀은 모호성 제거라 더 센 모델도 그대로 따름 = **재실험 불필요, 31solo 사다리 닫힘 확정**(26B 성공은 "싼 모델+빡빡계약=수렴"의 더 강한 증거). 컨텍스트 창 = gemma-4 31B·26B 둘 다 256K(구글 공식). **남은 정정**: 핸드오프·context-notes의 G60~G64·G66 "31B" 표기는 실제 26B(과거 기록이라 본문은 보존, 본 줄로 정정 고지).
+- **▶▶ 새 세션 첫 동작 = 4레버 닫힌 뒤 스케일 확장**. 후보: ① 더 큰 카드(모듈 여러개 touched·진짜 컨텍스트 천장 스트레스)로 레버4 한계 측정 ② combat 자율oracle ③ 외부리뷰 P1(#6·#4·#5·#10). 갈림길이라 사용자 선택 대기.
   ```
   python golem/studio/build_graded.py --base golem/studio/rocket_base --packet golem/studio/planning_packet_rocket_l4 --specqa golem/studio/specqa_packet_rocket_l4 --inject-modules src/engine.js --reconcile
   ```
-  실증: 31B 빌더가 **logic.js 본문을 한 번도 못 본 채** 시그니처만으로 engine.js만 편집해 ① 회귀 무결(SCN-001~006 1.0) ② 새 기능 ABORT(SCN-007/008 1.0)를 내나. logic/constants/main은 하네스가 verbatim 복사(재생성 X). **판정**: 합의 1.0 + 골든 일치면 레버4(선택적 컨텍스트) 메커니즘 닫힘 = 큰 게임 천장 해소 토대. 만약 회귀가 깨지면 → 빌더가 engine의 기존 export/동작을 인터페이스만으로 보존 못 함(트레이드오프 노출).
+  (위 = 방금 통과한 레버4 명령, 재현용 보존.)
 - **▶ 레버4 배선(G69, 커밋 a69f0fc·593e91e, 키0 검증 끝)**: `build_graded --inject-modules` — touched 모듈만 본문 주입+재생성, 나머지는 `_iface_stub`로 exports 시그니처만 주고 verbatim 복사. 선택적 EDIT 헤더("touched만 출력"). 프로브 카드 `planning/specqa_packet_rocket_l4`(ABORT=RULE-07, engine만 touched). 골든 = rocket_base+참조 engine 실Node 역산(`_derive_l4_goldens.py`). `_validate_l4_keyless.py` = 키0 배선 검증(프롬프트 가림+verbatim 병합+골든 8/8 재현, ALL PASS). 비선택(--base 레버1) 경로 불변.
 - **곁** = combat 자율oracle / 외부리뷰 P1(#6·#4·#5·#10) / atelier 2패스 스트레스(별 트랙, 골렘 본선 아님).
 - **▶ 트랙 C 본선 다음 동작 (G65, 로켓 실빌드 1단계 완료)**: build_graded --reconcile 완주 — 로켓 게임 코어 실제 생성·작동 확인. 산출물 `golem/studio/build_runs/graded-20260618-161312`(누적빌드 **첫 graded 카드**, .gitignore). 결과 = 게이트 7/11, 합의 0.881(SCN-001~005 6/7·SCN-006 7/7), **합의 vs oracle 전부 일치**(불일치 0→reconcile 진단 없음). Node 실측(키0)으로 6시나리오 직접 실행 = 대기권→궤도→달→화성, A겹 BEAT-1~4 발동·한국어 로그, SCN-004/005 WON. **트랙 C 1단계 세 목표(첫 graded·reconcile E2E·B겹 토대) 충족.** 배관 픽스(키0, 커밋됨): `specqa_packet_rocket/oracle_risk_review.json`(`risky_scenarios:[]`, build_graded.load_all 필수, 프로브 패킷에 빠져 있던 것).
@@ -31,7 +33,7 @@
 
 ## 지금 어디 (2026-06-18)
 
-**현재 핵심(2026-06-18, G69)**: 누적 빌드 4레버 거의 닫힘. 트랙 C 본선 = 로켓 실빌드(G65 첫 graded) → 서사 2겹(G66 StoryForge) → 누적 빌드 레버1~3 실증(G68, 편집수렴·회귀무결·새기능 합의 1.0) → 레버4 선택적 컨텍스트 배선·키0 검증(G69). **다음 세션 첫 동작 = 레버4 첫 ★키 런**(위 ▶▶ 명령): 31B가 logic 본문 못 본 채 시그니처만으로 engine 편집해 회귀+ABORT 합의 1.0이면 4레버 전부 닫힘. 방향 정본 = `GolemStudioMode.md` §21(확장)·§6.1(모호성 사전). 아래는 그 이전 §13 파이프라인 배경.
+**현재 핵심(2026-06-18, G70)**: 누적 빌드 4레버 전부 닫힘. 트랙 C 본선 = 로켓 실빌드(G65 첫 graded) → 서사 2겹(G66 StoryForge) → 누적 빌드 레버1~3 실증(G68, 편집수렴·회귀무결·새기능 합의 1.0) → 레버4 배선·키0(G69) → **레버4 첫 ★키 런 통과(G70, graded-20260618-191818, 게이트 11/11·합의 8/8 1.0·oracle 전부 일치)**: 31B가 logic 본문 못 본 채 engine만 편집해 회귀+ABORT 둘 다 1.0, logic verbatim·engine ABORT 핸들러 직접 대조. **다음 세션 첫 동작 = 스케일 확장**(더 큰 카드·진짜 컨텍스트 천장) 또는 combat 자율oracle / 외부리뷰 P1 — 갈림길. 방향 정본 = `GolemStudioMode.md` §21(확장)·§6.1(모호성 사전). 아래는 그 이전 §13 파이프라인 배경.
 
 Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축. 아이디어 한 줄로 **Step 1~7 전부 실제 완주**(방치형·발열 두 카드). 하네스는 계약구동으로 일반화돼 새 카드는 코드변경 0. 합의-vs-oracle 자동 해소(`reconcile.py`)+저합의 가드(G50)까지 갖춤. 산출물은 `golem/studio/`(패킷: 방치형=`*_packet`, 발열=`*_packet_heat`, **턴제전투(고결합)=`*_packet_combat`** 신규).
 
@@ -85,5 +87,6 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 17. ~~(★키) 트랙 C 2단계 — 서사 B겹(StoryForge)~~ — **완료(G66)**: `storyforge.py`, 로켓 4비트 대사 + 일관 바이블, 검증 3/3 PASS. 서사 2겹 닫힘.
 18. ~~(★키) 누적 빌드 레버1~3 — 코드주입·편집모드·누적회귀~~ — **완료(G67 배선·G68 실행)**: `build_graded --base` 편집모드. graded-20260618-180934 합의 1.0, 회귀(SCN-001~006) 6/6·새기능(SCN-007/008 UPGRADE) 2/2, 합의 vs oracle 전부 일치. 배관 픽스 = Node stdout UTF-8 디코딩(cp949 크래시 차단, 커밋 a81e2f2).
 19. ~~(키0) 누적 빌드 레버4 — 선택적 컨텍스트 배선·검증~~ — **완료(G69)**: `build_graded --inject-modules`(touched만 본문+재생성, 나머지 시그니처만+verbatim). 프로브 l4(ABORT). `_validate_l4_keyless` ALL PASS(프롬프트 가림+병합+골든 8/8 재현). 커밋 a69f0fc·593e91e.
-20. **(다음 세션 첫 동작, ★키) 레버4 첫 키 런** — 위 ▶▶ 명령. 31B가 logic 본문 못 본 채 시그니처만으로 engine 편집 → 회귀무결+ABORT 합의 1.0이면 누적 빌드 4레버 전부 닫힘. 통과 후 = 더 큰 카드(모듈 여러개·진짜 컨텍스트 천장)로 스케일 확장, 또는 combat 자율oracle / 외부리뷰 P1.
+20. ~~(★키) 레버4 첫 키 런~~ — **완료(G70, graded-20260618-191818)**: 게이트 11/11, 합의 8시나리오 전부 1.0, 합의 vs oracle 전부 일치. 31B가 logic 본문 못 본 채 engine만 편집 → 회귀(SCN-001~006)+ABORT(SCN-007/008) 둘 다 1.0. attempt01 logic.js byte-identical(verbatim)·engine.js ABORT 핸들러 확인. **누적 빌드 4레버 전부 닫힘.**
+22. **(다음 세션 첫 동작) 스케일 확장** — 더 큰 카드(모듈 여러개 touched·진짜 컨텍스트 천장)로 레버4 한계 측정, 또는 combat 자율oracle / 외부리뷰 P1. 갈림길=사용자 선택.
 21. (backlog) levels 등 출력표면 확장 / adversarial validator BLOCKING 추적 / 발열 Adversarial QA·Integration 정식 완주.
