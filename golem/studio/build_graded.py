@@ -29,6 +29,7 @@ sys.path.insert(0, str(HERE.parent.parent))
 
 import contract_validator                       # noqa: E402
 import static_gate                              # noqa: E402
+import patch_apply                              # noqa: E402
 from driver import parse_files, write_candidate  # noqa: E402
 
 MODEL_31 = "gemma-4-31b-it"
@@ -101,6 +102,39 @@ FROZEN MODULES (interface only — call, do not reimplement, do not output):
 
 """
 
+# 레버4 패치모드(§21.2 레버2): touched 모듈도 통째 재출력하지 말고 바뀐 토막만 FIND/REPLACE로 낸다.
+# 출력을 모듈 크기와도 분리한다(B는 게임 크기와만 분리). 적용은 하네스(patch_apply).
+_EDIT_HEADER_PATCH = """You are the BUILD engineer making an INCREMENTAL EDIT to an EXISTING, WORKING
+codebase. Do NOT rewrite from scratch. You are shown ONLY the modules this card touches, in full. The OTHER
+modules are FROZEN and already verified — you see ONLY their public interface (signatures), never their bodies.
+Call the frozen modules exactly by those signatures; assume they behave correctly. Keep every existing export
+name/signature of the touched modules intact so the frozen modules keep working.
+
+OUTPUT RULE: do NOT re-output whole files. Output ONLY the minimal CHANGES to the touched files as
+search/replace patch blocks. For each change, copy an EXACT snippet from the touched source as FIND (long
+enough to occur EXACTLY ONCE in that file — include surrounding lines if needed), then give the new text as
+REPLACE. Use this EXACT format, one or more blocks per file:
+
+=== PATCH: <path> ===
+<<<<<<< FIND
+<exact snippet copied verbatim from the touched source>
+=======
+<replacement text>
+>>>>>>> REPLACE
+
+Output NOTHING else — no prose, no whole files, no frozen modules. Any scenario not using the new action MUST
+behave identically to before.
+
+TOUCHED MODULES (full source — patch these):
+{touched_code}
+
+FROZEN MODULES (interface only — call, do not reimplement, do not output):
+{frozen_iface}
+
+--- Now apply the card below on top of that codebase: ---
+
+"""
+
 
 def _iface_stub(path, src, exports):
     """held-out 모듈을 본문 없이 시그니처만으로 표현(레버4). exports 각 이름의 `exports.NAME = ...`
@@ -146,7 +180,8 @@ def _output_lines(state_shape):
     return "\n".join(lines)
 
 
-def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None, selective=None):
+def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None, selective=None,
+                 patch=False):
     rules = contract.get("data_contract", {}).get("rules", [])
     state_shape = contract.get("data_contract", {}).get("state_shape", {})
     examples = json.dumps(scen_inputs[:3], ensure_ascii=False, indent=2)
@@ -158,7 +193,8 @@ def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None,
                           system_design=sysd.strip() or "(none)", files=files_desc,
                           input_examples=examples, output_lines=_output_lines(state_shape))
     if selective:  # 레버4: 건드리는 모듈만 본문 + 나머지 동결 인터페이스
-        return _EDIT_HEADER_SELECTIVE.format(
+        header = _EDIT_HEADER_PATCH if patch else _EDIT_HEADER_SELECTIVE
+        return header.format(
             touched_list=", ".join(selective["touched_paths"]),
             touched_code=selective["touched_code"],
             frozen_iface=selective["frozen_iface"]) + body
@@ -289,6 +325,9 @@ def main(argv=None):
     ap.add_argument("--inject-modules", default=None,
                     help="레버4(선택적 컨텍스트): 이번 카드가 건드리는 모듈만 본문 주입(쉼표구분, base 기준 "
                          "상대경로). 나머지 base 모듈은 시그니처만 주고 verbatim 복사한다. --base 필요.")
+    ap.add_argument("--patch", action="store_true",
+                    help="레버4 패치모드(§21.2 레버2): touched 모듈도 통째 재출력 대신 FIND/REPLACE diff만 "
+                         "내게 하고 하네스가 base에 적용. 출력을 모듈 크기와도 분리. --inject-modules 필요.")
     ap.add_argument("--specqa", default=str(HERE / "specqa_packet"))
     ap.add_argument("--cap", type=int, default=11)
     ap.add_argument("--out", default=None)
@@ -297,6 +336,8 @@ def main(argv=None):
     ap.add_argument("--apply", action="store_true",
                     help="--reconcile 진단 중 AUTO만 자동 적용(ESCALATE는 사람 대기)")
     args = ap.parse_args(argv)
+    if args.patch and not args.inject_modules:
+        ap.error("--patch는 --inject-modules와 함께 써야 한다(레버4 위에서 동작).")
 
     import os
     os.environ["GENERATOR_MODEL"] = MODEL_31
@@ -322,18 +363,20 @@ def main(argv=None):
         if args.inject_modules:  # 레버4: 건드리는 모듈만 본문, 나머지는 시그니처+verbatim
             touched_paths = [m.strip().replace("\\", "/") for m in args.inject_modules.split(",")]
             exports_by_path = {f["path"]: f.get("exports", []) for f in manifest.get("files", [])}
-            touched_chunks, frozen_chunks = [], []
+            touched_chunks, frozen_chunks, touched_src = [], [], {}
             for p in all_js:
                 rel = p.relative_to(bdir).as_posix()
                 src = p.read_text(encoding="utf-8")
                 if rel in touched_paths:
                     touched_chunks.append(f"=== FILE: {rel} ===\n{src}")
+                    touched_src[rel] = src
                 else:
                     frozen_chunks.append(_iface_stub(rel, src, exports_by_path.get(rel, [])))
                     held_out.append((rel, src))
             selective = {"touched_paths": touched_paths,
                          "touched_code": "\n\n".join(touched_chunks),
-                         "frozen_iface": "\n\n".join(frozen_chunks)}
+                         "frozen_iface": "\n\n".join(frozen_chunks),
+                         "touched_src": touched_src}
         else:  # 레버1: 기존 코드(.js 전부)를 FILE 마커 형식으로 주입
             base_code = "\n\n".join(
                 f"=== FILE: {p.relative_to(bdir).as_posix()} ===\n{p.read_text(encoding='utf-8')}"
@@ -342,9 +385,10 @@ def main(argv=None):
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     base = Path(args.out) if args.out else (HERE / "build_runs" / f"graded-{run_id}")
     prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs,
-                          base_code=base_code, selective=selective)
+                          base_code=base_code, selective=selective, patch=args.patch)
     pool = KeyPool(get_api_keys(), models=[MODEL_31])
-    mode = "EDIT/선택적" if selective else ("EDIT/누적" if args.base else "SCRATCH")
+    mode = (("EDIT/패치" if args.patch else "EDIT/선택적") if selective
+            else ("EDIT/누적" if args.base else "SCRATCH"))
     extra = f" touched={selective['touched_paths']} frozen={len(held_out)}" if selective else ""
     print(f"[BUILD v1/{mode}] manifest {len(manifest.get('files', []))}모듈, 시나리오 {len(scenarios)}"
           f"(채점가능 {len(gradeable)}), cap={args.cap} keys={pool.size}, run={run_id}{extra}")
@@ -366,7 +410,14 @@ def main(argv=None):
         ws = base / f"attempt{attempt:02d}" / "workspace"
         ws.mkdir(parents=True, exist_ok=True)
         try:  # 파싱·쓰기·게이트는 우리 하네스 — 여기 크래시는 HARNESS(카드 탓 아님), 런 안 깨고 기록
-            files = parse_files(resp)  # {경로: 본문}
+            if args.patch:  # 레버4 패치모드: FIND/REPLACE diff를 base touched 본문에 적용해 전체 복원
+                try:
+                    patches = patch_apply.parse_patches(resp)
+                    files = patch_apply.apply_patches(selective["touched_src"], patches)
+                except patch_apply.PatchError as pe:
+                    return attempt, False, f"patch: {pe}", {}
+            else:
+                files = parse_files(resp)  # {경로: 본문}
             if selective:  # 레버4: 동결 모듈은 빌더 출력 무시하고 base 원본을 verbatim 강제
                 touched = set(selective["touched_paths"])
                 files = {n: b for n, b in files.items() if n.replace("\\", "/") in touched}

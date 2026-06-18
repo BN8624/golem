@@ -231,4 +231,5 @@ P1 (다음 실험 전):
 - [x] **(★키) 확장 카드 B 측정(graded-20260619-005137)**: 게이트 11/11·합의 1.0·golden_diff 0·held-out 드리프트 0(A의 tables 드리프트와 대조)·engine EVACUATE 정상·콜≈6k. B가 63.5KB/~26k서 정확도+충실도 둘 다 1.0이면서 출력 작게 유지 = 재프레이밍 실증. 레버4 천장 B에선 미포착.
 - [x] **llm.py 타임아웃 안전망(키0, 커밋 466a5cb)**: per-request 30분 타임아웃(REQUEST_TIMEOUT_MS) + httpx 타임아웃 type명 분류 → 좀비 소켓 무한행 차단. 정상 콜(최대 24분) 안 끊음. 클라생성·분류·run_keyless ALL PASS 검증.
 - [x] **(★키) B 입력 lost-in-the-middle 프로브(graded-20260619-011018)**: 생성기 gen_station_xl.py로 546모듈 XL(sensor 500·입력~24k·시그니처545). 게이트 11/11·합의 1.0·golden_diff 0·held-out 드리프트 0/545·engine EVACUATE 정상. 묻힌 engine도 정확 편집=B 천장 미포착. B는 모듈 수 무관 1.0. (XL gitignore, 생성기만 추적)
-- [ ] **(다음) 패치빌드 §21 정합**: B 스케일 입증됐으니 파일별/diff 빌드로 진짜 큰 게임 짓는 라인 정리(정도). 곁=XL 1000+ 추가추적(한계효용↓) / combat 자율oracle / 외부리뷰 P1(#10)
+- [x] **(키0) 패치빌드 §21.2 레버2 배선(G74)**: 레버4 위 `--patch` 모드. touched 모듈도 통째 재출력 대신 안2(앵커/search-replace) FIND/REPLACE diff만 출력 → 하네스가 base에 적용(`patch_apply.py`). 출력을 모듈 크기와도 분리(B는 게임 크기와만 분리). FIND 0회/2회+/없는파일/쌍없음 = PatchError → CARD 실패(통째 재출력 폴백 없음, ★키 비교 깨끗). `_validate_l4_patch_keyless` ALL PASS(단위6 + 프롬프트4 + e2e등가: 패치복원==B참조본 바이트동일·게이트·골든8/8). run_keyless 편입
+- [ ] **(다음, ★키) 패치모드 3방식 비교**: 같은 카드를 A(전체)·B(모듈)·patch(diff) ★키 런 → 정확도·충실도·출력토큰 대조. 디프 출력이 31B로 안정적으로 나오나·patch 실패율 측정. 곁=XL 1000+ 추가추적(한계효용↓) / combat 자율oracle / 외부리뷰 P1(#10)

@@ -1184,3 +1184,28 @@ engine EVACUATE 핸들러 정상. 콜 ~6k·콜당 1–2분·행 없음. **결론
 - 판독: **B는 게임 모듈 수에 사실상 무관하게 정확도+충실도 1.0 유지** — 출력은 게임크기와 분리(항상 작음),
   입력 시그니처가 546모듈/~24k까지 커져도 묻힌 engine을 정확히 찾아 편집. 레버4 천장은 이 스케일 너머.
   XL 카드·패킷·골든은 gitignore(생성물), 생성기만 추적.
+
+## G74 — 패치빌드(§21.2 레버2 "편집 모드/diff") 배선, 키0
+
+**왜**: B(레버4 선택출력)는 출력을 *게임* 크기와 분리했으나(546모듈 1.0), touched 모듈은 여전히
+*통째* 재출력이라 출력이 *모듈* 크기와는 묶여 있었다. §21.2 레버2가 적은 진짜 편집 모드 = "바뀐 줄만
+diff로". 이걸 채우면 출력이 모듈 크기와도 분리된다.
+
+**포맷 결정 = 안2(앵커/search-replace)**. 두 후보 중 unified diff(안1)는 줄번호(`@@ -42`) 의존이
+31B 최대 실패점이라 기각. 안2는 줄번호 없이 원문 토막을 베껴 바꿀 곳만 표시 → 모델 부담 최소.
+형식: 파일별 `=== PATCH: path ===` + `<<<<<<< FIND … ======= … >>>>>>> REPLACE` 쌍(여러 개 허용).
+
+**폴백 결정 = 없음**. 패치 적용 실패(FIND 0회·2회+·없는 파일·쌍 없음)는 통째 재출력으로 안 떨어뜨리고
+PatchError → CARD 실패로 본다. 이유=★키 A/B/patch 비교를 깨끗이·정확일치 규율 유지. 적용기는 CRLF→LF
+정규화 후 매칭(플랫폼 줄끝차로 안 깨지게).
+
+**구현**: 적용기는 독립 모듈 `studio/patch_apply.py`(parse_patches/apply_patches/PatchError, 테스트 쉬움).
+`build_graded.py`는 얇게 — `_EDIT_HEADER_PATCH`(통째 금지·FIND/REPLACE 지시) + `--patch` 플래그
+(`--inject-modules` 필요) + selective에 `touched_src` 추가 + 워커에서 patch면 parse+apply,
+PatchError는 `patch:` 사유로 게이트 실패 반환(classify→CARD). 나머지(held-out verbatim·게이트·골든)는 불변.
+
+**검증(키0)**: `_validate_l4_patch_keyless.py` ALL PASS — ① 적용기 단위6(단일·다중쌍·CRLF·FIND없음·모호·
+없는파일·쌍없음) ② 프롬프트 모양4(patch=True에서 FIND/REPLACE 지시·통째금지·touched본문·동결비공개)
+③ **end-to-end 등가**: base engine→참조 engine(B가 내는 최종본) 전체치환 패치를 적용→복원본이 B 참조와
+LF바이트동일→held-out verbatim 병합→게이트 통과→골든 8/8 재현. 즉 패치 경로가 B와 같은 검증상태에 도달.
+run_keyless 스위트에 편입(CI 동일). **모델 콜은 아직 안 함 — 다음은 ★키 A/B/patch 3방식 비교**.
