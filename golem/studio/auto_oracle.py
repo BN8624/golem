@@ -134,10 +134,16 @@ def main(argv=None):
 
     scn_pass = [p["pass_rate"] for p in per_scn]
     all_keys = [(p["id"], k, acc) for p in per_scn for k, acc in p["key_accuracy"].items()]
+    # 키 이름별 정확률 — 시나리오단위(완전정확)는 한 모호키가 전 시나리오를 끌어내려 오해를 부른다(eco status).
+    by_name = {}
+    for _, k, acc in all_keys:
+        by_name.setdefault(k, []).append(acc)
+    key_acc_by_name = {k: round(statistics.mean(v), 3) for k, v in by_name.items()}
     summary = {
         "packet": args.packet, "n_seeds": args.n, "scenarios": len(per_scn), "model": MODEL_31,
         "oracle_accuracy_mean": round(statistics.mean(scn_pass), 3) if scn_pass else None,
         "fully_correct_scenarios": sum(1 for p in per_scn if p["pass_rate"] == 1.0),
+        "key_accuracy_by_name": key_acc_by_name,
         "mean_stability": round(statistics.mean([p["stability"] for p in per_scn]), 3) if per_scn else None,
         "worst_keys": sorted(all_keys, key=lambda t: t[2])[:8],
         "per_scenario": per_scn}
@@ -148,6 +154,7 @@ def main(argv=None):
     print(f"[AUTO-ORACLE 결과] 자율 oracle 정확률 {summary['oracle_accuracy_mean']} "
           f"(완전정확 시나리오 {summary['fully_correct_scenarios']}/{len(per_scn)}), "
           f"평균 안정성 {summary['mean_stability']}")
+    print(f"  키 이름별 정확률(진짜 신호): {key_acc_by_name}")
     print("  최약 키(틀린 곳):")
     for sid, k, acc in summary["worst_keys"]:
         if acc < 1.0:

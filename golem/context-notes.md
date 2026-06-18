@@ -818,3 +818,25 @@ G60 프로브 후속. G60이 짚은 두 모호성(SCN-006 gameStatus enum·SCN-0
 - **다음**: ① 고결합 카드(eco/combat) 자율 oracle — 결정적 계산이 깨지는 난이도 경계(방치형은 산술 단순) ②
   reconcile 입력에 자율 oracle 배선(손-oracle 대체, 모호탐지→계약fix 루프 자동화) ③ 어휘갭을 self-detect까지(31B가
   자기 불일치 보고 어느 계약줄 박을지 제안).
+
+## G62 — 자율 oracle 고결합(eco): 결합 무관, 실패는 또 전부 계약-모호 (2026-06-18, ★키)
+
+G61 다음 = 결합도가 결정적 oracle 계산을 깨나. eco(다개체 월드 시뮬: 번식·섭식·굶주림 tick 진행, 8시나리오)
+자율 oracle. 산출 `build_runs/autooracle-20260618-102954/`. ★주의: **시나리오단위 0.0은 측정 아티팩트** —
+uniform한 status 키가 전 시나리오를 끌어내림. 진짜 신호는 **키 이름별 정확률**(하네스에 `key_accuracy_by_name` 추가).
+
+- **키별: entities 0.875, status 0.0.** 즉 어려운 다개체 시뮬(entities)을 31B가 **7/8 완벽 계산** — 결합은
+  계산을 안 깨뜨린다(빌드합의 eco 발견과 동형). 모든 실패가 또 계약-모호:
+  - **status 8/8 실패 = 순수 enum 어휘**: 골든 전부 `"FINISHED"`, 31B는 `success`×16·`completed`×3·`ok`×2·
+    `complete`·`running`. 의미는 정답(끝남), rules가 리터럴 토큰 미명세. 방치형 gameStatus와 100% 동형 → 계약 한 줄.
+  - **SCN-004 entities 0/3(안정 1.0) = 번식 규칙 모호**: 골든 predator 2마리 각 energy4(번식 발생) vs 31B
+    1마리 energy9(번식 안 하고 누적). **빌드합의도 흔들렸던 그 SCN-004 잔차(0.925≠1.0)를 빌드 0줄로 재발견** —
+    번식 임계/타이밍이 rules에 안 박힘.
+- **판정(thesis 강화)**: ① **결합도는 자율 oracle 계산을 안 깨뜨린다**(eco entities 7/8, 방치형과 동급). 깨는 건
+  *미명세 계약*뿐(enum 어휘 + 번식 규칙). ② 자율 oracle 불일치 = **공짜 모호 탐지기**가 고결합서도 작동 —
+  SCN-004 번식 잔차(사람이 알던 eco 약점)를 정확히 재지목. ③ G60~62 통합: 자율 oracle의 실패 표면은 *항상*
+  계약 모호(산술 아님)이고, 박으면 닫힌다(G61 실증). 난이도는 "계산"이 아니라 "계약 명세"에 산다(G41~44 재확인).
+- **측정 교훈(하네스)**: 자율 oracle은 *키별*로 봐야 한다. 한 모호키(status)가 있으면 시나리오단위 정확률은
+  0으로 붕괴해 진짜 신호(entities 0.875)를 가린다. `auto_oracle.py`에 `key_accuracy_by_name` 헤드라인 추가.
+- **다음**: eco 어휘+번식 박고 재측정(G61식 사다리 → entities 8/8·status 8/8 수렴 검증) / reconcile 배선 /
+  31B self-suggest(자기 불일치 → 어느 계약줄 박을지 제안).
