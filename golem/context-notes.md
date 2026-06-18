@@ -1045,3 +1045,20 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   idle_vocab 1.0/11·eco_vocab 1.0/8·eco_selfsug 1.0/8 — **셋 다 26B 원본(G61/G63/G64)과 동일 1.0**. 핀은
   모호성 제거 규칙이라 더 센 모델도 그대로 따름. **결론: 재실험 불필요(26B 성공은 "싼 모델+빡빡계약=수렴"의 더 강한
   증거). 라벨만 정정. 31solo 사다리 닫힘 확정.** 산출 autooracle-20260618-{194121,195838,201413}.
+- **31solo 진짜 이유(사용자 확인)**: 설계 선택 아님 — 26B가 구글 서버 문제로 1주일 넘게 사실상 불능이라 도저히 못 씀.
+
+## G71 — 외부 코드리뷰 반영: 게이트·FROZEN 실버그 픽스 + 키0 CI (2026-06-18, 키0)
+- **외부 리뷰 6지적 검증**: #1 FROZEN BLOCKING 미추적·#2 게이트 첫 시나리오만 검사·#5 소형 JS만·#6 CI 없음 = 사실(코드
+  확인). #3 합의≠정확·#4 oracle 동일모델 = 방법론상 맞으나, 골렘의 정답 앵커는 합의 아니라 **실Node 골든**(모델 독립,
+  `_derive_l4_goldens` 등)이라 리뷰가 그 역할을 과대평가. 합의는 "계약 빡빡함" 계기지 정답 판정기가 아님.
+- **#4 단서(31solo 부작용)**: 31solo 전엔 auto_oracle=26B·빌더=31B라 우연한 교차모델 독립성이 있었으나 통일로 사라짐.
+  단 26B가 서버불능이라 "검증 oracle만 이종모델" 안은 폐기 → **독립 앵커는 Node 골든, 31B auto_oracle은 모호성
+  탐지기로만 쓰는 규율**로 처리.
+- **#2 픽스([build_graded.py:230])**: `if i==1 and ...`(첫 시나리오만 종료코드 검사)를 **모든 시나리오 returncode!=0
+  거부**로. 이전엔 i>=2 크래시가 None만 남기고 게이트 통과했음. 회귀잠금 `_gate_allscenarios_keyless.py`(정상 통과 +
+  SCN2 크래시 주입 거부, 키0). G70 카드·레버4 keyless 무회귀(8/8).
+- **#1 픽스([planning.py:280])**: `resolved=bool(decisions or assumed or deferred)`(하나라도 있으면 FROZEN)를
+  **흡수 수(decisions+assumed+deferred) ≥ BLOCKING 수**로. 질문 여럿인데 결정 하나면 OPEN. `blocking_open` 노출.
+  회귀잠금 `_freeze_blocking_keyless.py`(BLOCKING3·결정1→OPEN 등 5케이스, 키0).
+- **#6 픽스(CI)**: `run_keyless.py`(compileall + replay + 레버4 + 게이트 + FROZEN 묶음, API콜0) + `.github/workflows/
+  keyless.yml`(push/PR마다 Python+Node로 스위트). 로컬 ALL PASS. **#3·#5는 다음 트랙**(대형카드 = 스케일 확장).
