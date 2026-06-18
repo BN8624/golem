@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "전 시나리오 oracle_risk.risk=false. 고결합 전투 카드 — 골든은 combat_base+참조 engine(FATIGUE) 실Node 역산(모델 독립)."
+    }
+  ]
+}

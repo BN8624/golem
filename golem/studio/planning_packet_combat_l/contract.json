@@ -1,0 +1,57 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "tick": "number",
+      "player_hp": "number",
+      "player_energy": "number",
+      "player_gauge": "number",
+      "player_pos": "number",
+      "enemy_hp": "number",
+      "enemy_energy": "number",
+      "enemy_gauge": "number",
+      "enemy_pos": "number",
+      "isGameOver": "boolean",
+      "winner": "string (player|enemy|draw|null)",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: At the start of every tick, any unit with poison>0 takes 5 poison damage and its poison duration decreases by 1.",
+      "RULE-02: A unit that is not stunned gains gauge equal to its speed every tick.",
+      "RULE-03: A unit acts when its gauge >= 100. Priority order is Player first, then Enemy.",
+      "RULE-04: ATTACK: if |player.pos - enemy.pos| <= 1 and energy >= 20, the target's hp -= 20 and the actor's energy -= 20 (hit); otherwise it fails (no effect).",
+      "RULE-05: MOVE: step one cell toward the opponent; if the new pos is within 0..10 and energy >= 10, pos moves by the direction and energy -= 10; otherwise it fails.",
+      "RULE-06: WAIT: energy = min(100, energy + 20).",
+      "RULE-07: Every action (hit or fail) reduces the actor's gauge by 100.",
+      "RULE-08: A stunned unit gains no gauge and cannot act; its stun duration decreases by 1 at tick end.",
+      "RULE-09: The game ends immediately when any unit's hp <= 0. winner is the surviving side ('player' or 'enemy'); if both <= 0, winner is 'draw'.",
+      "RULE-10: The game runs at most 50 ticks. If no unit has died by the end of tick 50, the game ends in a draw.",
+      "RULE-11 (THIS CARD): FATIGUE. At the very end of each tick, AFTER the stun-duration decrement, any unit whose energy is exactly 0 takes 3 fatigue damage; then apply the end check (RULE-09) again. Everything else stays byte-for-byte identical to before — a tick in which neither unit sits at energy 0 prints exactly as the previous card did."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js",
+          "src/format.js"
+        ],
+        "description": "CLI entry: parse --scenario N, run engine, print flattened state via format.render."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runScenario"
+        ],
+        "imports": [
+          "src/constants.js",
+          "src/state.js",
+          "src/unit_logic.js"
+        ],
+        "description": "Tick loop: poison -> gauge gain -> actions (player then enemy) -> stun decrement. THIS card adds ONLY RULE-11 FATIGUE at tick end (energy==0 -> -3 hp, then end check). Keep all existing coupled mechanics intact. This is the ONLY module this card edits."
+      }
+    ]
+  }
+}
