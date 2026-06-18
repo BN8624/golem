@@ -1003,3 +1003,24 @@ frontier 종결 후 "작은 게임에서 멈추지 말고 골격→누적→큰 
   cp949 디코딩으로 원인 특정 → env(PYTHONUTF8)가 아니라 코드 한 줄로 픽스(레거시 build.py:101 동형 버그는 미수정).
 - **의미**: 누적 빌드 레버1~3(코드주입·편집모드 `_EDIT_HEADER`·누적회귀 동시채점) 실증 닫힘. 남은 레버4(선택적
   컨텍스트=모듈만 주입)가 큰 게임 진짜 천장(§21.2-④).
+
+## 대화 G69 — 레버4(선택적 컨텍스트) 배선 + 키0 검증 (2026-06-18)
+
+- **무엇**: 누적 빌드 마지막 레버 — 게임이 커서 전체 코드가 프롬프트에 안 들어갈 때 "이번 카드가 건드리는
+  모듈만" 주입(§21.2-④). `build_graded --inject-modules src/engine.js`: touched 모듈만 본문+재생성, 나머지
+  base 모듈은 `_iface_stub`로 **exports 시그니처만**(본문/값 가림) 주고 워크스페이스에 verbatim 복사(재생성 X).
+  사용자 결정 = 인터페이스 범위 "exports 시그니처만"(이름+파라미터, 본문 숨김).
+- **프로브 카드 l4(ABORT)**: rocket_base 위에 RULE-07(ABORT→gameStatus 'ABORTED', 즉시 중단=WON 동형).
+  engine.js만 touched, logic/constants/main은 hold-out. engine이 logic의 createInitialState·applyWait·
+  applyAdvance를 **본문 없이 시그니처대로** 호출해야 하는 게 핵심 시험.
+- **골든 역산(_derive_l4_goldens.py)**: 손계산 아니라 rocket_base+참조 engine을 실Node로 돌려 8시나리오 출력을
+  골든화(채점 경로 동일). 회귀6(SCN-001~006=원본 로켓 동일)+ABORT2(SCN-007 turn3/fuel1/stage1/ABORTED/BEAT-1,
+  SCN-008 즉시 ABORT).
+- **키0 검증(_validate_l4_keyless.py, ALL PASS)**: ① 프롬프트에 engine 본문 O·logic 누적로직('state.turn+1') X·
+  logic 시그니처('exports.applyWait = (state, constants) =>') O·constants 값('[2,3,4,5]') X·ABORT 규칙 O·
+  "touched만 출력" 지시 O. ② 빌더가 engine만 출력해도 동결 3파일 verbatim 병합 → 4파일 완성·logic verbatim 일치.
+  ③ gate_and_run 통과 + 골든 8/8 재현. → 31B 없이 메커니즘 전부 확인, ★키 직전 정지.
+- **배관**: parse_files는 dict 반환({경로:본문}) — selective 병합도 dict로. 비선택(--base 레버1) 경로 불변
+  (FROZEN MODULES 미포함 확인). manifest는 base(rocket_base)에서 읽으므로 exports_by_path가 시그니처 소스.
+- **다음**: ★키 런(HANDOFF ▶▶). 합의 1.0+골든 일치면 레버4 닫힘 = 누적 빌드 4레버 전부 실증. 회귀 깨지면
+  인터페이스만으로 기존 동작 보존 실패(트레이드오프 노출).
