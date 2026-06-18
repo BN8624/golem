@@ -20,6 +20,7 @@ N시드 재실행 → 정확률 + 규칙별 검출률(recall) + 오탐(false ala
 
 import argparse
 import json
+import os
 import re
 import statistics
 import sys
@@ -35,6 +36,7 @@ from jsonutil import extract_json        # noqa: E402
 # 캐논 일관성 판단은 '머리' 일이다 → critic 역할(=gemma 31B). 실제 모델 ID는 get_model이 준다
 # (역할→모델 매핑은 lib/config.py·.env가 정본; 여기 문자열을 박지 않아 print가 실제와 안 어긋난다).
 ROLE = "critic"
+MODEL_31 = "gemma-4-31b-it"   # atelier는 31B(머리)만 쓴다 — 핀 가드용 상수
 
 _CANON_PROMPT = """You are the CONTINUITY EDITOR for a novel. You are given the FROZEN CANON
 (established facts that must NEVER be contradicted) and a CHAPTER DRAFT. Find every place in the
@@ -175,6 +177,11 @@ def main(argv=None):
             raise SystemExit(f"[CANON-CHECK] atelier 전용 키가 없다 — {env_path} 에 "
                              "GOOGLE_API_KEY_1..N 을 넣어라 (golem 키와 섞이지 않게).")
         load_env(env_path)
+        # 31B 핀 가드: atelier는 critic(31B)만 쓴다. .env 오염·역할 오용으로 26B가 새지 않게 강제.
+        if ROLE != "critic":
+            raise SystemExit(f"[CANON-CHECK] ROLE은 critic(31B)이어야 한다 — 받은 값 {ROLE!r}")
+        os.environ["GENERATOR_MODEL"] = MODEL_31
+        os.environ["CRITIC_MODEL"] = MODEL_31
         keys = get_api_keys()
         model_id = get_model(ROLE)
         pool = KeyPool(keys, models=[model_id])

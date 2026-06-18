@@ -47,6 +47,12 @@ atelier는 나중에 독립 프로젝트로 *다른 폴더로 이전*한다. 지
 print/summary는 `get_model(ROLE)`로 실제 모델 ID를 낸다. (golem auto_oracle에도 같은 불일치가 있으나
 사용자 영역이라 건드리지 않고 짚어만 둠.) → 31B 실수치는 재실행 필요.
 
+**31B 핀 가드 추가 (2026-06-18).** 26B 사용처 전수조사 결과 호출 0(세 스크립트 다 `ROLE="critic"`→31B,
+fallback도 critic-ward, 26B 문자열은 lib의 비활성 정의뿐). 다만 canon_check·design_check은 planning과
+달리 모델을 명시 핀 안 하고 기본값(31B)에 의존했다 → `.env` 오염이나 `generate("generator")` 추가 시
+26B가 샐 잠복 위험. 두 채점기 실콜 경로에 planning과 같은 핀(`GENERATOR_MODEL`·`CRITIC_MODEL`=31B)을
+박고 `ROLE!=critic`이면 죽는 가드를 넣었다. replay(키0) 경로는 무영향. 실콜 `--n 1`로 31B 찍힘 확인.
+
 ## 캐논/미학 경계 1차 데이터 — 검출↔precision 방향 비대칭 (2026-06-18)
 
 `fixtures_ko_hard`(함의 위반 hard + 위반0 함정 trap)로 채점기를 밀어 첫 한계를 노출했다.
