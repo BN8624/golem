@@ -22,6 +22,7 @@ import json
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -255,22 +256,28 @@ def _write_packet(idea, draft, reviews, issues, packet, outdir):
         {"consumer": "다음 패스/책 planning이 입력으로 읽는다", "deferred": deferred},
         ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # FROZEN 조건: BLOCKING이 decisions/assumed/deferred로 흡수됐고, canon이 ≥3 차 있어야 한다
-    # (canon이 비면 canon_check이 지킬 게 없다 — 빈 바이블은 동결 의미 없음).
-    resolved = bool(decisions or assumed or deferred)
-    frozen = resolved and len(canon) >= 3
+    # FROZEN 조건: ⑴ BLOCKING이 decisions/assumed/deferred로 흡수됐고, ⑵ canon이 ≥3, ⑶ canon ID 중복 없음.
+    # ⑴ 거짓 0 방지: 흡수 항목 총수가 BLOCKING 수 이상이어야 한다(질문보다 답이 적으면 OPEN). 완전한 1:1
+    #    해소 추적은 모델이 자유서술로 답해 자동 매핑이 안 됨 — 그건 LLM 판정이 필요(별도). 여기선 개수 게이트.
+    absorbed = len(decisions) + len(assumed) + len(deferred)
+    unresolved_block = max(0, n_block - absorbed)
+    resolved = bool(decisions or assumed or deferred) and unresolved_block == 0
+    canon_ids = [c.get("id") for c in canon]
+    dup_ids = sorted({i for i in canon_ids if i and canon_ids.count(i) > 1})
+    frozen = resolved and len(canon) >= 3 and not dup_ids
     status = ["# STATUS", "",
               f"- 로그라인: {idea}",
               f"- 리뷰어 BLOCKING 원본: {n_block}",
               f"- 흡수: decisions {len(decisions)} / assumed {len(assumed)} / deferred {len(deferred)}",
-              f"- 미해소 BLOCKING: {0 if resolved else n_block}",
+              f"- 미해소 BLOCKING: {unresolved_block} (흡수 {absorbed} vs 원본 {n_block})",
               f"- canon 사실 수: {len(canon)}",
+              f"- canon ID 중복: {', '.join(dup_ids) if dup_ids else '없음'}",
               "",
-              f"BIBLE_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소 또는 canon<3)'}"]
+              f"BIBLE_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소 또는 canon<3 또는 ID중복)'}"]
     (outdir / "STATUS.md").write_text("\n".join(status) + "\n", encoding="utf-8")
-    return {"frozen": frozen, "blocking_original": n_block,
+    return {"frozen": frozen, "blocking_original": n_block, "unresolved_block": unresolved_block,
             "decisions": len(decisions), "assumed": len(assumed), "deferred": len(deferred),
-            "canon": len(canon)}
+            "canon": len(canon), "dup_ids": dup_ids}
 
 
 # ---- caller: fake(녹음 재생, 키X) / real(LLMClient, 키O) ----
@@ -384,9 +391,12 @@ def _verdict(results):
 
 def _write_outputs(idea, draft, results, api_calls):
     summary = {"idea": idea, "api_calls": api_calls, "arms": results, "verdict": _verdict(results)}
-    (HERE / "runs").mkdir(exist_ok=True)
-    (HERE / "runs" / "planning_result.json").write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    runs = HERE / "runs"
+    runs.mkdir(exist_ok=True)
+    text = json.dumps(summary, ensure_ascii=False, indent=2)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    (runs / f"planning-{stamp}.json").write_text(text, encoding="utf-8")   # 타임스탬프 보존(재현성)
+    (runs / "planning_result.json").write_text(text, encoding="utf-8")     # 최신 포인터(호환)
     return summary
 
 

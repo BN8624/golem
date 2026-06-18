@@ -176,21 +176,27 @@ def _write_packet(bible, draft, reviews, issues, packet, outdir):
          f"## DEFERRED(후속 미룸) {len(deferred)}", *[f"- {d}" for d in deferred]]
     (outdir / "questions.md").write_text("\n".join(q) + "\n", encoding="utf-8")
 
-    # FROZEN 조건: BLOCKING이 decisions/assumed/deferred로 흡수됐고, setups>=4 + beats>=8이어야 한다
-    # (setups가 비면 design_check이 추적할 약속이 없다 — 빈 아웃라인은 동결 의미 없음).
-    resolved = bool(decisions or assumed or deferred)
-    frozen = resolved and len(setups) >= 4 and len(beats) >= 8
+    # FROZEN 조건: ⑴ BLOCKING 흡수, ⑵ setups>=4 + beats>=8, ⑶ setup ID 중복 없음.
+    # ⑴ 거짓 0 방지: 흡수 항목 총수가 BLOCKING 수 이상이어야 한다(질문보다 답이 적으면 OPEN). 완전한 1:1
+    #    해소 추적은 자유서술 답이라 LLM 판정이 필요(별도) — 여기선 개수 게이트로 "일부만 답하면 통과"를 막는다.
+    absorbed = len(decisions) + len(assumed) + len(deferred)
+    unresolved_block = max(0, n_block - absorbed)
+    resolved = bool(decisions or assumed or deferred) and unresolved_block == 0
+    setup_ids = [s.get("id") for s in setups]
+    dup_ids = sorted({i for i in setup_ids if i and setup_ids.count(i) > 1})
+    frozen = resolved and len(setups) >= 4 and len(beats) >= 8 and not dup_ids
     status = ["# STATUS", "",
               f"- 리뷰어 BLOCKING 원본: {n_block}",
               f"- 흡수: decisions {len(decisions)} / assumed {len(assumed)} / deferred {len(deferred)}",
-              f"- 미해소 BLOCKING: {0 if resolved else n_block}",
+              f"- 미해소 BLOCKING: {unresolved_block} (흡수 {absorbed} vs 원본 {n_block})",
               f"- setups 수: {len(setups)} / beats 수: {len(beats)}",
+              f"- setup ID 중복: {', '.join(dup_ids) if dup_ids else '없음'}",
               "",
-              f"OUTLINE_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소 또는 setups<4/beats<8)'}"]
+              f"OUTLINE_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소 또는 setups<4/beats<8 또는 ID중복)'}"]
     (outdir / "STATUS.md").write_text("\n".join(status) + "\n", encoding="utf-8")
-    return {"frozen": frozen, "blocking_original": n_block,
+    return {"frozen": frozen, "blocking_original": n_block, "unresolved_block": unresolved_block,
             "decisions": len(decisions), "assumed": len(assumed), "deferred": len(deferred),
-            "setups": len(setups), "beats": len(beats)}
+            "setups": len(setups), "beats": len(beats), "dup_ids": dup_ids}
 
 
 # ---- caller: fake(녹음 재생, 키X) / real(LLMClient, 키O) ----
