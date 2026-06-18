@@ -19,6 +19,7 @@ python design_check.py --replay fixtures_design/replay_demo.json --n 3          
 python specqa_check.py --replay fixtures_specqa/replay_demo.json --n 3          # 캐논/미학 격리 채점기
 python planning.py --replay fixtures/planning_replay.json --synthesize --out runs/demo          # FROZEN 바이블
 python design.py   --replay fixtures_design/design_replay.json --out runs/demo_outline          # FROZEN 아웃라인
+python specqa.py   --replay fixtures_specqa/specqa_replay.json --out runs/demo_contract          # FROZEN 씬 계약
 ```
 
 ## 현재 위치 (생산 3 + 채점 3 = 6 도구, specQA 생산자까지 키0 닫힘 — ★실콜 다음)
