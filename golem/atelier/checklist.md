@@ -10,7 +10,9 @@
 - [x] 캐논/미학 경계 1차 결정: **검출(recall)은 한국어 함의로도 강함(C3·C6 1.0), precision(일치 방향
       판정)이 실한계**(trap "친누이"를 C2 위반으로 3/3 뒤집음). 프롬프트·few-shot 둘 다 불가역. 상세 context-notes.
 - [x] rule_id 정규화 버그 픽스(`_norm_id`) + fp 진단 계측(`false_alarm_by_rule/_evidence`).
-- [ ] precision 한계 2패스 검증(위반 후보 재확인 콜)으로 깨지나 — 아키텍처 변경, 별도 세션.
+- [x] precision 한계 2패스 검증(`--verify`)으로 **깨짐**: trap 오탐 1.0→0, hard 검출 1.0 유지,
+      전체 exact 1.0(canon-20260618-171503). precision은 모델 한계 아닌 단일콜 프레이밍 한계 — 검출/검증
+      분리하면 풀림(콜 약 2배). **경계 재이동: precision도 기계화 가능.** 상세 context-notes.
 
 ## 자족화 (골렘 폴더 비의존 — 나중에 독립 프로젝트로 이전 대비)
 

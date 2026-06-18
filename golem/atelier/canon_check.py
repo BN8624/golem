@@ -66,6 +66,24 @@ Output ONE JSON object EXACTLY, no prose, no explanation:
 {{ "violations": [ {{ "rule_id": "<id from canon>", "evidence": "<short quote from the draft>" }} ] }}"""
 
 
+_VERIFY_PROMPT = """You are a STRICT FACT-CHECKER auditing flagged canon violations for FALSE ALARMS.
+For each candidate, decide if the draft quote REALLY contradicts its canon fact.
+
+A real contradiction means the draft asserts something that CANNOT BE TRUE if the canon fact holds.
+A quote that AGREES WITH, RESTATES, or merely MENTIONS the fact is NOT a contradiction (confirmed=false).
+
+FROZEN CANON:
+{canon}
+
+CHAPTER DRAFT:
+{draft}
+
+CANDIDATE VIOLATIONS (JSON): {candidates}
+
+Output ONE JSON object EXACTLY, no prose:
+{{ "verdicts": [ {{ "rule_id": "<id>", "confirmed": true }} ] }}"""
+
+
 def _ask_check(pool, canon, draft_text):
     """31B에 한 초고의 캐논 위반을 찾게 시킨다. 반환 = 파싱된 {violations:[...]} 또는 None."""
     from llm import LLMClient
@@ -73,6 +91,27 @@ def _ask_check(pool, canon, draft_text):
     prompt = _CANON_PROMPT.format(canon=canon_str, draft=draft_text)
     with pool.checkout() as key:
         return extract_json(LLMClient(api_key=key).generate(ROLE, prompt))
+
+
+def _verify(pool, canon, draft_text, pred):
+    """2패스: 1패스가 낸 위반 후보를 '정말 모순인가' 재확인해 confirmed=true만 남긴다(precision↑).
+    후보 0이면 콜 없이 그대로. 검증 콜 실패 시 1패스 보존(누락보다 보수적)."""
+    cands = [{"rule_id": _norm_id(v["rule_id"]), "evidence": v.get("evidence", "")}
+             for v in pred.get("violations", []) if v.get("rule_id")]
+    if not cands:
+        return pred
+    from llm import LLMClient
+    canon_str = "\n".join(f'- [{r["id"]}] {r["text"]}' for r in canon)
+    prompt = _VERIFY_PROMPT.format(canon=canon_str, draft=draft_text,
+                                   candidates=json.dumps(cands, ensure_ascii=False))
+    with pool.checkout() as key:
+        res = extract_json(LLMClient(api_key=key).generate(ROLE, prompt))
+    if not res:
+        return pred
+    confirmed = {_norm_id(v["rule_id"]) for v in res.get("verdicts", [])
+                 if v.get("confirmed") and v.get("rule_id")}
+    return {"violations": [v for v in pred.get("violations", [])
+                           if _norm_id(v.get("rule_id", "")) in confirmed]}
 
 
 def _norm_id(rid):
@@ -106,6 +145,8 @@ def main(argv=None):
     ap.add_argument("--n", type=int, default=3, help="시드(재실행) 수 — 안정성/분산용")
     ap.add_argument("--fixtures", default="fixtures")
     ap.add_argument("--replay", default=None, help="키 없이 채점 배선 검증 (canned 응답 JSON)")
+    ap.add_argument("--verify", action="store_true",
+                    help="2패스 검증 — 1패스 위반 후보를 재확인 콜로 걸러 오탐 억제(★키 더 씀)")
     args = ap.parse_args(argv)
 
     try:
@@ -155,6 +196,8 @@ def main(argv=None):
                 pred = seq[i % len(seq)] if seq else None
             else:
                 pred = _ask_check(pool, canon, c["draft_text"])
+                if args.verify and pred:
+                    pred = _verify(pool, canon, c["draft_text"], pred)
             sc = _score(pred, golden)
             seed_exact.append(sc["exact"])
             seed_found.append(tuple(sc["found"]))
