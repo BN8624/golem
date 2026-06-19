@@ -2,3 +2,4 @@
 {"id": "L-002", "scope": "all", "rule": "기존 분기·함수는 byte-for-byte 보존하라. 새 규칙이 닿지 않는 시나리오는 직전 카드와 출력이 한 글자도 달라선 안 된다.", "why": "누적 카드 불변식. 직전 카드 전체 시나리오로 회귀 검증된다.", "source": "general"}
 {"id": "L-003", "scope": "all", "rule": "신규 메커니즘 시나리오는 그 메커니즘만 격리해 발동시켜라(다른 신규 요소와 섞지 마라). 최소 2개.", "why": "card4 Boost는 boost가 +key와 엉켜 실제 발동이 1개뿐 = 약한 커버리지.", "source": "sokoban_card4_boost_review"}
 {"id": "L-004", "scope": "all", "rule": "touched 모듈만 건드리고 export 시그니처(resolveMove(state,dir) 등)는 그대로 유지하라.", "why": "프로즌 모듈 호환성.", "source": "general"}
+{"id": "L-005", "scope": "all", "rule": "발동(격리) 시나리오는 moves 경로가 실제로 새 타일을 밟도록 설계하라. 타일을 격자에 두기만 하고 플레이어가 안 지나가면 발동 0 = 커버리지 미달.", "why": "card4 Spring 제안의 SCN-091은 S를 격자에 뒀지만 단일 move가 S에 닿지 않아 발동 0, 발동 커버리지 1<2로 FLAG.", "source": "sokoban_card4_spring_review"}

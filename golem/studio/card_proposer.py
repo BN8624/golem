@@ -58,9 +58,15 @@ CONCEPT: <one Korean sentence>
 === MOVE_LOGIC ===
 <FULL new src/move_logic.js source, cumulative (all old mechanics + the new one)>
 === SCENARIOS ===
-<JSON array of 4 scenarios: {{"id":"SCN-0NN","covers_reqs":["RULE-09"],"input":{{"level":["#...","..."],"moves":["R","U",...]}}}}.
-Use INLINE level grids that include your new tile. At least 2 scenarios MUST fire the new mechanic in ISOLATION
-(not mixed with K/D/T/O). Include at least 1 plain scenario with NO new tile (regression). Keep grids small.>
+<JSON array of 5 scenarios: {{"id":"SCN-0NN","covers_reqs":["RULE-09"],"input":{{"level":["#...","..."],"moves":["R","U",...]}}}}.
+Use INLINE level grids that include your new tile. At least 3 scenarios MUST fire the new mechanic in ISOLATION
+(not mixed with K/D/T/O). Include at least 1 plain scenario with NO new tile (regression).
+CRITICAL — the player MUST actually step onto the new tile, or it never fires. Coordinates: row = array index,
+col = char index. '@' is the player. For the first move to land on tile 'X', put '@' ADJACENT to 'X' on the
+side the move comes from: move R -> '@' is directly LEFT of 'X' in the SAME row ("@X." then moves ["R"]);
+move U -> '@' is directly BELOW 'X' in the SAME column (X on top row, @ right under it, then moves ["U"]).
+Before finalizing, TRACE every move: compute the destination cell (row,col) and confirm it is your tile and
+not a '#'. Keep grids small (3 rows is fine).>
 """
 
 
