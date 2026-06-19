@@ -18,14 +18,91 @@
       ]
     },
     "rules": [
-      "REQ-001: CLI argument --scenario N selects the hardcoded dataset.",
-      "REQ-002: turn = turn + 1 after every action attempt.",
-      "REQ-003: Combat is simultaneous mutual damage.",
+      "REQ-001: CLI argument --scenario N selects the world from src/scenarios.js (getScenario(N), 1-based).",
+      "REQ-002: turn = turn + 1 after every action attempt (including a blocked move).",
+      "REQ-003: An attack action deals simultaneous mutual damage: the hero subtracts hero.atk from the targeted enemy's hp AND that enemy subtracts its atk from hero.hp, both at once. Enemies never act on their own.",
       "REQ-004: HP can be negative.",
       "REQ-005: Win/Lose checks occur strictly post-action.",
-      "REQ-006: If both hero.hp <= 0 and all enemies.hp <= 0, status = DEFEAT.",
-      "REQ-007: Initial enemy count 0 results in FINISHED, not VICTORY.",
-      "REQ-008: Output is a single JSON line with: status, turn, hero_hp, hero_pos, enemies (id, hp, pos)."
+      "REQ-006: If, post-action, both hero.hp <= 0 and all enemies.hp <= 0, status = DEFEAT (checked before VICTORY).",
+      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY.",
+      "REQ-008: Print these lines, in order, nothing else: status, turn, hero_hp, hero_pos, enemies. hero_pos is [x, y]. enemies is a JSON array where each enemy is EXACTLY {id, hp, pos} — DO NOT include atk.",
+      "REQ-009: When all actions are exhausted with neither VICTORY nor DEFEAT reached, status = FINISHED.",
+      "REQ-010: A move is blocked (hero.pos unchanged, no combat) when the destination cell has any negative coordinate (off-grid; the grid minimum coordinate is 0) OR is occupied by a living enemy. turn still increments per REQ-002.",
+      "REQ-011: An action is {type:'attack', target:'<enemy id>'} or {type:'move', dir:[dx,dy]}. An attack deals/receives damage only if the targeted enemy is orthogonally adjacent (|dx|+|dy| == 1 between hero.pos and that enemy.pos); otherwise it is a no-op (turn still increments)."
+    ],
+    "output_contract": {
+      "fields": ["status", "turn", "hero_hp", "hero_pos", "enemies"],
+      "lines": [
+        "status: <one of READY|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "hero_hp: <integer, may be negative>",
+        "hero_pos: <a JSON array [x, y] of integers>",
+        "enemies: <a JSON array; each enemy is EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — DO NOT include atk>"
+      ]
+    },
+    "scenario_data": [
+      {
+        "id": "SCN-001",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"},
+          {"type": "attack", "target": "E1"},
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-002",
+        "initialState": {
+          "hero": {"hp": 20, "atk": 10, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 100, "atk": 30, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-003",
+        "initialState": {
+          "hero": {"hp": 1, "atk": 10, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 100, "atk": 50, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "move", "dir": [1, 0]}
+        ]
+      },
+      {
+        "id": "SCN-004",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": []
+        },
+        "actions": [
+          {"type": "move", "dir": [-1, 0]}
+        ]
+      },
+      {
+        "id": "SCN-005",
+        "initialState": {
+          "hero": {"hp": 10, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 10, "atk": 20, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-006",
+        "initialState": {
+          "hero": {"hp": 20, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 20, "atk": 20, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      }
     ]
   },
   "interface_contract": {
@@ -44,12 +121,23 @@
         "exports": [
           "runScenario"
         ],
+        "imports": [
+          "src/game_logic.js"
+        ]
+      },
+      {
+        "path": "src/game_logic.js",
+        "exports": [
+          "applyAction",
+          "checkGameState",
+          "updateState"
+        ],
         "imports": []
       },
       {
         "path": "src/scenarios.js",
         "exports": [
-          "scenarios"
+          "getScenario"
         ],
         "imports": []
       }

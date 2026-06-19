@@ -1,10 +1,4 @@
 {
   "risky_scenarios": [],
-  "notes": [
-    "Death threshold finalized as HP <= 0.",
-    "Mutual death (Hero and Enemy <= 0 in same turn) results in DEFEAT.",
-    "Dead enemies are removed from the state list.",
-    "Coordinate system restricted to non-negative integers with boundary clamping.",
-    "Status 'FINISHED' replaced by 'VICTORY' for goal-reach conditions."
-  ]
+  "notes": []
 }

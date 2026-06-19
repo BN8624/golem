@@ -1,21 +1,38 @@
 [
   {
     "id": "SCN-001",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": [{\"id\": \"E1\", \"hp\": 20, \"pos\": [1, 0]}]}, \"commands\": [\"ATTACK E1\", \"ATTACK E1\"]}",
+    "input": {
+      "args": [
+        "--scenario",
+        "1"
+      ]
+    },
     "covers_reqs": [
       "REQ-01",
+      "REQ-02",
       "REQ-03",
+      "REQ-04",
+      "REQ-05",
       "REQ-08"
     ],
     "expected": {
       "status": "VICTORY",
-      "turn": 2,
-      "hero_hp": 100,
+      "turn": 3,
+      "hero_hp": 70,
       "hero_pos": [
         0,
         0
       ],
-      "enemies": []
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
     },
     "oracle_risk": {
       "risk": false,
@@ -24,17 +41,63 @@
   },
   {
     "id": "SCN-002",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": [{\"id\": \"E1\", \"hp\": 100, \"pos\": [1, 0]}]}, \"commands\": [\"MOVE [1, 0]\", \"TAKE_DAMAGE 110\"]}",
+    "input": {
+      "args": [
+        "--scenario",
+        "2"
+      ]
+    },
     "covers_reqs": [
+      "REQ-01",
+      "REQ-02",
+      "REQ-03",
       "REQ-04",
-      "REQ-05"
+      "REQ-05",
+      "REQ-08"
     ],
     "expected": {
       "status": "DEFEAT",
-      "turn": 2,
+      "turn": 1,
       "hero_hp": -10,
       "hero_pos": [
-        1,
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 90,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-003",
+    "input": {
+      "args": [
+        "--scenario",
+        "3"
+      ]
+    },
+    "covers_reqs": [
+      "REQ-01",
+      "REQ-02",
+      "REQ-08"
+    ],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 1,
+      "hero_pos": [
+        0,
         0
       ],
       "enemies": [
@@ -54,38 +117,24 @@
     }
   },
   {
-    "id": "SCN-003",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": []}, \"commands\": [\"MOVE [0, -1]\"]}",
+    "id": "SCN-004",
+    "input": {
+      "args": [
+        "--scenario",
+        "4"
+      ]
+    },
     "covers_reqs": [
-      "REQ-02"
+      "REQ-01",
+      "REQ-07",
+      "REQ-08"
     ],
     "expected": {
-      "status": "VICTORY",
+      "status": "FINISHED",
       "turn": 1,
       "hero_hp": 100,
       "hero_pos": [
         0,
-        0
-      ],
-      "enemies": []
-    },
-    "oracle_risk": {
-      "risk": false,
-      "reason": "Assuming movement outside grid boundaries is clamped or ignored, maintaining position [0,0]."
-    }
-  },
-  {
-    "id": "SCN-004",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": [], \"exit_pos\": [1, 0]}, \"commands\": [\"MOVE [1, 0]\"]}",
-    "covers_reqs": [
-      "REQ-07"
-    ],
-    "expected": {
-      "status": "VICTORY",
-      "turn": 1,
-      "hero_hp": 100,
-      "hero_pos": [
-        1,
         0
       ],
       "enemies": []
@@ -97,9 +146,19 @@
   },
   {
     "id": "SCN-005",
-    "input": "{\"start_state\": {\"hero_hp\": 10, \"hero_pos\": [0, 0], \"enemies\": [{\"id\": \"E1\", \"hp\": 10, \"pos\": [1, 0]}]}, \"commands\": [\"ATTACK E1\"]}",
+    "input": {
+      "args": [
+        "--scenario",
+        "5"
+      ]
+    },
     "covers_reqs": [
-      "REQ-06"
+      "REQ-01",
+      "REQ-03",
+      "REQ-04",
+      "REQ-05",
+      "REQ-06",
+      "REQ-08"
     ],
     "expected": {
       "status": "DEFEAT",
@@ -109,18 +168,35 @@
         0,
         0
       ],
-      "enemies": []
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
     },
     "oracle_risk": {
       "risk": false,
-      "reason": "Simultaneous death resolves to DEFEAT as per REQ-06 logic."
+      "reason": ""
     }
   },
   {
     "id": "SCN-006",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": []}, \"commands\": [\"TAKE_DAMAGE 100\"]}",
+    "input": {
+      "args": [
+        "--scenario",
+        "6"
+      ]
+    },
     "covers_reqs": [
-      "REQ-05"
+      "REQ-01",
+      "REQ-05",
+      "REQ-06",
+      "REQ-08"
     ],
     "expected": {
       "status": "DEFEAT",
@@ -130,53 +206,20 @@
         0,
         0
       ],
-      "enemies": []
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
     },
     "oracle_risk": {
       "risk": false,
-      "reason": "Verifies death threshold is inclusive of 0 (HP <= 0)."
-    }
-  },
-  {
-    "id": "SCN-007",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": []}, \"commands\": []}",
-    "covers_reqs": [
-      "REQ-01"
-    ],
-    "expected": {
-      "status": "VICTORY",
-      "turn": 0,
-      "hero_hp": 100,
-      "hero_pos": [
-        0,
-        0
-      ],
-      "enemies": []
-    },
-    "oracle_risk": {
-      "risk": false,
-      "reason": "Edge case: game starts with no enemies."
-    }
-  },
-  {
-    "id": "SCN-008",
-    "input": "{\"start_state\": {\"hero_hp\": 100, \"hero_pos\": [0, 0], \"enemies\": [], \"map_limit\": [10, 10]}, \"commands\": [\"MOVE [99, 99]\"]}",
-    "covers_reqs": [
-      "REQ-02"
-    ],
-    "expected": {
-      "status": "VICTORY",
-      "turn": 1,
-      "hero_hp": 100,
-      "hero_pos": [
-        10,
-        10
-      ],
-      "enemies": []
-    },
-    "oracle_risk": {
-      "risk": false,
-      "reason": "Verifies coordinate clamping at maximum map boundaries."
+      "reason": ""
     }
   }
 ]

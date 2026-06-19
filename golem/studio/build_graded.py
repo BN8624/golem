@@ -58,12 +58,9 @@ in order, then print the final state. Use the config values PROVIDED in the elem
 NEVER crash on a missing optional field.
 
 OUTPUT CONTRACT (FIXED — print EXACTLY these lines, this order, nothing else):
-{output_lines}
-All numeric state values are integers (use floor where a rule specifies). The `logs` line is a JSON array of
-log strings in order (e.g. [] if none); emit a log ONLY where a rule explicitly says to, with that exact
-wording, and never as a separate bare line.
+{output_block}
 
-Output every file with EXACT markers, one per file:
+{provided_block}Output every file with EXACT markers, one per file:
 === FILE: <path> ===
 <file body>
 """
@@ -181,10 +178,46 @@ def _output_lines(state_shape):
     return "\n".join(lines)
 
 
+def _output_block(state_shape, output_contract=None):
+    """프롬프트 OUTPUT CONTRACT 본문. output_contract(평면 필드·logs 없음)가 있으면 그걸 쓰고,
+    없으면 기존 state_shape 스칼라+logs 동작(다른 게임 무손상)."""
+    if output_contract and output_contract.get("lines"):
+        return ("\n".join(output_contract["lines"])
+                + "\nAll numeric state values are integers (use floor where a rule specifies). "
+                  "Print NOTHING else — no logs, no extra lines.")
+    return (_output_lines(state_shape)
+            + "\nAll numeric state values are integers (use floor where a rule specifies). The `logs` line is "
+              "a JSON array of\nlog strings in order (e.g. [] if none); emit a log ONLY where a rule explicitly "
+              "says to, with that exact\nwording, and never as a separate bare line.")
+
+
+def _provided_block(frozen_modules=None):
+    """계약 데이터로 하네스가 미리 써넣는 고정 모듈(예: src/scenarios.js)을 프롬프트에 표시해
+    모델이 그 인터페이스에 맞춰 나머지 파일을 짓게 한다. 없으면 빈 문자열(기존 동작)."""
+    if not frozen_modules:
+        return ""
+    chunks = [f"=== FILE: {rel} ===\n{src}" for rel, src in frozen_modules.items()]
+    return ("PROVIDED MODULE (already written by the harness — call it as-is; do NOT output it, do NOT "
+            "redefine it):\n" + "\n\n".join(chunks)
+            + "\nmain.js MUST read --scenario N, call getScenario(N) to obtain the world "
+              "{initialState, actions}, and pass world.initialState and world.actions to the engine. "
+              "Build the OTHER files normally.\n\n")
+
+
+def _gen_scenarios_module(scenario_data):
+    """계약 scenario_data(고정 세계)에서 src/scenarios.js 본문 생성 — 모든 빌드가 동일 세계를 받게 한다."""
+    worlds = [{"initialState": s["initialState"], "actions": s["actions"]} for s in scenario_data]
+    body = json.dumps(worlds, ensure_ascii=False, indent=2)
+    return ("// 전술 커널 시나리오 세계(계약 고정·하네스 주입). getScenario(n)은 1-based n번 세계를 반환한다.\n"
+            f"const SCENARIOS = {body};\n"
+            "exports.getScenario = (n) => SCENARIOS[n - 1] || null;\n")
+
+
 def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None, selective=None,
-                 patch=False):
+                 patch=False, frozen_modules=None):
     rules = contract.get("data_contract", {}).get("rules", [])
     state_shape = contract.get("data_contract", {}).get("state_shape", {})
+    output_contract = contract.get("data_contract", {}).get("output_contract")
     examples = json.dumps(scen_inputs[:3], ensure_ascii=False, indent=2)
     files_desc = "\n".join(
         f"- {f['path']}: exports {f.get('exports', [])}, imports {f.get('imports', [])}"
@@ -192,7 +225,9 @@ def build_prompt(concept, contract, manifest, sysd, scen_inputs, base_code=None,
     body = _PROMPT.format(concept=concept.strip() or "(none)",
                           rules="\n".join(f"- {r}" for r in rules) or "(none)",
                           system_design=sysd.strip() or "(none)", files=files_desc,
-                          input_examples=examples, output_lines=_output_lines(state_shape))
+                          input_examples=examples,
+                          output_block=_output_block(state_shape, output_contract),
+                          provided_block=_provided_block(frozen_modules))
     if selective:  # 레버4: 건드리는 모듈만 본문 + 나머지 동결 인터페이스
         header = _EDIT_HEADER_PATCH if patch else _EDIT_HEADER_SELECTIVE
         return header.format(
@@ -296,7 +331,11 @@ def _golden_diff(passed_outputs, scenarios, gradeable, contract):
     """합의(다수) vs golden(expected) 자동 대조 — 출력표면 키만. 수작업 diff 제거(키0).
     각 항목에 reconcile.resolve가 쓰는 `input`(채점메타 제외 시나리오)도 담는다."""
     ss = contract.get("data_contract", {}).get("state_shape", {})
-    output_keys = {k for k, v in ss.items() if not isinstance(v, dict)}
+    oc = contract.get("data_contract", {}).get("output_contract")
+    if oc and oc.get("fields"):
+        output_keys = set(oc["fields"])
+    else:
+        output_keys = {k for k, v in ss.items() if not isinstance(v, dict)}
     grading = {"id", "expected", "oracle_risk", "covers_reqs"}
     by_id = {s["id"]: s for s in scenarios}
     diffs = []
@@ -355,6 +394,13 @@ def main(argv=None):
     grading_keys = {"id", "expected", "oracle_risk", "covers_reqs"}
     scen_inputs = [{k: v for k, v in s.items() if k not in grading_keys} for s in scenarios]
 
+    # 계약 scenario_data가 있으면 src/scenarios.js를 그 고정 세계로 하네스가 써넣어 모든 빌드가
+    # 동일 입력을 받게 한다(scratch 전용; --base는 held_out 메커니즘이 따로 있음).
+    frozen_modules = {}
+    scenario_data = contract.get("data_contract", {}).get("scenario_data")
+    if scenario_data and not args.base:
+        frozen_modules["src/scenarios.js"] = _gen_scenarios_module(scenario_data)
+
     base_code = None
     selective = None
     held_out = []  # 레버4: (상대경로, 원본소스) — 워크스페이스에 verbatim 복사
@@ -386,7 +432,8 @@ def main(argv=None):
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     base = Path(args.out) if args.out else (HERE / "build_runs" / f"graded-{run_id}")
     prompt = build_prompt(concept, contract, manifest, sysd, scen_inputs,
-                          base_code=base_code, selective=selective, patch=args.patch)
+                          base_code=base_code, selective=selective, patch=args.patch,
+                          frozen_modules=frozen_modules)
     pool = KeyPool(get_api_keys(), models=[MODEL_31])
     mode = (("EDIT/패치" if args.patch else "EDIT/선택적") if selective
             else ("EDIT/누적" if args.base else "SCRATCH"))
@@ -427,6 +474,8 @@ def main(argv=None):
                 files = {n: b for n, b in files.items() if n.replace("\\", "/") in touched}
                 for rel, src in held_out:
                     files[rel] = src
+            for rel, src in frozen_modules.items():  # 계약 고정 모듈(scenario_data 등)을 verbatim 강제
+                files[rel] = src
             write_candidate(ws, files)
             (ws / "scenarios.json").write_text(json.dumps(scen_inputs, ensure_ascii=False), encoding="utf-8")
             ok, reason, outputs = gate_and_run(ws, manifest_v, scenarios)
