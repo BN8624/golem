@@ -264,6 +264,16 @@ P1 (다음 실험 전):
 - [~] **소설→게임 브리지 첫 실증(G79)**: 아뜰리에 "에테르노의 그림자"(12장면) → 내러티브 IF 뼈대 + 턴제 전투 카드 하이브리드. 골렘=구조화+건전성검증, 각색충실도=사람. (아뜰리에 읽기전용.)
   - [x] (키0) 구조 설계 `bridge_eterno/STRUCTURE.md` — 12장면→노드 매핑·상태 스키마·4대 메커니즘 직역·선형→분기 발명. 커밋 fc07178.
   - [x] (키0) Card1 패킷화 + 전수검사·A1 재작성(G80) — `eterno_base`(7모듈 IF 엔진, static_gate 통과) + planning/specqa 패킷. 빌드 전 전수검사서 1차 설계 결함(스텁 base+줄거리 앞으로 확장=누적 회귀 깨짐) 잡아 **허브형 완결 base + add-only 곁가지 카드**로 재작성(Card1=scenes.js만, 타이머 always-on). 누적 8시나리오(회귀5+잠입3) 회귀 base 골든과 바이트동일. B(허위 RULE-04)·C(eclipse off-by-one) 해소, D=키0 검증기 `_validate_eterno_keyless.py`(gate+골든+회귀 예행, 빌드 성공 사전보증). run_keyless ALL PASS. driver에 eterno 등록(inject=scenes.js). 커밋 81963f3·3da5e15·c194bde·dfabb2b.
-  - [ ] (★키) 무인 빌드 `driver_showcase.py eterno` — 31B가 base에 Card1 패치 → 게이트·합의·골든 diff.
-  - [ ] (다음) Card2 변칙검술 전투(combat_base 마나방패+ANOMALY) 누적.
+  - [x] **(★키) 무인 빌드 `driver_showcase.py eterno` 그린 완주(G81)** — 139.7s, 게이트 11/11·합의 1.0·골든 diff 0(8시나리오), touched=scenes.js만·frozen 6. 최종=`build_runs/showcase_eterno/l1_built`. **소설→게임 IF 브리지 첫 실증 닫힘.**
+  - [x] **(키0) 이모지 웹 외형 1호(G81)** — `golem/studio/eterno_play/server.js`. 검증 엔진 require·읽기전용 렌더(룰 복제 안 함). 아이폰 테일스케일 접속(방화벽 인바운드 8765 테일넷대역만 허용). 사용자 플레이 확인.
+  - [-] (취소) Card2 변칙검술 — IF 라인은 l1로 닫고 전술 SRPG로 피벗(아래). 변칙검술은 전술 카드로 이어감.
 - [ ] **(나중) 실노출 신호 조각 ②**: 살아남은 후보를 작게 내보내 실제 반응 측정 → 더블다운.
+
+## 장르 피벗 — 전술 SRPG(영걸전형) + 운영 모델 정형화 (G81, 2026-06-19) — 이유 context-notes G81
+- [x] **운영 모델 정형화** — 골렘=설계+빌드+검증 / 클로드=하네스+외형(게임 설계 직접X) / 사용자=아이디어·취향(맨끝). 작게 시작→점진 검증, 단계마다 끊어 보고 하네스 조임, 보조는 한시적·골렘 완전자율이 목표. 메모리 3종(golem-labor-division·golem-incremental-small-first·golem-user-intervenes-last).
+- [x] **장르 결정** — IF 취향 아님 → 전술 SRPG. 정사각 상하좌우 2D부터(검증·이미지추출·고도렌더 floor 정렬), 쿼터뷰/iso 나중. 비주얼=에셋팩+이미지→타일맵(결정CV·레이아웃만)+고도. 가챠=시드RNG로 검증가능.
+- [x] **(키0) 파이프라인 plumbing 점검** — `run_keyless.py` ALL PASS(compileall·replay·레버4·게이트#2·FROZEN#1).
+- [x] **(★키) 전술 커널 planning 첫 런 → OPEN** — `planning.py --synthesize --idea "…전술 그리드…영웅1·인접공격·처치=승리·결정적" --out planning_packet_tactics_kernel`. 골렘 설계 양호(BLOCKING 19→흡수 16: 결정11·가정3·보류2, 턴사이클·적AI·결정이동·충돌·데미지). FROZEN 못 박음.
+- [x] **(키0) 하네스 fix 완료** — `planning.py:262` n_block을 `_dedup`(A/B/C와 동일 토큰 Jaccard)로 distinct 카운트. STATUS에 "원본 N→distinct M" 병기. `_freeze_blocking_keyless.py`에 중복 회귀 4건 추가. 실제 패킷 재평가: 원본 19→distinct 16, 흡수 16≥16→FROZEN 가능. run_keyless ALL PASS. (synthesis가 unresolved 명시하는 더 견고한 버전은 ★키 백로그.)
+- [ ] **(★키) planning 재런 → FROZEN 확인 → `design.py`** — 골렘이 전술 커널 모듈 분해. 단계마다 끊어 검토.
+- [ ] (이후) specqa → build로 커널 산출 → 카드 누적(변칙검술→사거리→지형→유닛→루트).
