@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Grid is semi-infinite (x>=0, y>=0) with no upper boundary.",
+    "All coordinates and attributes are integers.",
+    "The output log format remains as previously specified but includes markers for 'Shield Rupture' and 'Anomaly Discharge'."
+  ]
+}

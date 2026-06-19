@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero at [0,0], Wall at [0,1], Action: move [0,1]",
+    "input": "move [0,1]",
+    "expect": "Action fails, turn increments, hero remains at [0,0]"
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero at [0,0] (Mana 1, Anomaly 3), Enemy at [1,0] (Atk 2), Terrain [0,0]: Conductive",
+    "input": "attack target 1",
+    "expect": "Mana drops to -1, HP drops by 1, Anomaly triggers on Conductive tile, Enemy takes (hero.atk + (3 * 2)) damage"
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero at [0,0] (Mana 0, HP 2), Enemy at [1,0] (Atk 5)",
+    "input": "attack target 1",
+    "expect": "Hero HP drops to -3, Status: Defeat"
+  }
+]

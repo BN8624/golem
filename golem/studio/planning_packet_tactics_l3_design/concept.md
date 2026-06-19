@@ -1,0 +1,1 @@
+The player controls a hero on a 2D grid, executing a pre-defined list of deterministic actions to defeat all enemies. The goal is to manage HP and Mana Shielding while leveraging an "Anomaly" discharge to clear enemies. Terrain tiles add strategic constraints (obstacles) and combat modifiers (damage multipliers) to the battlefield.

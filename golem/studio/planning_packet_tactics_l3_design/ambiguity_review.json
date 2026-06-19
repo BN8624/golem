@@ -1,0 +1,266 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "Hero damage (in attack action: does this mean damage dealt by the hero or damage received by the hero?)",
+        "adjacent (undefined distance metric; Manhattan vs Chebyshev/Moore)",
+        "x<0, y<0 (mathematically a conjunction; likely intended as a disjunction 'x < 0 OR y < 0')"
+      ],
+      "missing_rules": [
+        "The base effect of the Anomaly trigger (it is described as a multiplier on Conductive tiles, but the default behavior/target area for the discharge is not defined in the Action rules)."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming ranged_attack deals damage equal to hero.atk",
+        "Assuming Anomaly damage is dealt to enemies at Manhattan distance 1"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does 'Hero damage is absorbed by mana' refer to damage the hero receives from an enemy?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the specific effect of the Anomaly trigger when the hero is NOT on a Conductive tile?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is 'adjacent' defined as Manhattan distance == 1?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Upper boundary limits for movement (only x<0, y<0 are defined as failures).",
+        "Handling of 'target:id' if the ID is not present in the enemy list at all.",
+        "Damage spillover logic: whether damage exceeding current mana is subtracted from hero HP during a shield rupture.",
+        "Turn/Action progression: whether a failed action consumes a turn or is simply skipped.",
+        "Anomaly trigger edge case: whether the Anomaly can trigger if mana starts at <= 0.",
+        "The specific mechanical effect of the 'Anomaly trigger' (e.g., which enemies are hit and how much damage is dealt), as it is only mentioned in the conductive tile modifier."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that the grid is infinite in positive directions since only negative boundaries are specified."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "How should the system handle an attack action where the target:id does not exist in the current state?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "When mana drops to <= 0, does the remaining damage from that specific attack carry over to the hero's HP?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the exact radius and target set for the Anomaly discharge when it triggers?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Should a failed move/attack action increment the turn counter or result in no state change?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "adjacent enemies (not explicitly defined as Manhattan distance == 1, though implied by attack action)"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "The grid is assumed to be semi-infinite (bounded only by x<0, y<0) as no upper boundaries are provided in the state or rules."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Is the 'adjacent' range for the Anomaly discharge identical to the 'attack' range (Manhattan distance == 1)?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Should the 'Conductive' damage multiplier (x2) and the grid boundaries be moved into the state object to allow for level-specific configuration?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "Anomaly triggers"
+      ],
+      "missing_rules": [
+        "Exact logic for Anomaly damage application (which enemies are targeted, the sequence of subtraction, and whether it occurs before or after the simultaneous attack damage)."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Lack of explicit log entries for Anomaly triggers, making it difficult to distinguish between normal attack damage and anomaly damage in the output."
+      ],
+      "risky_assumptions": [
+        "Assumption that 'adjacent' in REQ-002 refers to Manhattan distance == 1."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Can you define the specific state transition that occurs when an 'Anomaly triggers'? Specifically, who takes damage and when?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Wall movement blocking is specified in three separate locations (GDD Player Actions, GDD Terrain, and REQ-001), creating a risk of maintenance desynchronization.",
+        "The Conductive tile effect is specified in both GDD Terrain and REQ-002, creating a risk of maintenance desynchronization.",
+        "The requirement for determinism overlaps between the NON-GOALS section ('No RNG') and REQ-005 ('Terrain effects must be deterministic')."
+      ],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "Mana Shield rupture (not explicitly defined, though implied to be the transition of mana from >0 to <=0)",
+        "adjacent (not defined if this is Manhattan distance == 1 or includes diagonals)"
+      ],
+      "missing_rules": [
+        "Upper boundary limits for hero.pos (only x<0, y<0 are checked)",
+        "The precise sequence of events during 'attack': (e.g., Simultaneous Damage -> Mana Check -> Anomaly Application -> Death/Win-Lose Check)",
+        "Whether the target of the 'attack' action is included in the 'adjacent enemies' that receive anomaly_dmg"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming that anomaly_dmg only triggers on 'attack' and not 'ranged_attack' because mana absorption is only mentioned under 'attack'"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Is there a maximum grid size for x and y coordinates to prevent out-of-bounds errors?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'adjacent' for Anomaly damage specifically mean Manhattan distance == 1?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Should the Anomaly damage be calculated and applied before or after the final victory/defeat check of the current action?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "The `ranged_attack` feature allows clearing enemies via one-way damage, which contradicts the stated goal of clearing enemies by leveraging an 'Anomaly' discharge."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Is `ranged_attack` intended to be in scope, given that its 'one-way damage' mechanic allows players to bypass the core gameplay loop of managing HP/Mana and leveraging Anomaly discharges?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "adjacent (not specified if Manhattan distance 1 or including diagonals)",
+        "Mana Shield rupture (not explicitly defined as synonymous with the Anomaly trigger)"
+      ],
+      "missing_rules": [
+        "The base Anomaly effect: it is stated that it triggers and that Conductive tiles double the damage, but the fundamental rule of who is hit and how much damage is dealt by default is missing.",
+        "Upper bounds for grid coordinates (move failure only checks for < 0)."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'adjacent' for Anomaly follows the same distance logic as the 'attack' action (Manhattan distance 1)."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the exact mechanical resolution of the Anomaly discharge? (e.g., Does it deal 'anomaly_dmg' to all enemies within Manhattan distance 1?)",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is there a maximum grid size, or is the board infinite in positive X and Y directions?",
+          "class": "ASSUMED"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "Hero damage (in attack action: does this mean damage dealt by the hero or damage received by the hero?)",
+      "adjacent (undefined distance metric; Manhattan vs Chebyshev/Moore)",
+      "x<0, y<0 (mathematically a conjunction; likely intended as a disjunction 'x < 0 OR y < 0')",
+      "adjacent enemies (not explicitly defined as Manhattan distance == 1, though implied by attack action)",
+      "Anomaly triggers",
+      "Mana Shield rupture (not explicitly defined, though implied to be the transition of mana from >0 to <=0)",
+      "adjacent (not defined if this is Manhattan distance == 1 or includes diagonals)",
+      "adjacent (not specified if Manhattan distance 1 or including diagonals)",
+      "Mana Shield rupture (not explicitly defined as synonymous with the Anomaly trigger)"
+    ],
+    "missing_rules": [
+      "The base effect of the Anomaly trigger (it is described as a multiplier on Conductive tiles, but the default behavior/target area for the discharge is not defined in the Action rules).",
+      "Upper boundary limits for movement (only x<0, y<0 are defined as failures).",
+      "Handling of 'target:id' if the ID is not present in the enemy list at all.",
+      "Damage spillover logic: whether damage exceeding current mana is subtracted from hero HP during a shield rupture.",
+      "Turn/Action progression: whether a failed action consumes a turn or is simply skipped.",
+      "Anomaly trigger edge case: whether the Anomaly can trigger if mana starts at <= 0.",
+      "The specific mechanical effect of the 'Anomaly trigger' (e.g., which enemies are hit and how much damage is dealt), as it is only mentioned in the conductive tile modifier.",
+      "Exact logic for Anomaly damage application (which enemies are targeted, the sequence of subtraction, and whether it occurs before or after the simultaneous attack damage).",
+      "Upper boundary limits for hero.pos (only x<0, y<0 are checked)",
+      "The precise sequence of events during 'attack': (e.g., Simultaneous Damage -> Mana Check -> Anomaly Application -> Death/Win-Lose Check)",
+      "Whether the target of the 'attack' action is included in the 'adjacent enemies' that receive anomaly_dmg",
+      "The base Anomaly effect: it is stated that it triggers and that Conductive tiles double the damage, but the fundamental rule of who is hit and how much damage is dealt by default is missing.",
+      "Upper bounds for grid coordinates (move failure only checks for < 0)."
+    ],
+    "conflicting_rules": [
+      "The `ranged_attack` feature allows clearing enemies via one-way damage, which contradicts the stated goal of clearing enemies by leveraging an 'Anomaly' discharge."
+    ],
+    "underspecified_outputs": [
+      "Lack of explicit log entries for Anomaly triggers, making it difficult to distinguish between normal attack damage and anomaly damage in the output."
+    ],
+    "risky_assumptions": [
+      "Assuming ranged_attack deals damage equal to hero.atk",
+      "Assuming Anomaly damage is dealt to enemies at Manhattan distance 1",
+      "Assumption that the grid is infinite in positive directions since only negative boundaries are specified.",
+      "The grid is assumed to be semi-infinite (bounded only by x<0, y<0) as no upper boundaries are provided in the state or rules.",
+      "Assumption that 'adjacent' in REQ-002 refers to Manhattan distance == 1.",
+      "Wall movement blocking is specified in three separate locations (GDD Player Actions, GDD Terrain, and REQ-001), creating a risk of maintenance desynchronization.",
+      "The Conductive tile effect is specified in both GDD Terrain and REQ-002, creating a risk of maintenance desynchronization.",
+      "The requirement for determinism overlaps between the NON-GOALS section ('No RNG') and REQ-005 ('Terrain effects must be deterministic').",
+      "Assuming that anomaly_dmg only triggers on 'attack' and not 'ranged_attack' because mana absorption is only mentioned under 'attack'",
+      "Assuming 'adjacent' for Anomaly follows the same distance logic as the 'attack' action (Manhattan distance 1)."
+    ],
+    "BLOCKING_questions": [
+      "Does 'Hero damage is absorbed by mana' refer to damage the hero receives from an enemy?",
+      "What is the specific effect of the Anomaly trigger when the hero is NOT on a Conductive tile?",
+      "How should the system handle an attack action where the target:id does not exist in the current state?",
+      "When mana drops to <= 0, does the remaining damage from that specific attack carry over to the hero's HP?",
+      "What is the exact radius and target set for the Anomaly discharge when it triggers?",
+      "Can you define the specific state transition that occurs when an 'Anomaly triggers'? Specifically, who takes damage and when?",
+      "Is there a maximum grid size for x and y coordinates to prevent out-of-bounds errors?",
+      "Should the Anomaly damage be calculated and applied before or after the final victory/defeat check of the current action?",
+      "Is `ranged_attack` intended to be in scope, given that its 'one-way damage' mechanic allows players to bypass the core gameplay loop of managing HP/Mana and leveraging Anomaly discharges?",
+      "What is the exact mechanical resolution of the Anomaly discharge? (e.g., Does it deal 'anomaly_dmg' to all enemies within Manhattan distance 1?)"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+- **Player Actions**
+    - `move {dir:[dx,dy]}`:
+        - *Change*: Updates `hero.pos` by `[dx, dy]`.
+        - *Failure*: Fails if destination is $x<0, y<0$ or occupied by a living enemy OR occupied by a `Wall` terrain tile.
+        - *Log*: No change to output format.
+    - `attack {target:id}`:
+        - *Change*: Checks Manhattan distance == 1. Both hero and enemy deal damage simultaneously. Hero damage is absorbed by `mana` first. If `mana` drops from $>0$ to $\le 0$, Anomaly triggers.
+        - *Failure*: Fails if target is dead or distance $\neq 1$.
+        - *Log*: No change to output format.
+    - `ranged_attack {target:id}`:
+        - *Change*: Checks Manhattan distance $\in [2, 3]$. Deals one-way damage to enemy.
+        - *Failure*: Fails if target is dead or distance outside $[2, 3]$.
+        - *Log*: No change to output format.
+
+- **Entities & Tiles**
+    - **Hero**: Has `hp, atk, pos, mana, anomaly_dmg`.
+    - **Enemy**: Has `id, hp, atk, pos`.
+    - **Terrain (Static)**: Defined as a map of coordinates to types.
+        - `Wall`: Impassable; blocks `move` actions.
+        - `Conductive`: If the Hero is standing on this tile when a Mana Shield rupture occurs, the `anomaly_dmg` dealt to adjacent enemies is doubled ($\times 2$).
+
+- **Win/Lose Conditions**
+    - **Victory**: All enemies `hp <= 0`.
+    - **Defeat**: Hero `hp <= 0` (even if last enemy also dies).
+    - **Finished**: No initial enemies or all actions exhausted without victory/defeat.
+
+- **NON-GOALS**
+    - No dynamic terrain (tiles cannot change type or move).
+    - No pathfinding (actions are explicit coordinates/directions).
+    - No visual rendering or real-time input.
+    - No RNG or probability-based modifiers.

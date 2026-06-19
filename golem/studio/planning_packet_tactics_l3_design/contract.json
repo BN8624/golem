@@ -1,0 +1,63 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "hero": {
+        "hp": "number",
+        "atk": "number",
+        "pos": "[x, y]",
+        "mana": "number",
+        "anomaly_dmg": "number"
+      },
+      "enemies": [
+        {
+          "id": "number",
+          "hp": "number",
+          "atk": "number",
+          "pos": "[x, y]"
+        }
+      ],
+      "terrain": {
+        "x,y": "Wall | Conductive"
+      },
+      "action_list": [
+        {
+          "type": "move | attack | ranged_attack",
+          "dir": "[dx, dy]",
+          "target": "number"
+        }
+      ],
+      "log": [
+        "string"
+      ]
+    },
+    "rules": [
+      "move {dir}: Updates pos. Fails if result x < 0 or y < 0, or if target is 'Wall', or if target is occupied by an enemy with hp > 0.",
+      "attack {target}: Valid if distance == 1 and target is alive. Simultaneously: enemy takes hero.atk; hero receives enemy.atk. Hero damage is subtracted from mana first, then hp. If mana goes from > 0 to <= 0, trigger Anomaly.",
+      "ranged_attack {target}: Valid if distance is 2 or 3 and target is alive. Enemy takes hero.atk damage. No mana/hp cost to hero.",
+      "Anomaly: All enemies with distance == 1 take anomaly_dmg. If hero is on 'Conductive' tile, damage is anomaly_dmg * 2.",
+      "Victory: All enemies hp <= 0.",
+      "Defeat: Hero hp <= 0. (Defeat takes precedence over Victory if both occur in the same action).",
+      "Turn Progression: Each action in action_list increments turn by 1 regardless of success/failure."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "GameStateEngine"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}
