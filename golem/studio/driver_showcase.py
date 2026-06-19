@@ -38,6 +38,12 @@ GAMES = {
             ("l3", "planning_packet_sokoban_l3", "specqa_packet_sokoban_l3", "src/move_logic.js"),
         ],
     },
+    "eterno": {  # 소설→게임 브리지(에테르노의 그림자) — 내러티브 IF
+        "base": "eterno_base",
+        "cards": [
+            ("l1", "planning_packet_eterno_l1", "specqa_packet_eterno_l1", "src/scenes.js,src/beats.js"),
+        ],
+    },
 }
 
 
