@@ -1,0 +1,304 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "integer",
+      "status": "string (READY | VICTORY | DEFEAT | FINISHED)",
+      "hero": {
+        "hp": "integer",
+        "atk": "integer",
+        "pos": "integer[2] (x, y)",
+        "mana": "integer (optional; mana shield. If undefined, treat as 0 — base behavior)",
+        "anomaly_dmg": "integer (optional; rupture splash damage. If undefined, treat as 0)"
+      },
+      "enemies": [
+        {
+          "id": "string",
+          "hp": "integer",
+          "atk": "integer",
+          "pos": "integer[2] (x, y)",
+          "unit_type": "string (optional; 'Hardened' | 'Glass' | 'Resonant'. Absent = plain enemy)"
+        }
+      ],
+      "terrain": "object (optional, in initialState): keys are 'x,y' strings, values are 'Wall' | 'Conductive'. Absent = no terrain."
+    },
+    "rules": [
+      "REQ-001: CLI argument --scenario N selects the world from src/scenarios.js (getScenario(N), 1-based).",
+      "REQ-002: turn = turn + 1 after every action attempt (including a blocked move or a no-op attack).",
+      "REQ-003: A melee attack action deals simultaneous mutual damage: the hero deals damage to the targeted enemy (amount per REQ-017) AND that enemy subtracts its atk from the hero, both at once. The damage the hero RECEIVES is mediated by the Mana Shield (REQ-012). Enemies never act on their own.",
+      "REQ-004: HP can be negative.",
+      "REQ-005: Win/Lose checks occur strictly post-action.",
+      "REQ-006: If, post-action, both hero.hp <= 0 and all enemies.hp <= 0, status = DEFEAT (checked before VICTORY).",
+      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY. This status is still determined post-action per REQ-005 — the scenario's actions still run and turn increments normally (it is NOT short-circuited before the first action).",
+      "REQ-008: Print these lines, in order, nothing else: status, turn, hero_hp, hero_pos, enemies. hero_pos is [x, y]. enemies is a JSON array where each enemy is EXACTLY {id, hp, pos} — DO NOT include atk or unit_type. mana, anomaly_dmg, terrain, and unit_type are INTERNAL state and are NEVER printed (output format is unchanged from the base).",
+      "REQ-009: When all actions are exhausted with neither VICTORY nor DEFEAT reached, status = FINISHED.",
+      "REQ-010: A move is blocked (hero.pos unchanged, no combat) when the destination cell has any negative coordinate (off-grid; the grid minimum coordinate is 0) OR is occupied by a living enemy OR is a 'Wall' terrain cell (REQ-015). turn still increments per REQ-002.",
+      "REQ-011: An action is one of {type:'attack', target:'<enemy id>'} (melee, REQ-003), {type:'move', dir:[dx,dy]} (REQ-010), or {type:'ranged_attack', target:'<enemy id>'} (REQ-014). A melee attack deals/receives damage only if the targeted enemy is orthogonally adjacent (|dx|+|dy| == 1 between hero.pos and that enemy.pos); otherwise it is a no-op (turn still increments).",
+      "REQ-012: Mana Shield. The hero may carry an integer field hero.mana (a shield). If hero.mana is undefined, treat it as 0. When the hero RECEIVES damage from a melee attack's mutual exchange (REQ-003), that incoming damage is absorbed by mana FIRST: absorbed = min(incoming, hero.mana); hero.mana -= absorbed (never below 0); the overflow (incoming - absorbed) is subtracted from hero.hp. When hero.mana is 0, absorbed is 0 and the full incoming damage hits hero.hp — identical to base behavior. mana only changes when the hero receives melee attack damage; moves and ranged attacks never alter it.",
+      "REQ-013: Anomaly rupture. The hero may carry an integer field hero.anomaly_dmg (default 0 if undefined). If, within a single MELEE attack action, hero.mana was > 0 BEFORE the incoming damage and becomes <= 0 AFTER it (the shield ruptures), then immediately after damage application and BEFORE the post-action win/loss check (REQ-005), every enemy that is orthogonally adjacent to the hero (|dx|+|dy| == 1 to hero.pos) AND still living (hp > 0) takes the rupture's anomaly damage (amount per REQ-016/017). This includes the attacked target if it survived the hero's attack. Rupture happens at most once per action and only on melee attack actions (moves and ranged attacks deal the hero no damage, so they never rupture).",
+      "REQ-014: Ranged attack. An action {type:'ranged_attack', target:'<enemy id>'} deals damage only if the targeted enemy is alive (hp > 0) AND within Manhattan distance 2..3 inclusive (2 <= |dx|+|dy| <= 3 between hero.pos and that enemy.pos). If valid, the hero deals damage to the target (amount per REQ-017) and takes NO damage in return (one-way; the hero's mana is unaffected, so a ranged attack never ruptures the shield or triggers anomaly per REQ-013). If the target is adjacent (dist == 1), out of range (dist > 3), missing, or already dead, the ranged attack is a no-op. Terrain does NOT block ranged attacks (no line-of-sight). turn still increments per REQ-002.",
+      "REQ-015: Terrain (static). A scenario's initialState may include a terrain map: an object whose keys are 'x,y' strings (e.g. '1,0') and whose values are terrain types. If terrain is absent, the grid has no terrain and all prior behavior is byte-for-byte unchanged. Type 'Wall' makes a cell impassable: a move whose destination cell is a 'Wall' is blocked (hero.pos unchanged, no combat), in addition to the off-grid and living-enemy blocks of REQ-010; turn still increments. Walls do NOT block ranged attacks (REQ-014) and do not affect melee, mana, or anomaly. Terrain never changes during a scenario.",
+      "REQ-016: Conductive terrain. Type 'Conductive' amplifies the ANOMALY rupture (REQ-013): if, at the moment a rupture's anomaly damage is applied, the hero is standing on a 'Conductive' cell (terrain[hero.pos.x + ',' + hero.pos.y] === 'Conductive'), the base anomaly amount is hero.anomaly_dmg * 2 instead of hero.anomaly_dmg (before any per-enemy unit_type multiplier of REQ-017). Conductive has no effect when no rupture occurs, and no effect on movement, melee, or ranged attacks.",
+      "REQ-017: Unit types (enemy traits). An enemy may carry an optional string field unit_type. If absent, the enemy takes damage exactly as before. An enemy has at most one unit_type. Defined types: 'Hardened' = melee damage dealt to this enemy is reduced by 1 (to a minimum of 0) before any other factor; ranged and anomaly damage are unaffected. 'Glass' = all incoming damage to this enemy (melee, ranged, and anomaly) is doubled. 'Resonant' = whenever this enemy takes ANOMALY damage from a rupture, the hero immediately takes 1 damage to hero.hp (applied during anomaly resolution, before the post-action win/loss check); one point of self-damage per Resonant enemy struck. Exact damage dealt to a targeted enemy: melee = (unit_type=='Glass' ? 2 : 1) * max(0, hero.atk - (unit_type=='Hardened' ? 1 : 0)); ranged = (unit_type=='Glass' ? 2 : 1) * hero.atk; anomaly = (unit_type=='Glass' ? 2 : 1) * baseAnomaly, where baseAnomaly is hero.anomaly_dmg doubled if the hero is on a Conductive cell (REQ-016). unit_type is INTERNAL and never printed."
+    ],
+    "output_contract": {
+      "fields": ["status", "turn", "hero_hp", "hero_pos", "enemies"],
+      "lines": [
+        "status: <one of READY|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "hero_hp: <integer, may be negative>",
+        "hero_pos: <a JSON array [x, y] of integers>",
+        "enemies: <a JSON array; each enemy is EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — DO NOT include atk>"
+      ]
+    },
+    "scenario_data": [
+      {
+        "id": "SCN-001",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"},
+          {"type": "attack", "target": "E1"},
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-002",
+        "initialState": {
+          "hero": {"hp": 20, "atk": 10, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 100, "atk": 30, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-003",
+        "initialState": {
+          "hero": {"hp": 1, "atk": 10, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 100, "atk": 50, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "move", "dir": [1, 0]}
+        ]
+      },
+      {
+        "id": "SCN-004",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": []
+        },
+        "actions": [
+          {"type": "move", "dir": [-1, 0]}
+        ]
+      },
+      {
+        "id": "SCN-005",
+        "initialState": {
+          "hero": {"hp": 10, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 10, "atk": 20, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-006",
+        "initialState": {
+          "hero": {"hp": 20, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 20, "atk": 20, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-007",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0], "mana": 50, "anomaly_dmg": 30},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-008",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0], "mana": 5, "anomaly_dmg": 30},
+          "enemies": [{"id": "E1", "hp": 100, "atk": 10, "pos": [1, 0]}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-009",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 60},
+          "enemies": [
+            {"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]},
+            {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1]}
+          ]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-010",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [2, 0]}]
+        },
+        "actions": [
+          {"type": "ranged_attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-011",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [4, 0]}]
+        },
+        "actions": [
+          {"type": "ranged_attack", "target": "E1"},
+          {"type": "move", "dir": [1, 0]},
+          {"type": "ranged_attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-012",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 50, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [3, 0]}]
+        },
+        "actions": [
+          {"type": "ranged_attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-013",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 10, "atk": 0, "pos": [5, 5]}],
+          "terrain": {"1,0": "Wall"}
+        },
+        "actions": [
+          {"type": "move", "dir": [1, 0]},
+          {"type": "move", "dir": [0, 1]}
+        ]
+      },
+      {
+        "id": "SCN-014",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30},
+          "enemies": [
+            {"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]},
+            {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1]}
+          ],
+          "terrain": {"1,1": "Conductive"}
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-015",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [2, 0]}],
+          "terrain": {"1,0": "Wall"}
+        },
+        "actions": [
+          {"type": "ranged_attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-016",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [1, 0], "unit_type": "Hardened"}]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-017",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [0, 0]},
+          "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]
+        },
+        "actions": [
+          {"type": "ranged_attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-018",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30},
+          "enemies": [
+            {"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]},
+            {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1], "unit_type": "Glass"}
+          ]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      },
+      {
+        "id": "SCN-019",
+        "initialState": {
+          "hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30},
+          "enemies": [
+            {"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0], "unit_type": "Resonant"},
+            {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1], "unit_type": "Resonant"}
+          ]
+        },
+        "actions": [
+          {"type": "attack", "target": "E1"}
+        ]
+      }
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js",
+          "src/scenarios.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runScenario"
+        ],
+        "imports": [
+          "src/game_logic.js"
+        ]
+      },
+      {
+        "path": "src/game_logic.js",
+        "exports": [
+          "applyAction",
+          "checkGameState",
+          "updateState"
+        ],
+        "imports": []
+      },
+      {
+        "path": "src/scenarios.js",
+        "exports": [
+          "getScenario"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Initial HP is captured at the start of the simulation to determine the 'Shield Rupture' threshold.",
+    "The hero's anomaly_dmg is the base for all anomaly attacks.",
+    "The CLI argument `--scenario N` will map to a hardcoded set of scenario objects in the code."
+  ]
+}

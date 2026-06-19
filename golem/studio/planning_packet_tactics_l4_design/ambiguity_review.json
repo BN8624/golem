@@ -1,0 +1,305 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "hero.mana/hp"
+      ],
+      "missing_rules": [
+        "Definition of how 'Anomaly damage' is triggered (no action currently utilizes the hero.anomaly_dmg stat)",
+        "The priority/order of operations when calculating damage for a unit that might have multiple traits (if possible), or specifically how 'Glass' multiplier interacts with 'Hardened' reduction"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'attack' is the sole source of 'melee' damage referenced in REQ-001"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does 'hero.mana/hp -= enemy.atk' imply damage is subtracted from mana first then HP, or from both simultaneously, or is it a conditional choice?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is a 'shield rupture' and how is it triggered to activate the Conductive tile effect?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Which player action or trigger causes the Hero to deal 'Anomaly damage' to an enemy?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "Hero Anomaly"
+      ],
+      "missing_rules": [
+        "Behavior when an action fails (e.g., move to wall, out-of-range attack): does the turn still advance, or does the simulation halt?",
+        "Handling of attacks targeting enemies that are already dead (hp <= 0)",
+        "Handling of attacks targeting an id that does not exist in the enemies list",
+        "Upper boundaries for grid coordinates (only x<0 and y<0 are mentioned)",
+        "The mechanism/action that triggers 'anomaly damage' (not defined in Player Actions)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that an enemy can only have one unit_type (no stacking of Hardened/Glass/Resonant)",
+        "Assumption that actions are processed sequentially regardless of success/failure"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "How is 'anomaly damage' dealt? There is no action defined that causes it, but Conductive and Resonant traits depend on it.",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What constitutes a 'shield rupture' to trigger the Conductive tile bonus?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "When an action fails its requirements (e.g., move to a wall), should the engine log a failure and proceed to the next action, or stop the simulation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The rule for 'Conductive' tiles depends on a 'shield rupture' condition, but there is no property in the State object to track whether a shield rupture is active. Where does this state live and how is it triggered?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "Hero's Anomaly"
+      ],
+      "missing_rules": [
+        "Trigger condition for 'shield rupture'",
+        "Definition of how 'anomaly damage' is dealt (which action triggers it)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming anomaly damage is a side-effect of existing actions (attack/ranged_attack) despite not being specified"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What action or state change triggers a 'shield rupture' to make the Conductive tile testable?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "How is 'anomaly damage' applied? Is it a separate action or a property of existing attacks?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "Hero Anomaly"
+      ],
+      "missing_rules": [
+        "Action trigger for anomaly damage",
+        "Logic for entering/triggering a 'shield rupture' state"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'anomaly' and 'shield rupture' mechanics can be implemented without expanding the prototype's scope beyond a simple linear action processor"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The 'Conductive' tile and 'Resonant' trait reference anomaly damage and shield ruptures, but no corresponding action or rule exists to trigger them. Are these intended to be part of the prototype, or should they be removed to avoid over-complexity?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "The definitions for unit traits 'Hardened', 'Glass', and 'Resonant' in the GDD overlap/duplicate the logic specified in REQ-001, REQ-002, and REQ-003."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Trait logic is duplicated across both the GDD and Requirements; should these be consolidated into a single source of truth to avoid potential divergence during updates?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "attack: used as a specific action identifier (`attack`) and as a general category for offensive actions (e.g., 'Ranged Attack')",
+        "unit_type: used as a combat trait/modifier for enemies (Hardened, Glass, Resonant) but as a general classification for the hero (Standard)"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "hero.mana/hp -= enemy.atk"
+      ],
+      "missing_rules": [
+        "Mechanism/action that triggers anomaly damage",
+        "Condition or trigger that defines a 'shield rupture'"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Which action is intended to deal anomaly damage, as currently only 'attack' and 'ranged_attack' are defined?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "How is 'shield rupture' defined and triggered for the Conductive tile to function?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'hero.mana/hp -= enemy.atk' mean the value is subtracted from both resources, or is there a priority/conditional logic (e.g., subtract from mana first, then overflow to hp)?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming anomaly_dmg and related mechanics (Resonant trait, Conductive tile) are functional despite the absence of any action to trigger them."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The GDD references 'anomaly_dmg', 'Resonant' traits, and 'shield rupture' triggers for Conductive tiles, but no player actions exist to produce anomaly damage or rupture shields. Should these be removed as out-of-scope features?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "shield rupture",
+        "hero.mana/hp"
+      ],
+      "missing_rules": [
+        "Mechanism for triggering/executing anomaly damage (no corresponding action defined)",
+        "Rule for when 'shield rupture' occurs for Conductive tiles",
+        "Priority/order of damage application during simultaneous 'attack' actions"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Integration of the 'Log' messages (e.g., 'Move [x,y]') with the strict format required by REQ-005"
+      ],
+      "risky_assumptions": [
+        "Assumption that damage in 'attack' consumes mana before subtracting from hp",
+        "Assumption that ranged_attack uses the 'atk' stat rather than 'anomaly_dmg'",
+        "Assumption that unit_type is mutually exclusive (single value)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the trigger condition for a 'shield rupture'?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is there a missing action for dealing anomaly damage, or is it tied to another action?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'hero.mana/hp -= enemy.atk' imply a priority sequence (Mana then HP) or a specific formula?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "shield rupture",
+      "hero.mana/hp",
+      "shield rupture",
+      "Hero Anomaly",
+      "shield rupture",
+      "shield rupture",
+      "Hero's Anomaly",
+      "shield rupture",
+      "Hero Anomaly",
+      "attack: used as a specific action identifier (`attack`) and as a general category for offensive actions (e.g., 'Ranged Attack')",
+      "unit_type: used as a combat trait/modifier for enemies (Hardened, Glass, Resonant) but as a general classification for the hero (Standard)",
+      "shield rupture",
+      "hero.mana/hp -= enemy.atk",
+      "shield rupture",
+      "shield rupture",
+      "hero.mana/hp"
+    ],
+    "missing_rules": [
+      "Definition of how 'Anomaly damage' is triggered (no action currently utilizes the hero.anomaly_dmg stat)",
+      "The priority/order of operations when calculating damage for a unit that might have multiple traits (if possible), or specifically how 'Glass' multiplier interacts with 'Hardened' reduction",
+      "Behavior when an action fails (e.g., move to wall, out-of-range attack): does the turn still advance, or does the simulation halt?",
+      "Handling of attacks targeting enemies that are already dead (hp <= 0)",
+      "Handling of attacks targeting an id that does not exist in the enemies list",
+      "Upper boundaries for grid coordinates (only x<0 and y<0 are mentioned)",
+      "The mechanism/action that triggers 'anomaly damage' (not defined in Player Actions)",
+      "Trigger condition for 'shield rupture'",
+      "Definition of how 'anomaly damage' is dealt (which action triggers it)",
+      "Action trigger for anomaly damage",
+      "Logic for entering/triggering a 'shield rupture' state",
+      "Mechanism/action that triggers anomaly damage",
+      "Condition or trigger that defines a 'shield rupture'",
+      "Mechanism for triggering/executing anomaly damage (no corresponding action defined)",
+      "Rule for when 'shield rupture' occurs for Conductive tiles",
+      "Priority/order of damage application during simultaneous 'attack' actions"
+    ],
+    "conflicting_rules": [
+      "The definitions for unit traits 'Hardened', 'Glass', and 'Resonant' in the GDD overlap/duplicate the logic specified in REQ-001, REQ-002, and REQ-003."
+    ],
+    "underspecified_outputs": [
+      "Integration of the 'Log' messages (e.g., 'Move [x,y]') with the strict format required by REQ-005"
+    ],
+    "risky_assumptions": [
+      "Assuming 'attack' is the sole source of 'melee' damage referenced in REQ-001",
+      "Assumption that an enemy can only have one unit_type (no stacking of Hardened/Glass/Resonant)",
+      "Assumption that actions are processed sequentially regardless of success/failure",
+      "Assuming anomaly damage is a side-effect of existing actions (attack/ranged_attack) despite not being specified",
+      "Assuming 'anomaly' and 'shield rupture' mechanics can be implemented without expanding the prototype's scope beyond a simple linear action processor",
+      "Assuming anomaly_dmg and related mechanics (Resonant trait, Conductive tile) are functional despite the absence of any action to trigger them.",
+      "Assumption that damage in 'attack' consumes mana before subtracting from hp",
+      "Assumption that ranged_attack uses the 'atk' stat rather than 'anomaly_dmg'",
+      "Assumption that unit_type is mutually exclusive (single value)"
+    ],
+    "BLOCKING_questions": [
+      "Does 'hero.mana/hp -= enemy.atk' imply damage is subtracted from mana first then HP, or from both simultaneously, or is it a conditional choice?",
+      "What is a 'shield rupture' and how is it triggered to activate the Conductive tile effect?",
+      "Which player action or trigger causes the Hero to deal 'Anomaly damage' to an enemy?",
+      "How is 'anomaly damage' dealt? There is no action defined that causes it, but Conductive and Resonant traits depend on it.",
+      "What constitutes a 'shield rupture' to trigger the Conductive tile bonus?",
+      "When an action fails its requirements (e.g., move to a wall), should the engine log a failure and proceed to the next action, or stop the simulation?",
+      "The rule for 'Conductive' tiles depends on a 'shield rupture' condition, but there is no property in the State object to track whether a shield rupture is active. Where does this state live and how is it triggered?",
+      "What action or state change triggers a 'shield rupture' to make the Conductive tile testable?",
+      "How is 'anomaly damage' applied? Is it a separate action or a property of existing attacks?",
+      "The 'Conductive' tile and 'Resonant' trait reference anomaly damage and shield ruptures, but no corresponding action or rule exists to trigger them. Are these intended to be part of the prototype, or should they be removed to avoid over-complexity?",
+      "Which action is intended to deal anomaly damage, as currently only 'attack' and 'ranged_attack' are defined?",
+      "How is 'shield rupture' defined and triggered for the Conductive tile to function?",
+      "Does 'hero.mana/hp -= enemy.atk' mean the value is subtracted from both resources, or is there a priority/conditional logic (e.g., subtract from mana first, then overflow to hp)?",
+      "The GDD references 'anomaly_dmg', 'Resonant' traits, and 'shield rupture' triggers for Conductive tiles, but no player actions exist to produce anomaly damage or rupture shields. Should these be removed as out-of-scope features?",
+      "What is the trigger condition for a 'shield rupture'?",
+      "Is there a missing action for dealing anomaly damage, or is it tied to another action?",
+      "Does 'hero.mana/hp -= enemy.atk' imply a priority sequence (Mana then HP) or a specific formula?"
+    ]
+  }
+}

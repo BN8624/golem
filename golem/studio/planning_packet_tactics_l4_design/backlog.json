@@ -1,0 +1,8 @@
+{
+  "consumer": "다음 버전/카드 planning이 입력으로 읽는다",
+  "deferred": [
+    "Multiple traits per enemy (restricted to one unit_type for now).",
+    "Complex terrain interaction (e.g., obstacles that don't block but slow).",
+    "Dynamic action lists based on game state."
+  ]
+}

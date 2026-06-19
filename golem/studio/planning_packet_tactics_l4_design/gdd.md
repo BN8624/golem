@@ -1,0 +1,19 @@
+- **Player Actions**
+    - `move {dir: [dx, dy]}`: Updates `hero.pos`. Fails if destination is $x<0$ or $y<0$, occupied by a living enemy, or a 'Wall' tile. Log: "Move [x,y]".
+    - `attack {target: id}`: Requires Manhattan distance 1. Simultaneous damage: `enemy.hp -= hero.atk` and `hero.mana/hp -= enemy.atk`. Log: "Attack [id]".
+    - `ranged_attack {target: id}`: Requires Manhattan distance 2-3. One-way damage: `enemy.hp -= hero.atk`. Log: "Ranged Attack [id]".
+- **Entities & Unit Traits**
+    - **Hero**: Possesses `hp`, `atk`, `mana`, and `anomaly_dmg`.
+    - **Enemies**: Possess `id`, `hp`, `atk`, and an optional `unit_type`.
+        - `Hardened`: Reduces incoming **melee** damage by 1 (minimum 0).
+        - `Glass`: All incoming damage (melee, ranged, and anomaly) is doubled.
+        - `Resonant`: If damaged by a Hero's Anomaly, the hero immediately takes 1 damage.
+    - **Tiles**: 
+        - `Wall`: Blocks movement.
+        - `Conductive`: Doubles `hero.anomaly_dmg` when the hero stands on it during a shield rupture.
+- **Win/Lose Conditions**
+    - **VICTORY**: All enemies `hp <= 0`.
+    - **DEFEAT**: `hero.hp <= 0` (even if all enemies are also dead).
+    - **FINISHED**: 0 initial enemies or action list exhausted without victory/defeat.
+- **NON-GOALS**
+    - Random number generation (RNG), real-time input, enemy movement, animations/graphics, or changes to the fixed CLI output format.

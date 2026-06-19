@@ -1,0 +1,1 @@
+A deterministic tactical combat simulation where a hero executes a pre-defined sequence of actions on a 2D grid to eliminate all enemies. The player defines the scenario and action list; the engine processes them linearly to determine if the hero achieves victory or suffers defeat.

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero(hp:10, mana:0, atk:2), Enemy(id:1, hp:5, unit_type:Hardened, pos:[1,0])",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Turn 1: Enemy 1 HP becomes 4 (2-1=1 dmg). Hero HP becomes 10 - Enemy.atk."
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero(hp:10, mana:5, atk:2), Enemy(id:1, hp:10, unit_type:Glass, pos:[1,0])",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Turn 1: Enemy 1 HP becomes 6 (2 * 2 = 4 dmg). Hero Mana becomes 5 - Enemy.atk."
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero(hp:10, mana:5, anomaly_dmg:3, pos:[0,0]), Enemy(id:1, hp:10, unit_type:Resonant, pos:[1,1]), Terrain{'0,0':'Conductive'}",
+    "input": "[{type: 'anomaly_attack', target: 1}]",
+    "expect": "Turn 1: Enemy 1 HP becomes 7. Hero Mana becomes 4 (Resonant trigger)."
+  },
+  {
+    "id": "SCN-004",
+    "setup": "Hero(hp:10, mana:5, anomaly_dmg:3, pos:[0,0]), Enemy(id:1, hp:10, pos:[1,1]), Terrain{'0,0':'Conductive'}",
+    "input": "[{type: 'anomaly_attack', target: 1}, {type: 'anomaly_attack', target: 1}]",
+    "expect": "Turn 1: Enemy HP 7 (No rupture). Turn 2: Enemy HP 1 (Shattered: Conductive doubles dmg: 3*2=6)."
+  }
+]

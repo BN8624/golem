@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "전 시나리오 oracle_risk.risk=false. 전술 카드 l4(유닛) — 골든은 tactics_kernel_base+확장 참조 game_logic(l3+units) 실Node 역산(모델 독립)."
+    }
+  ]
+}
