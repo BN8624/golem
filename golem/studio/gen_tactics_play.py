@@ -1,7 +1,7 @@
-# 전술 5카드 게임을 정사각 탑다운으로 보여주는 독립 HTML 렌더러 생성기 — 검증된 l5 엔진 그대로 재사용(키0·읽기전용)
-"""쇼케이스 외형. tactics_kernel_base + 검증된 l5 참조 game_logic(마나방패·사거리·지형·유닛·루트맵)을
-node로 require해 22세계 전부 턴별 상태를 추출 → 단일 index.html에 트레이스 임베드.
-엔진은 골렘이 게이트·합의 1.0·golden_diff 0으로 검증한 바로 그 로직. 렌더러는 표시 전용(로직 안 건드림).
+# 전술 7카드 게임을 정사각 탑다운으로 보여주는 독립 HTML 렌더러 생성기 — 검증된 l7 엔진 그대로 재사용(키0·읽기전용)
+"""쇼케이스 외형. tactics_kernel_base + 검증된 l7 참조 game_logic(마나방패·사거리·지형·유닛·루트맵·상태이상·밸런스)을
+node로 require해 28세계+캠페인 1편 전부 턴별 상태를 추출 → 단일 index.html에 트레이스 임베드.
+엔진은 골렘이 게이트·golden_diff 0으로 검증한 바로 그 로직. 렌더러는 표시 전용(로직 안 건드림).
 브라우저로 index.html 열면 시나리오 고르고 턴 재생.
 """
 
@@ -13,10 +13,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 BASE = HERE / "tactics_kernel_base"
-PACKET = HERE / "planning_packet_tactics_l6"
+PACKET = HERE / "planning_packet_tactics_l7"
 OUT = HERE / "tactics_play"
 
-# 캠페인 한 편 — 6카드 엔진을 루트맵으로 엮은 4전투 데모(검증된 l6 엔진으로 결정적 실행). 콘텐츠는 엔진과 분리.
+# 캠페인 한 편 — 7카드 엔진을 루트맵으로 엮은 4전투 데모(검증된 l7 엔진으로 결정적 실행). 콘텐츠는 엔진과 분리.
 CAMPAIGN = {
     "id": "CAMPAIGN",
     "initialState": {
@@ -49,13 +49,15 @@ LABELS = {
     "SCN-019": "유닛 Resonant 반사피해", "SCN-020": "루트맵 2전투 승리(hp 이월)",
     "SCN-021": "루트 전환 후 FINISHED", "SCN-022": "루트 2전투에서 DEFEAT",
     "SCN-023": "상태이상 Corrosion DoT 처치", "SCN-024": "Corrosion ×2(Glass)",
-    "SCN-025": "Corrosion 처치→루트 전환", "CAMPAIGN": "★ 캠페인 — 6카드 4전투 한 편",
+    "SCN-025": "Corrosion 처치→루트 전환",
+    "SCN-026": "밸런스 recMult→DEFEAT", "SCN-027": "밸런스 atkMult→원샷", "SCN-028": "밸런스 anomMult→일소",
+    "CAMPAIGN": "★ 캠페인 — 7카드 4전투 한 편",
 }
 
-# 검증된 l6 참조 game_logic을 가져온다(gen_tactics_l6_golden 단일 출처 — 6카드 전부 포함).
-def l6_game_logic():
+# 검증된 l7 참조 game_logic을 가져온다(gen_tactics_l7_golden 단일 출처 — 6카드 전부 포함).
+def l7_game_logic():
     sys.path.insert(0, str(HERE))
-    from gen_tactics_l6_golden import REF_GAME_LOGIC
+    from gen_tactics_l7_golden import REF_GAME_LOGIC
     return REF_GAME_LOGIC
 
 # 턴별 상태를 뽑는 node 트레이서(engine 초기화 재현 + updateState/checkGameState 스텝마다 스냅샷).
@@ -110,13 +112,13 @@ def main():
     scenario_data = list(contract["data_contract"]["scenario_data"]) + [CAMPAIGN]  # 25세계 + 캠페인 1편
     scenarios_js = bg._gen_scenarios_module(scenario_data)
 
-    # 검증된 l6 엔진 워크스페이스(읽기전용 재사용).
+    # 검증된 l7 엔진 워크스페이스(읽기전용 재사용).
     ws = HERE / "_tactics_play_engine_tmp"
     if ws.exists():
         shutil.rmtree(ws)
     shutil.copytree(BASE, ws)
     (ws / "module_manifest.json").unlink(missing_ok=True)
-    (ws / "src" / "game_logic.js").write_text(l6_game_logic(), encoding="utf-8")
+    (ws / "src" / "game_logic.js").write_text(l7_game_logic(), encoding="utf-8")
     (ws / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
     (ws / "trace.js").write_text(TRACER_JS, encoding="utf-8")
 
@@ -145,7 +147,7 @@ def main():
     (OUT / "index.html").write_text(html, encoding="utf-8")
     print(f"  트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
     print(f"  캠페인 4전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
-    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l6 엔진).")
+    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l7 엔진).")
     return 0
 
 
@@ -154,7 +156,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>전술 SRPG — 5카드 쇼케이스</title>
+<title>전술 SRPG — 7카드 쇼케이스</title>
 <style>
   :root { --bg:#0f1220; --panel:#1a1f33; --grid:#2a3150; --cell:#161b2e; --hero:#4ea1ff; --enemy:#ff5d6c; --wall:#3a3f52; --cond:#21d3c8; --txt:#e6e9f5; --dim:#8b93b5; --ok:#43d17a; --bad:#ff6b7a; }
   * { box-sizing:border-box; }
@@ -182,8 +184,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <h1>전술 SRPG — 5카드 쇼케이스</h1>
-  <div class="sub">마나방패·ANOMALY · 사거리 · 지형(Wall/Conductive) · 유닛(Hardened/Glass/Resonant) · 루트맵 — 골렘이 설계·검증한 l5 엔진(읽기전용 렌더)</div>
+  <h1>전술 SRPG — 7카드 쇼케이스</h1>
+  <div class="sub">마나방패·ANOMALY · 사거리 · 지형 · 유닛 · 루트맵 · 상태이상 · 밸런스 — 골렘이 설계·검증한 l7 엔진(읽기전용 렌더)</div>
   <div class="bar">
     <select id="pick"></select>
     <button id="prev">◀ 이전</button>
