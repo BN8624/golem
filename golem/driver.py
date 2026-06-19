@@ -49,10 +49,14 @@ def _strip_fence(body):
         lines.pop(0)
     while lines and not lines[-1].strip():
         lines.pop()
+    # 여는/닫는 펜스를 독립적으로 벗긴다. 모델이 전체 응답을 ```lang … ``` 한 덩이로 감싸면
+    # 닫는 ```가 마지막 파일 본문 끝에만 남아(여는 펜스는 intro로 빠짐) 누출됐다(G81 잘림 3건).
     if lines and lines[0].lstrip().startswith("```"):
         lines.pop(0)
-        if lines and lines[-1].strip().startswith("```"):
-            lines.pop()
+    if lines and lines[-1].strip().startswith("```"):
+        lines.pop()
+    while lines and not lines[-1].strip():
+        lines.pop()
     return "\n".join(lines) + "\n"
 
 
