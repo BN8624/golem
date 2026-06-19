@@ -1,0 +1,34 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "scene": "string",
+      "fragments": "string[] (subset of F1..F5)",
+      "beats": "string[]",
+      "eclipse": "number | null (보름 카운트다운, null=미점화)",
+      "ending": "string (NEW_DAWN|CAUGHT|RITUAL_COMPLETE|FLED|AWAKENED|null)",
+      "isGameOver": "boolean",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: The game starts at scene 'start' with empty fragments/beats/logs and eclipse=null. Each choice in input.choices is applied in order, up to MAX_STEPS.",
+      "RULE-02: A choice valid for the current scene transitions to its target scene and logs '선택:<choiceId>'. An invalid choice (not offered by the current scene) is logged '무시:<choiceId>' and changes nothing else.",
+      "RULE-03: When the chosen option carries a fragment not yet held, append it to fragments and log '조각:<F>'. Fragments are unique (collecting an owned fragment is a no-op).",
+      "RULE-04: After a fragment is collected, re-evaluate beats. Beat RESONANCE fires exactly once when all five fragments (F1..F5) are held; firing logs 'BEAT:RESONANCE'.",
+      "RULE-05: A choice with verdict=true ends the confrontation: scene becomes end_dawn (ending NEW_DAWN) if all five fragments are held, otherwise end_ritual (ending RITUAL_COMPLETE).",
+      "RULE-06: Reaching any scene that declares an ending sets state.ending and isGameOver=true; remaining choices are not processed. end_fled yields ending FLED; end_caught yields CAUGHT.",
+      "RULE-07: When a chosen option carries startTimer and eclipse is still null, eclipse is set to ECLIPSE_TURNS (15). While eclipse is not null and the resulting scene is not an ending, eclipse decreases by 1 each turn; if it reaches 0 or below, the scene becomes end_ritual (RITUAL_COMPLETE).",
+      "RULE-08 (THIS CARD): Checkpoint infiltration + first awakening. Add an 'infiltrate' choice to scene 'start' -> scene 'checkpoint', which offers 'attune' (-> 'altar_1', slips past surveillance) and 'bluff' (-> 'end_caught', CAUGHT). Add scene 'altar_1' offering 'bleed' (fragment F1 -> 'altar_1_done') and 'leave' (-> 'end_fled'). Add scene 'altar_1_done' (ending AWAKENED). Beat AWAKENING fires exactly once when F1 is held; firing logs 'BEAT:AWAKENING'. Any play that never chooses 'infiltrate' produces byte-for-byte identical output to base."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "touched": ["src/scenes.js", "src/beats.js"],
+    "files": [
+      {"path": "src/scenes.js", "exports": ["SCENES"], "imports": [],
+       "description": "Scene graph data (B layer). THIS card adds the 'infiltrate' choice to 'start' and the new scenes 'checkpoint', 'altar_1', 'altar_1_done' (fragment F1). All existing scenes/choices kept intact."},
+      {"path": "src/beats.js", "exports": ["fireBeats"], "imports": ["src/constants.js"],
+       "description": "Beat-firing logic (A layer). THIS card adds the AWAKENING beat (F1 held) alongside the existing RESONANCE beat. Keep fireBeats(fragments, firedBeats) signature."}
+    ]
+  }
+}

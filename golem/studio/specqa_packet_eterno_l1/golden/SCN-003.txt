@@ -1,0 +1,8 @@
+turn: 3
+scene: end_fled
+fragments: []
+beats: []
+eclipse: null
+ending: FLED
+isGameOver: true
+logs: ["선택:infiltrate","선택:attune","선택:leave"]

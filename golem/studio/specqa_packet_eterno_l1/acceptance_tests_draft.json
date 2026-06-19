@@ -1,0 +1,190 @@
+[
+  {
+    "id": "SCN-001",
+    "input": {
+      "choices": [
+        "infiltrate",
+        "attune",
+        "bleed"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-08",
+      "RULE-03",
+      "RULE-04"
+    ],
+    "expected": {
+      "turn": 3,
+      "scene": "altar_1_done",
+      "fragments": [
+        "F1"
+      ],
+      "beats": [
+        "AWAKENING"
+      ],
+      "eclipse": null,
+      "ending": "AWAKENED",
+      "isGameOver": true,
+      "logs": [
+        "선택:infiltrate",
+        "선택:attune",
+        "선택:bleed",
+        "조각:F1",
+        "BEAT:AWAKENING"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-002",
+    "input": {
+      "choices": [
+        "infiltrate",
+        "bluff"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-08",
+      "RULE-06"
+    ],
+    "expected": {
+      "turn": 2,
+      "scene": "end_caught",
+      "fragments": [],
+      "beats": [],
+      "eclipse": null,
+      "ending": "CAUGHT",
+      "isGameOver": true,
+      "logs": [
+        "선택:infiltrate",
+        "선택:bluff"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-003",
+    "input": {
+      "choices": [
+        "infiltrate",
+        "attune",
+        "leave"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-08",
+      "RULE-06"
+    ],
+    "expected": {
+      "turn": 3,
+      "scene": "end_fled",
+      "fragments": [],
+      "beats": [],
+      "eclipse": null,
+      "ending": "FLED",
+      "isGameOver": true,
+      "logs": [
+        "선택:infiltrate",
+        "선택:attune",
+        "선택:leave"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-004",
+    "input": {
+      "choices": [
+        "press_on"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02",
+      "RULE-06"
+    ],
+    "expected": {
+      "turn": 1,
+      "scene": "end_fled",
+      "fragments": [],
+      "beats": [],
+      "eclipse": null,
+      "ending": "FLED",
+      "isGameOver": true,
+      "logs": [
+        "선택:press_on"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-005",
+    "input": {
+      "choices": [
+        "turn_back"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02",
+      "RULE-06"
+    ],
+    "expected": {
+      "turn": 1,
+      "scene": "end_fled",
+      "fragments": [],
+      "beats": [],
+      "eclipse": null,
+      "ending": "FLED",
+      "isGameOver": true,
+      "logs": [
+        "선택:turn_back"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-006",
+    "input": {
+      "choices": [
+        "infiltrate",
+        "nonsense",
+        "attune"
+      ]
+    },
+    "covers_reqs": [
+      "RULE-02"
+    ],
+    "expected": {
+      "turn": 2,
+      "scene": "altar_1",
+      "fragments": [],
+      "beats": [],
+      "eclipse": null,
+      "ending": null,
+      "isGameOver": false,
+      "logs": [
+        "선택:infiltrate",
+        "무시:nonsense",
+        "선택:attune"
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  }
+]
