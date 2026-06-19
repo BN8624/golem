@@ -2,8 +2,9 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-19, G82) — 전술 카드 2장 누적 완료·둘 다 ★키 빌드 깨끗하게 닫힘(게이트 11/11·합의 1.0·golden_diff 0). l1=변칙검술 마나방패+ANOMALY(9세계), l2=사거리(12세계). 다음=셋째 카드(지형) 또는 사용자 결정.**
-- **(★키) 전술 카드 l2 빌드 그린(run=graded-20260619-235702).** 골렘이 사거리 메커니즘 자율 설계(planning ★키, `planning_packet_tactics_l2_design` FROZEN) → 내가 base 관례로 그래프트. ranged_attack=맨해튼 2..3 일방피해·반격없음·라인오브사이트 없음(영웅 무피해라 마나/파열 무관). REQ-014 추가, REQ-012/013 이월. 12세계(회귀9+사거리3) 전원 합의 1.0·golden_diff []·모델 독립 재현·engine/main verbatim. 커밋 d531f38. 결과=`build_runs/graded-20260619-235702`.
+**현재 상태 (2026-06-20, G82) — 전술 카드 3장 누적 완료·셋 다 ★키 빌드 깨끗하게 닫힘(게이트 11/11·합의 1.0·golden_diff 0). l1=변칙검술 마나방패+ANOMALY(9세계), l2=사거리(12세계), l3=지형(15세계). 다음=넷째 카드(유닛) 또는 사용자 결정.**
+- **(★키) 전술 카드 l3 빌드 그린(run=graded-20260620-004658).** 골렘이 지형 메커니즘 자율 설계(planning ★키, `planning_packet_tactics_l3_design` FROZEN) → base 관례로 그래프트. 두 타일: Wall(이동 차단, 단 라인오브사이트 없어 ranged 무시)·Conductive(영웅이 그 위에서 파열시 anomaly ×2). terrain={"x,y":type}을 initialState에 static(engine spread→game_logic만). REQ-015/016 추가. 15세계(회귀12+지형3: 벽이동차단/전도체×2→VICTORY/벽이ranged무시) 전원 합의 1.0·golden_diff []·모델 독립 재현·engine/main verbatim. 커밋 73b7f16. 결과=`build_runs/graded-20260620-004658`.
+- **(★키) 전술 카드 l2 빌드 그린(run=graded-20260619-235702).** ranged_attack=맨해튼 2..3 일방피해·반격없음. REQ-014 추가. 12세계 전원 합의 1.0·golden_diff []. 커밋 d531f38.
 - **(★키) 전술 카드 l1 빌드 그린(run=graded-20260619-231114).** `--base tactics_kernel_base --inject-modules src/game_logic.js`(메커니즘이 applyAction 안에 다 들어가 로직 변경은 game_logic.js 한 모듈뿐 — engine/main verbatim 유지, scenarios.js는 scenario_data로 frozen). 마나방패(흡수→overflow만 hp)+ANOMALY 파열(mana>0→≤0 전이시 인접 적 anomaly_dmg). 커밋 ddca752·185736f.
 - **확립된 카드 패턴(l1·l2 동일).** ①골렘이 메커니즘 자율 설계(`planning.py --synthesize --idea "커널+기존카드 서술 + NEW CARD ..." --out planning_packet_tactics_lN_design`, ★키). ②클로드가 base 관례로 그래프트: `planning_packet_tactics_lN`=직전 REQ 전부 이월 + 새 REQ, 출력 5필드 불변, scenario_data=직전 세계(회귀)+새 세계. ③`gen_tactics_lN_golden.py`=직전 참조의 순수 슈퍼셋(분기만 추가) 실Node 역산, 회귀 동일·신규 발동. ④`_validate_tactics_lN_keyless` 게이트·골든·결정성. ⑤`build_graded --base tactics_kernel_base --packet ... --specqa ... --inject-modules src/game_logic.js --reconcile`(★키). 메커니즘이 applyAction에 담기는 한 inject는 game_logic.js 하나. **(주의: 새 모듈/엔진 변경 요구시 inject 목록·base 동결 갱신.)** `build_graded`는 --base서도 scenario_data 주입(카드 세계가 src/scenarios.js로).
 - **누적 순서 다음 후보: 지형 → 유닛 → 루트 맵.** 단계마다 끊어 보고.
@@ -104,9 +105,9 @@ Golem Studio = `GolemStudioMode.md` §13 파이프라인을 실모델로 구축.
 
 **★ 북극성(목표) = `GolemStudioMode.md` §1.5 다작·선별 퍼널.** 단발 게임이 아니라 `생성→[싼 사전필터]→사람 판단→[실노출 신호]→더블다운`. 골렘은 "안 깨졌나"를 공짜로 걸러 사람 판단을 "재미있나"에만 쓰게 한다. 대괄호 두 조각(싼 사전필터·실노출)이 골렘이 지어야 할 미완성 부분. 병목은 생성 아니라 선별+품질. 모든 다음 액션은 이 목표에 종속.
 
-1. **전술 SRPG(영걸전형) — 골렘이 설계하는 새 장르. 작은 커널부터 카드 누적. 커널 1.0·base 동결·카드 2장(l1 마나방패·l2 사거리) ★키 빌드 그린 완료. 다음=셋째 카드(지형) 또는 사용자 결정.** 에테르노 IF 브리지는 l1 그린으로 닫혔고(G81), 사용자가 IF는 취향 아님→전술 SRPG로 피벗. **핵심 규율: 골렘이 설계, 클로드는 손으로 base 안 씀·하네스만 조임, 사용자는 맨 끝 개입.**
-   - **현재 상태: 커널 1.0·base 동결(G81)·카드 l1·l2 ★키 빌드 그린(G82, graded-20260619-231114·graded-20260619-235702).** 누적 2장.
-   - **다음 첫 동작 = 셋째 카드(지형) — 위 "확립된 카드 패턴"대로**: 골렘 planning ★키로 지형 메커니즘(예: 막힘/엄폐/이동코스트 타일) 자율 설계 → 그래프트(REQ-001~014 이월 + REQ-015) → 확장 참조 골든 → 키0 검산 → ★키 빌드. **(주의: 지형은 타일맵 데이터가 필요 — scenario_data에 grid/tiles 필드 추가나 새 모듈을 요구할 수 있다. 그러면 inject 목록·base 동결·output_contract 갱신을 먼저 판단.)** 누적 순서=지형 → 유닛 → 루트 맵. 단계마다 끊어 보고.
+1. **전술 SRPG(영걸전형) — 골렘이 설계하는 새 장르. 작은 커널부터 카드 누적. 커널 1.0·base 동결·카드 3장(l1 마나방패·l2 사거리·l3 지형) ★키 빌드 그린 완료. 다음=넷째 카드(유닛) 또는 사용자 결정.** 에테르노 IF 브리지는 l1 그린으로 닫혔고(G81), 사용자가 IF는 취향 아님→전술 SRPG로 피벗. **핵심 규율: 골렘이 설계, 클로드는 손으로 base 안 씀·하네스만 조임, 사용자는 맨 끝 개입.**
+   - **현재 상태: 커널 1.0·base 동결(G81)·카드 l1·l2·l3 ★키 빌드 그린(G82).** 누적 3장. 카드마다 사용자에게 메커니즘 "느낌" 1문 묻고(l2 반격·l3 지형종류 둘 다 "전부 골렘에 맡김") 골렘이 자율 설계.
+   - **다음 첫 동작 = 넷째 카드(유닛) — 위 "확립된 카드 패턴"대로**: 사용자에게 유닛 느낌 1문(영웅 복수? 적 AI 이동? 유닛 타입별 능력?) → 골렘 planning ★키 자율 설계 → 그래프트(REQ-001~016 이월 + 새 REQ) → 확장 참조 골든 → 키0 검산 → ★키 빌드. **(주의: 유닛이 다수 영웅/적 이동을 도입하면 액션·턴 모델·출력(여러 영웅?)이 커질 수 있다 — output_contract·base 모듈/동결 영향을 먼저 판단. 지금까지는 game_logic.js 하나로 충분했으나 유닛은 깨질 후보.)** 누적 순서=유닛 → 루트 맵. 단계마다 끊어 보고.
    - 비주얼은 나중(골렘이 룰 소진 후): 정사각 탑다운부터, 에셋팩+이미지→타일맵 추출+고도. 클로드 외형(엔진 읽기전용)·각색충실도·밸런스=사람. 에테르노 스토리(`bridge_eterno/STRUCTURE.md`)는 캠페인 루트 콘텐츠(엔진과 분리).
 2. **(목표 핵심 인프라) 싼 사전필터 조각 ① — 닫힘(G77).** 카드 자동 제안(B+검토) `card_proposer.py`에 레저(RAG) 주입 + 사전필터 신호(static_gate·직전 골든 회귀·발동 커버리지·결정성·구조 스코프)층. `cardgen_ledger.py` + `cardgen/`(L-001~L-005·E-001/E-002). **소코반 card4로 두 판정 다 실증**: Boost/Crumbling 제안이 "커버리지 1<2"로 자동 FLAG → 워크드 격자 few-shot 보강 후 Crumbling Floor가 발동 4·회귀 0·클린 구조로 PASS_PREFILTER. **부수 발견: 산문 교훈(L-005)만으론 31B 격자 좌표 약점 못 막아 few-shot 예시가 필요(교훈 종류 차이).** 커밋 7cbccc4·141d138. 모델-비평가는 여전히 불완전한 취향 대리(PASS도 '그럴듯하게 틀린' REF는 사람이 대조).
 3. (곁가지) XL을 1000+모듈로 더 밀어 천장 계속 추적(한계효용↓) / combat 자율oracle / 외부리뷰 P1(#10).
