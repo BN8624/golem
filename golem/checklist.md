@@ -263,7 +263,7 @@ P1 (다음 실험 전):
 - [x] **(★키 2콜) 싼 사전필터 조각 ① 닫힘(G78)**: `card_proposer.py`에 레저(RAG, `cardgen_ledger.py`+`cardgen/` L-001~005·E-001/002) 주입 + 사전필터 신호층(static_gate·직전 골든 회귀·발동 커버리지·결정성·구조 스코프). 소코반 card4로 **FLAG·PASS 두 판정 실증**(Spring/Crumbling 커버리지 자동 FLAG → 워크드 격자 few-shot 보강 후 Crumbling Floor PASS). 부수발견=산문교훈 vs few-shot 교훈종류 차이. 한계=PASS도 '그럴듯하게 틀린' REF는 사람 대조 필요. 커밋 7cbccc4·141d138.
 - [~] **소설→게임 브리지 첫 실증(G79)**: 아뜰리에 "에테르노의 그림자"(12장면) → 내러티브 IF 뼈대 + 턴제 전투 카드 하이브리드. 골렘=구조화+건전성검증, 각색충실도=사람. (아뜰리에 읽기전용.)
   - [x] (키0) 구조 설계 `bridge_eterno/STRUCTURE.md` — 12장면→노드 매핑·상태 스키마·4대 메커니즘 직역·선형→분기 발명. 커밋 fc07178.
-  - [x] (키0) Card1 패킷화 — `eterno_base`(7모듈 IF 엔진, static_gate 통과) + planning/specqa 패킷(RULE-08 검문잠입/조각1) + gen_golden(REF 역산) 6시나리오. 회귀 base 골든과 바이트동일·run_keyless ALL PASS. driver에 eterno 등록. 커밋 81963f3·3da5e15.
+  - [x] (키0) Card1 패킷화 + 전수검사·A1 재작성(G80) — `eterno_base`(7모듈 IF 엔진, static_gate 통과) + planning/specqa 패킷. 빌드 전 전수검사서 1차 설계 결함(스텁 base+줄거리 앞으로 확장=누적 회귀 깨짐) 잡아 **허브형 완결 base + add-only 곁가지 카드**로 재작성(Card1=scenes.js만, 타이머 always-on). 누적 8시나리오(회귀5+잠입3) 회귀 base 골든과 바이트동일·run_keyless ALL PASS. driver에 eterno 등록(inject=scenes.js). 커밋 81963f3·3da5e15·c194bde.
   - [ ] (★키) 무인 빌드 `driver_showcase.py eterno` — 31B가 base에 Card1 패치 → 게이트·합의·골든 diff.
   - [ ] (다음) Card2 변칙검술 전투(combat_base 마나방패+ANOMALY) 누적.
 - [ ] **(나중) 실노출 신호 조각 ②**: 살아남은 후보를 작게 내보내 실제 반응 측정 → 더블다운.
