@@ -1,0 +1,14 @@
+{
+  "schema_version": "0.1",
+  "module_format": "commonjs",
+  "entry": "main.js",
+  "files": [
+    {"path": "main.js", "exports": [], "imports": ["src/engine.js", "src/format.js"]},
+    {"path": "src/engine.js", "exports": ["runScenario"], "imports": ["src/constants.js", "src/scenes.js", "src/state.js", "src/beats.js"]},
+    {"path": "src/scenes.js", "exports": ["SCENES"], "imports": []},
+    {"path": "src/beats.js", "exports": ["fireBeats"], "imports": ["src/constants.js"]},
+    {"path": "src/state.js", "exports": ["createInitialState"], "imports": []},
+    {"path": "src/format.js", "exports": ["render"], "imports": []},
+    {"path": "src/constants.js", "exports": ["ALL_CLUES", "MAX_STEPS"], "imports": []}
+  ]
+}

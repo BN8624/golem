@@ -1,0 +1,7 @@
+turn: 1
+scene: end_refused
+clues: []
+beats: []
+ending: WALKED_AWAY
+isGameOver: true
+logs: ["선택:refuse"]

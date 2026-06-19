@@ -1,0 +1,7 @@
+turn: 3
+scene: end_wrong
+clues: ["PRINT"]
+beats: []
+ending: COLD_CASE
+isGameOver: true
+logs: ["선택:take_case","선택:inspect_window","단서:PRINT","선택:accuse"]

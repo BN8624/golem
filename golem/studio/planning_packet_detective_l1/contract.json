@@ -1,0 +1,32 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "scene": "string",
+      "clues": "string[]",
+      "beats": "string[]",
+      "ending": "string (TRUTH|COLD_CASE|WALKED_AWAY|null)",
+      "isGameOver": "boolean",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: The game starts at scene 'start' with empty clues/beats/logs. Each choice in input.choices is applied in order, up to MAX_STEPS.",
+      "RULE-02: A choice valid for the current scene transitions to its target scene and logs '선택:<choiceId>'. An invalid choice (not offered by the current scene) is logged '무시:<choiceId>' and changes nothing else.",
+      "RULE-03: When the chosen option carries a clue not yet collected, append it to clues and log '단서:<CLUE>'. Clues are unique (collecting an owned clue is a no-op).",
+      "RULE-04: After a clue is collected, re-evaluate beats. Beat DEDUCTION fires exactly once when all three core clues (WOUND, LETTER, PRINT) are held; firing logs 'BEAT:DEDUCTION'.",
+      "RULE-05: The 'accuse' choice (verdict) ends the game: scene becomes end_solved (ending TRUTH) if all three core clues are held, otherwise end_wrong (ending COLD_CASE).",
+      "RULE-06: Reaching any scene that declares an ending sets state.ending and isGameOver=true; remaining choices are not processed. The 'refuse' choice leads to end_refused (ending WALKED_AWAY); 'walk' at confront leads to end_wrong (COLD_CASE).",
+      "RULE-07 (THIS CARD): FALSE_ALIBI. Add a butler path: the crime_scene offers a new choice 'question_butler' -> scene 'butler_room', which offers 'confront_alibi' (clue ALIBI, returns to crime_scene) and 'leave_butler' (returns to crime_scene). Beat FALSE_ALIBI fires exactly once when both ALIBI and LETTER are held (the torn letter exposes the alibi as false); firing logs 'BEAT:FALSE_ALIBI'. ALIBI is NOT a core clue and does not affect the DEDUCTION/verdict conditions. Any play that never questions the butler produces byte-for-byte identical output to before."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "touched": ["src/scenes.js", "src/beats.js"],
+    "files": [
+      {"path": "src/scenes.js", "exports": ["SCENES"], "imports": [],
+       "description": "Scene graph data (B layer). THIS card adds the 'question_butler' choice to crime_scene and the new 'butler_room' scene (clue ALIBI). All existing scenes/choices kept intact."},
+      {"path": "src/beats.js", "exports": ["fireBeats"], "imports": ["src/constants.js"],
+       "description": "Beat-firing logic (A layer). THIS card adds the FALSE_ALIBI beat (ALIBI && LETTER) alongside the existing DEDUCTION beat. Keep fireBeats(clues, firedBeats) signature."}
+    ]
+  }
+}

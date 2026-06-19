@@ -1,0 +1,7 @@
+turn: 5
+scene: end_solved
+clues: ["LETTER","PRINT","WOUND"]
+beats: ["DEDUCTION"]
+ending: TRUTH
+isGameOver: true
+logs: ["선택:take_case","선택:inspect_body","단서:WOUND","선택:inspect_desk","단서:LETTER","선택:inspect_window","단서:PRINT","BEAT:DEDUCTION","선택:accuse"]

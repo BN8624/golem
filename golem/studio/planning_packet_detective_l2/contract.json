@@ -1,0 +1,33 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "scene": "string",
+      "clues": "string[]",
+      "beats": "string[]",
+      "ending": "string (TRUTH|COLD_CASE|WALKED_AWAY|null)",
+      "isGameOver": "boolean",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: The game starts at scene 'start' with empty clues/beats/logs. Each choice in input.choices is applied in order, up to MAX_STEPS.",
+      "RULE-02: A choice valid for the current scene transitions to its target scene and logs '선택:<choiceId>'. An invalid choice is logged '무시:<choiceId>' and changes nothing else.",
+      "RULE-03: When the chosen option carries a clue not yet collected, append it to clues and log '단서:<CLUE>'. Clues are unique.",
+      "RULE-04: After a clue is collected, re-evaluate beats. Beat DEDUCTION fires once when all three core clues (WOUND, LETTER, PRINT) are held; firing logs 'BEAT:DEDUCTION'.",
+      "RULE-05: The 'accuse' choice (verdict) ends the game: end_solved (TRUTH) if all three core clues are held, otherwise end_wrong (COLD_CASE).",
+      "RULE-06: Reaching an ending scene sets ending and isGameOver=true; remaining choices are skipped. 'refuse' -> WALKED_AWAY; 'walk' at confront -> COLD_CASE.",
+      "RULE-07: FALSE_ALIBI (card 1). crime_scene offers 'question_butler' -> 'butler_room' ('confront_alibi' gives clue ALIBI, 'leave_butler'; both return to crime_scene). Beat FALSE_ALIBI fires once when ALIBI and LETTER are both held; logs 'BEAT:FALSE_ALIBI'. ALIBI is not a core clue.",
+      "RULE-08 (THIS CARD): MOTIVE_REVEALED. Add a safe path: crime_scene offers a new choice 'search_safe' -> scene 'safe', which offers 'read_diary' (clue MOTIVE, returns to crime_scene) and 'close_safe' (returns to crime_scene). Beat MOTIVE_REVEALED fires exactly once when both MOTIVE and WOUND are held (the diary's motive plus the wound show premeditation); firing logs 'BEAT:MOTIVE_REVEALED'. MOTIVE is NOT a core clue and does not affect DEDUCTION/verdict. Any play that never searches the safe produces byte-for-byte identical output to before this card."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "touched": ["src/scenes.js", "src/beats.js"],
+    "files": [
+      {"path": "src/scenes.js", "exports": ["SCENES"], "imports": [],
+       "description": "Scene graph data (B layer). THIS card adds the 'search_safe' choice to crime_scene and the new 'safe' scene (clue MOTIVE). All existing scenes/choices (including the butler path) kept intact."},
+      {"path": "src/beats.js", "exports": ["fireBeats"], "imports": ["src/constants.js"],
+       "description": "Beat-firing logic (A layer). THIS card adds the MOTIVE_REVEALED beat (MOTIVE && WOUND) alongside the existing DEDUCTION and FALSE_ALIBI beats. Keep fireBeats(clues, firedBeats) signature."}
+    ]
+  }
+}
