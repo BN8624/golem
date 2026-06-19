@@ -8,6 +8,10 @@
 - **트랙3 밸런스 ✓ — l7=밸런스 config.** config={atkMult,recMult,anomMult}(기본 1, floor) 영웅 행동 해석 안에서 적용(없으면 ×1=l6). run=graded-20260620-021030, 게이트11/11·golden_diff []·overall 0.987. 28세계(회귀25+config3: recMult→DEFEAT/atkMult→원샷/anomMult→일소).
 - **트랙4 캠페인 ✓** — 루트맵으로 7카드 엔진을 엮은 4전투 캠페인(멜레→사거리+벽→Hardened 탱크→Glass 보스 Corrosion 마무리), 검증된 l7 엔진 결정적 5액션→VICTORY. 렌더러 드롭다운 "★ 캠페인". 콘텐츠는 엔진과 분리(atelier 안 건드림).
 - **누적 7카드: l1 마나방패·l2 사거리·l3 지형·l4 유닛·l5 루트맵·l6 상태이상·l7 밸런스. 전부 game_logic.js 한 모듈만 inject·engine/main/scenarios 불변·출력 5필드 고정·golden_diff 0.** 데이터 포인트: 6~7카드서 라우트 복합 세계 합의가 1.0→0.97~0.99로 살짝 내려옴(여전히 골든 클린, 정답앵커=실Node 골든이라 무해).
+- **스토리 입힘 + 아이폰 서버(완료, 사용자 호평 "느낌이 확 달라").** 캠페인 4→6전투 + 서사 B겹(프롤로그·전투 장면·에필로그, "변칙검술 연대기"). 엔진/룰 불변, 서사는 출력전용 데이터층. 렌더러 스토리 패널. `tactics_play/server.js`(0.0.0.0:8770 테일스케일)는 **사용자 요청으로 내림**(필요시 `node server.js`). 교훈=[[golem-story-layer-matters]].
+- **자율 인프라 트랙 시작 — "어디까지 만드냐"의 답 = 골렘은 '완결 후보(엔진+카드+스토리+렌더)'까지 만들고 선별에서 멈춘다(스코프는 골렘이 아니라 선별 퍼널이 닫음). 종착점=골렘이 그 완결 후보를 혼자 찍어냄.** 그러려면 지금 클로드 손작업 3개(그래프트·스토리·렌더)를 하네스로 흡수해야 함. 사용자 선택=**(a) 그래프트 자동화 먼저.**
+  - **graft.py 완료(키0).** 카드당 손4파일(contract 캐리포워드+새REQ / gen 참조 / specqa / validator)을 **델타 + `graft()` 한 번**으로 흡수. 규율=새 REQ 자기완결·이전 REQ verbatim 캐리(back-edit 금지). `graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_src)`가 조립+키0검증(회귀 바이트동일·신규 발동·gate·golden·결정성)을 한 번에. **검증: l7을 l6+델타에서 재조립→specqa 골든이 커밋 l7과 바이트동일·전 검증 OK(`python golem/studio/graft.py`).**
+  - **다음(★키) = base-델타 골렘 planning 모드.** 지금도 new_req/new_worlds/참조 game_logic 델타는 클로드가 씀. 골렘이 '현 base 계약을 FROZEN으로 받아 가산 델타(새 REQ·세계·로컬 game_logic 패치)를 base 관례로 직접 뱉게' 하면 그래프트가 끝까지 무인. 그 뒤 (b)스토리 StoryForge·(c)렌더 일반화 흡수하면 완결 후보 무인 생성.
 - 운영: 취향 안 묻고 골렘 자율, 키 안 멈추고 끝까지([[golem-no-taste-questions]]). 종착점=골렘 완전자율, 지금은 초반이라 하네스 컨트롤(사용자 G82 재확인). (이전 5카드 상태는 아래 보존.)
 
 **(G82 이전) 전술 카드 5장 누적 완료·다섯 다 ★키 빌드 깨끗하게 닫힘(게이트 11/11·합의 1.0·golden_diff 0). l1=마나방패+ANOMALY(9), l2=사거리(12), l3=지형(15), l4=유닛(19), l5=루트맵(22세계). "변칙검술→사거리→지형→유닛→루트맵" 누적 순서 완주.**
