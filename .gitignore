@@ -11,6 +11,7 @@ __pycache__/
 
 # 생성물 (재생성 가능)
 golem/studio/build_runs/
+build_runs/
 golem/runs/
 /runs/
 golem/studio/reconcile_report.json
