@@ -1,0 +1,28 @@
+- **Player Actions**
+    - `move(x, y)`: Changes hero position. **Failure**: Target is a Wall or out of bounds. **Log**: `TURN X: HERO MOVED TO [x,y]`.
+    - `attack(enemy_id)`: Melee attack on adjacent enemy. **Failure**: Target not adjacent or not found. **Log**: `TURN X: HERO ATTACKED ENEMY [id]`.
+    - `ranged_attack(enemy_id)`: Attack enemy at Manhattan distance 2-3. **Failure**: Distance not 2-3 or target not found. **Log**: `TURN X: HERO RANGED ATTACKED ENEMY [id]`.
+- **Entities & Rules**
+    - **Hero**: Has `hp`, `mana`, `atk`, `corrosion`.
+    - **Mana Shield**: Melee damage targets `mana` first. If a single hit reduces `mana` from $>0$ to $\le 0$, a **Rupture** occurs: all adjacent enemies take `hero.atk` damage.
+    - **Terrain**: `Wall` blocks hero movement. `Conductive` doubles Rupture damage.
+    - **Enemy Types**: 
+        - `Hardened`: Melee damage received is reduced by 1.
+        - `Glass`: All damage received is multiplied by 2.
+        - `Resonant`: Hero takes 1 HP damage whenever the hero triggers a Rupture.
+    - **Corrosion**: Ranged attacks apply a DoT. Every hero action, the DoT deals damage to the enemy and then the DoT magnitude decays by 1.
+- **Win/Lose Conditions**
+    - **Win**: All enemies in the current scenario are destroyed $\rightarrow$ load next scenario in route. Final scenario clear = VICTORY.
+    - **Lose**: Hero `hp` $\le 0$.
+- **NON-GOALS**
+    - No enemy turns, AI, movement, or mana.
+    - No graphical interface or real-time input.
+    - No random number generation.
+- **Balance Config (New Card)**
+    - **Knobs**: `atkMult` (Hero damage dealt), `recMult` (Hero damage received), `anomMult` (Rupture damage magnitude).
+    - **Application**: 
+        - All calculations use `Math.floor()` for integer results.
+        - **Damage Dealt**: `floor(base_dmg * atkMult)`. Applied before enemy type modifiers (Hardened/-1, Glass/x2).
+        - **Damage Received**: `floor(base_dmg * recMult)`. Applied to all hero HP loss.
+        - **Rupture**: `floor(hero.atk * anomMult * (conductive ? 2 : 1))`.
+    - **Default**: If `balanceConfig` is missing, all multipliers = 1.

@@ -1,0 +1,348 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "adjacent enemies (inclusive or exclusive of the Rupture trigger)",
+        "DoT magnitude (starting value not defined)",
+        "conductive (whether the boolean check refers to the trigger's position or the victim's position)"
+      ],
+      "missing_rules": [
+        "The mechanism by which Hero mana is depleted, given that no enemy turns or AI exist to deal damage",
+        "The initial value of the Corrosion DoT when applied by a ranged attack"
+      ],
+      "conflicting_rules": [
+        "GDD Rupture damage (hero.atk) vs Balance Config Rupture formula (floor(hero.atk * anomMult * ...))",
+        "REQ-007 (Hero HP loss from Corrosion) vs GDD (Corrosion applied to enemies)"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'GlassMult' and 'HardenedMod' in REQ-002 map to the x2 and -1 constants mentioned in the GDD",
+        "Assuming Rupture occurs on the hero's turn despite the shield being a defensive mechanic"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Who possesses the Mana Shield and how is it reduced? The state gives mana to the Hero, but the GDD implies it is a target for damage, yet there are no enemy turns to deal that damage.",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the starting magnitude of the Corrosion DoT?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does REQ-007 contain a typo regarding Hero HP loss from Corrosion, or is there a missing rule where the hero can be affected by their own DoT?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "For Rupture damage on Conductive terrain, is the damage doubled for all targets if the source is on a conductive tile, or only for targets standing on conductive tiles?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "isConductive (unclear if this refers to the tile the hero occupies or the tile the target enemy occupies)"
+      ],
+      "missing_rules": [
+        "Whether failed actions (e.g., moving into a wall) count as 'hero actions' that trigger Corrosion DoT ticks",
+        "Order of operations: whether Corrosion DoT ticks occur before or after the hero's action resolves",
+        "Priority of Win/Lose conditions if the last enemy and the hero both reach 0 HP during the same action (e.g., Rupture triggering Resonant damage)",
+        "The mechanism for the hero to receive 'melee damage' to trigger the Mana Shield, given that enemy turns and AI are explicitly non-goals"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Log format for failed actions (only success logs are defined)"
+      ],
+      "risky_assumptions": [
+        "Assumption that 'hero stats persist' between scenarios includes the current mana value"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The Mana Shield rule describes how melee damage is handled, but Non-Goals state there are no enemy turns or AI. How does the hero take melee damage?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the Corrosion DoT apply to all affected enemies simultaneously at the start/end of an action, or only to a specific target?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Hero persistence (REQ-008) is not reflected in the state structure; because the hero object is nested inside each scenario, there is no global state to store current hero stats when transitioning between scenarios.",
+        "The Mana Shield rule (melee damage targets mana first) has no place to live in state as there are no incoming damage types or enemy attack events defined in the state/actions."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Should the hero object be moved to the root of the state to support the persistence required by REQ-008?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Given that there are no enemy turns (NON-GOALS), is the Mana Shield rule intended to apply to specific hero-triggered effects, or is it a legacy rule that should be removed?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "tick (timing relative to the action: does it occur before or after the action's primary effect?)"
+      ],
+      "missing_rules": [
+        "Damage formula for Corrosion DoT (how the DoT magnitude translates to HP loss)",
+        "Whether the action that applies Corrosion also triggers the first tick"
+      ],
+      "conflicting_rules": [
+        "Corrosion Target: GDD states DoT deals damage to the enemy, but REQ-007 lists Corrosion as a source of Hero HP loss."
+      ],
+      "underspecified_outputs": [
+        "The definition of the 'status' field in the CLI output (e.g., 'ACTIVE', 'WIN', 'LOSE')"
+      ],
+      "risky_assumptions": [
+        "Assumption that hero.corrosion (stat) is the value applied to the enemy as corrosion_dot (state)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does Corrosion damage the enemy (per GDD) or the hero (per REQ-007)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the mathematical formula for calculating the damage dealt by a Corrosion tick?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What specific strings should the 'status' field in the CLI output contain?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "Rupture damage is defined as 'hero.atk' in GDD Entities, but as 'floor(hero.atk * anomMult * ...)' in GDD Balance and REQ-005."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Wall collision logic is duplicated across GDD Actions, GDD Terrain, and REQ-001, risking specification drift.",
+        "Ranged attack distance constraints are duplicated in GDD Actions and REQ-003.",
+        "Rupture trigger conditions are duplicated in GDD Entities and REQ-004.",
+        "Corrosion DoT tick/decay logic is duplicated in GDD Entities and REQ-006.",
+        "Hero HP loss multiplier logic is duplicated in GDD Balance and REQ-007.",
+        "BalanceConfig default value logic is duplicated in GDD Balance and REQ-009."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Since logic is duplicated across the GDD and REQUIREMENTS sections, which section is the primary source of truth for implementation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "corrosion"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "GDD defines Corrosion as a DoT dealing damage to enemies, but REQ-007 defines Corrosion as a source of Hero HP loss."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Does 'Corrosion' refer to a debuff applied to enemies, a property of the hero (as seen in the State object), or both?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "adjacent (4-way Manhattan vs 8-way Chebyshev)",
+        "corrosion (defined as enemy DoT in GDD, but listed as hero HP loss in REQ-007)"
+      ],
+      "missing_rules": [
+        "The magnitude/value of corrosion applied to an enemy by a ranged_attack",
+        "Whether the attack that triggers a Rupture is processed before or after the Rupture damage is dealt",
+        "Whether the action that applies corrosion also triggers the first DoT tick"
+      ],
+      "conflicting_rules": [
+        "NON-GOALS states 'No enemy turns', but Mana Shield requires 'Melee damage' (typically from enemies) to deplete mana and trigger Rupture",
+        "GDD states Corrosion DoT deals damage to the enemy, while REQ-007 states Corrosion causes Hero HP loss"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'adjacent' for Rupture uses the same distance logic as 'attack' (Manhattan 1)",
+        "Assuming 'hero.corrosion' in the state JSON is a typo since GDD only describes enemy corrosion"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Since there are no enemy turns, how is the hero's mana depleted to trigger a Rupture?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does Corrosion affect the enemy (as per GDD) or the hero (as per REQ-007)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the base amount of Corrosion applied by a ranged_attack?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'adjacent' imply a Manhattan distance of 1?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The 'Balance Config' (multipliers for damage and rupture) is detailed in the GDD and Requirements but not mentioned in the Concept goal of a 'combat puzzle'. Is this configuration system intended for the player, or is it an out-of-scope developer tool?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "The Non-Goals state 'No... mana', yet the Concept and GDD explicitly require a 'Mana Shield' and 'mana management'. Should the Non-Goal be clarified to 'No enemy mana'?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "adjacent (Manhattan vs Chebyshev distance)",
+        "DoT magnitude (initial value is not defined)"
+      ],
+      "missing_rules": [
+        "Whether failed actions (e.g., moving into a wall) still trigger Corrosion DoT ticks/decay",
+        "Damage source for Mana Shield (who deals the melee damage to the hero if there are no enemy turns?)",
+        "Behavior of melee damage once mana is <= 0 (does it then target HP?)",
+        "Whether the enemy that triggers a Rupture is included in the 'all adjacent enemies' damage list"
+      ],
+      "conflicting_rules": [
+        "NON-GOALS states 'No enemy turns... or mana', but GDD defines a 'Mana Shield' and 'Hero mana'",
+        "GDD states Corrosion 'deals damage to the enemy', but REQ-007 calculates 'Hero HP loss (from... Corrosion)'"
+      ],
+      "underspecified_outputs": [
+        "Log format for Rupture events",
+        "Log format for Corrosion DoT ticks",
+        "Log format for entity deaths"
+      ],
+      "risky_assumptions": [
+        "Assuming 'adjacent' implies Manhattan distance 1",
+        "Assuming 'all enemies' for win condition refers to the current scenario only"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If there are no enemy turns or AI, how does the hero take the melee damage required to trigger a Mana Shield Rupture?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does Corrosion damage the enemy (per GDD) or the hero (per REQ-007)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the base damage value applied by a ranged attack's Corrosion DoT?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "adjacent enemies (inclusive or exclusive of the Rupture trigger)",
+      "DoT magnitude (starting value not defined)",
+      "conductive (whether the boolean check refers to the trigger's position or the victim's position)",
+      "isConductive (unclear if this refers to the tile the hero occupies or the tile the target enemy occupies)",
+      "tick (timing relative to the action: does it occur before or after the action's primary effect?)",
+      "corrosion",
+      "adjacent (4-way Manhattan vs 8-way Chebyshev)",
+      "corrosion (defined as enemy DoT in GDD, but listed as hero HP loss in REQ-007)",
+      "adjacent (Manhattan vs Chebyshev distance)",
+      "DoT magnitude (initial value is not defined)"
+    ],
+    "missing_rules": [
+      "The mechanism by which Hero mana is depleted, given that no enemy turns or AI exist to deal damage",
+      "The initial value of the Corrosion DoT when applied by a ranged attack",
+      "Whether failed actions (e.g., moving into a wall) count as 'hero actions' that trigger Corrosion DoT ticks",
+      "Order of operations: whether Corrosion DoT ticks occur before or after the hero's action resolves",
+      "Priority of Win/Lose conditions if the last enemy and the hero both reach 0 HP during the same action (e.g., Rupture triggering Resonant damage)",
+      "The mechanism for the hero to receive 'melee damage' to trigger the Mana Shield, given that enemy turns and AI are explicitly non-goals",
+      "Hero persistence (REQ-008) is not reflected in the state structure; because the hero object is nested inside each scenario, there is no global state to store current hero stats when transitioning between scenarios.",
+      "The Mana Shield rule (melee damage targets mana first) has no place to live in state as there are no incoming damage types or enemy attack events defined in the state/actions.",
+      "Damage formula for Corrosion DoT (how the DoT magnitude translates to HP loss)",
+      "Whether the action that applies Corrosion also triggers the first tick",
+      "The magnitude/value of corrosion applied to an enemy by a ranged_attack",
+      "Whether the attack that triggers a Rupture is processed before or after the Rupture damage is dealt",
+      "Whether the action that applies corrosion also triggers the first DoT tick",
+      "Whether failed actions (e.g., moving into a wall) still trigger Corrosion DoT ticks/decay",
+      "Damage source for Mana Shield (who deals the melee damage to the hero if there are no enemy turns?)",
+      "Behavior of melee damage once mana is <= 0 (does it then target HP?)",
+      "Whether the enemy that triggers a Rupture is included in the 'all adjacent enemies' damage list"
+    ],
+    "conflicting_rules": [
+      "GDD Rupture damage (hero.atk) vs Balance Config Rupture formula (floor(hero.atk * anomMult * ...))",
+      "REQ-007 (Hero HP loss from Corrosion) vs GDD (Corrosion applied to enemies)",
+      "Corrosion Target: GDD states DoT deals damage to the enemy, but REQ-007 lists Corrosion as a source of Hero HP loss.",
+      "Rupture damage is defined as 'hero.atk' in GDD Entities, but as 'floor(hero.atk * anomMult * ...)' in GDD Balance and REQ-005.",
+      "GDD defines Corrosion as a DoT dealing damage to enemies, but REQ-007 defines Corrosion as a source of Hero HP loss.",
+      "NON-GOALS states 'No enemy turns', but Mana Shield requires 'Melee damage' (typically from enemies) to deplete mana and trigger Rupture",
+      "GDD states Corrosion DoT deals damage to the enemy, while REQ-007 states Corrosion causes Hero HP loss",
+      "NON-GOALS states 'No enemy turns... or mana', but GDD defines a 'Mana Shield' and 'Hero mana'",
+      "GDD states Corrosion 'deals damage to the enemy', but REQ-007 calculates 'Hero HP loss (from... Corrosion)'"
+    ],
+    "underspecified_outputs": [
+      "Log format for failed actions (only success logs are defined)",
+      "The definition of the 'status' field in the CLI output (e.g., 'ACTIVE', 'WIN', 'LOSE')",
+      "Log format for Rupture events",
+      "Log format for Corrosion DoT ticks",
+      "Log format for entity deaths"
+    ],
+    "risky_assumptions": [
+      "Assuming 'GlassMult' and 'HardenedMod' in REQ-002 map to the x2 and -1 constants mentioned in the GDD",
+      "Assuming Rupture occurs on the hero's turn despite the shield being a defensive mechanic",
+      "Assumption that 'hero stats persist' between scenarios includes the current mana value",
+      "Assumption that hero.corrosion (stat) is the value applied to the enemy as corrosion_dot (state)",
+      "Wall collision logic is duplicated across GDD Actions, GDD Terrain, and REQ-001, risking specification drift.",
+      "Ranged attack distance constraints are duplicated in GDD Actions and REQ-003.",
+      "Rupture trigger conditions are duplicated in GDD Entities and REQ-004.",
+      "Corrosion DoT tick/decay logic is duplicated in GDD Entities and REQ-006.",
+      "Hero HP loss multiplier logic is duplicated in GDD Balance and REQ-007.",
+      "BalanceConfig default value logic is duplicated in GDD Balance and REQ-009.",
+      "Assuming 'adjacent' for Rupture uses the same distance logic as 'attack' (Manhattan 1)",
+      "Assuming 'hero.corrosion' in the state JSON is a typo since GDD only describes enemy corrosion",
+      "Assuming 'adjacent' implies Manhattan distance 1",
+      "Assuming 'all enemies' for win condition refers to the current scenario only"
+    ],
+    "BLOCKING_questions": [
+      "Who possesses the Mana Shield and how is it reduced? The state gives mana to the Hero, but the GDD implies it is a target for damage, yet there are no enemy turns to deal that damage.",
+      "What is the starting magnitude of the Corrosion DoT?",
+      "Does REQ-007 contain a typo regarding Hero HP loss from Corrosion, or is there a missing rule where the hero can be affected by their own DoT?",
+      "The Mana Shield rule describes how melee damage is handled, but Non-Goals state there are no enemy turns or AI. How does the hero take melee damage?",
+      "Should the hero object be moved to the root of the state to support the persistence required by REQ-008?",
+      "Does Corrosion damage the enemy (per GDD) or the hero (per REQ-007)?",
+      "What is the mathematical formula for calculating the damage dealt by a Corrosion tick?",
+      "Since logic is duplicated across the GDD and REQUIREMENTS sections, which section is the primary source of truth for implementation?",
+      "Does 'Corrosion' refer to a debuff applied to enemies, a property of the hero (as seen in the State object), or both?",
+      "Since there are no enemy turns, how is the hero's mana depleted to trigger a Rupture?",
+      "Does Corrosion affect the enemy (as per GDD) or the hero (as per REQ-007)?",
+      "What is the base amount of Corrosion applied by a ranged_attack?",
+      "The Non-Goals state 'No... mana', yet the Concept and GDD explicitly require a 'Mana Shield' and 'mana management'. Should the Non-Goal be clarified to 'No enemy mana'?",
+      "If there are no enemy turns or AI, how does the hero take the melee damage required to trigger a Mana Shield Rupture?",
+      "Does Corrosion damage the enemy (per GDD) or the hero (per REQ-007)?",
+      "What is the base damage value applied by a ranged attack's Corrosion DoT?"
+    ]
+  }
+}

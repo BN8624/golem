@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Assuming 'atkMult' applies to Corrosion damage since it's a hero-originated offensive effect.",
+    "Assuming the 'status' field in CLI output is one of: 'ACTIVE', 'VICTORY', 'DEFEAT'.",
+    "Assuming 'adjacent' always refers to Manhattan distance 1."
+  ]
+}

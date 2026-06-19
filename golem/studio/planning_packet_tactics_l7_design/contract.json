@@ -1,0 +1,85 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "hero": {
+        "hp": "number",
+        "mana": "number",
+        "atk": "number",
+        "corrosion": "number",
+        "pos": "[x, y]"
+      },
+      "route": {
+        "currentScenarioIdx": "number",
+        "scenarios": [
+          {
+            "id": "string",
+            "enemies": [
+              {
+                "id": "string",
+                "hp": "number",
+                "atk": "number",
+                "pos": "[x, y]",
+                "unit_type": "Hardened | Glass | Resonant",
+                "corrosion_dot": "number"
+              }
+            ],
+            "terrain": {
+              "walls": "[[x, y], ...]",
+              "conductive": "[[x, y], ...]"
+            }
+          }
+        ]
+      },
+      "balanceConfig": {
+        "atkMult": "number",
+        "recMult": "number",
+        "anomMult": "number"
+      },
+      "log": "string[]"
+    },
+    "rules": [
+      "Move: Fail if target in walls or out of bounds.",
+      "Melee Attack: 1. Deal damage: floor(floor(hero.atk * atkMult) * (Glass ? 2 : 1)) - (Hardened ? 1 : 0). 2. Hero receives Counter-Damage: floor(enemy.atk * recMult).",
+      "Mana Shield: Counter-Damage reduces mana first. If mana > 0 and then becomes <= 0, Rupture triggers.",
+      "Rupture Damage: floor(hero.atk * anomMult * (victim_on_conductive ? 2 : 1)) applied to all enemies at Manhattan distance 1 from Hero.",
+      "Resonant: If Rupture triggers, Hero takes floor(1 * recMult) HP damage.",
+      "Ranged Attack: Target must be Manhattan distance 2-3. Applies hero.corrosion to enemy.corrosion_dot. Deals floor(hero.atk * atkMult) damage.",
+      "Corrosion Loop: For each action: For each enemy: Deal floor(corrosion_dot * atkMult) damage -> Subtract 1 from corrosion_dot.",
+      "Scenario Transition: When all enemies die: hero.pos = [0,0], currentScenarioIdx++, load next scenario. Persistence: hero stats (hp, mana, atk, corrosion) carry over.",
+      "Win/Lose: Win if all enemies in final scenario destroyed. Lose if hero.hp <= 0."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ],
+        "description": "CLI entry point handling --scenario flag and action loop."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "processAction",
+          "GameState"
+        ],
+        "imports": [
+          "src/state.js"
+        ],
+        "description": "Core game logic, rule enforcement, and state transitions."
+      },
+      {
+        "path": "src/state.js",
+        "exports": [
+          "initialState"
+        ],
+        "imports": [],
+        "description": "State definition and helper functions for state mutation."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+The player controls a single hero navigating a sequence of tactical grid battles. The hero performs a series of deterministic actions (move, attack, ranged attack) to eliminate all enemies in a scenario to progress through a route. The game is a "combat puzzle" where success depends on positioning, mana management for shield ruptures, and managing corrosion DoT.
