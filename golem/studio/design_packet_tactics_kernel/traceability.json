@@ -1,0 +1,107 @@
+{
+  "REQ-01": {
+    "text": "CLI argument --scenario N selects the hardcoded dataset.",
+    "design_modules": [
+      "main.js",
+      "src/scenarios.js"
+    ],
+    "exports": [
+      "getScenario"
+    ],
+    "tests": [
+      "SCN-001"
+    ],
+    "status": "covered"
+  },
+  "REQ-02": {
+    "text": "turn = turn + 1 after every action attempt.",
+    "design_modules": [
+      "src/game_logic.js",
+      "src/engine.js"
+    ],
+    "exports": [
+      "updateState"
+    ],
+    "tests": [
+      "SCN-002"
+    ],
+    "status": "covered"
+  },
+  "REQ-03": {
+    "text": "Combat is simultaneous mutual damage.",
+    "design_modules": [
+      "src/game_logic.js"
+    ],
+    "exports": [
+      "applyAction"
+    ],
+    "tests": [
+      "SCN-003"
+    ],
+    "status": "covered"
+  },
+  "REQ-04": {
+    "text": "HP can be negative.",
+    "design_modules": [
+      "src/game_logic.js"
+    ],
+    "exports": [
+      "updateState"
+    ],
+    "tests": [
+      "SCN-003"
+    ],
+    "status": "covered"
+  },
+  "REQ-05": {
+    "text": "Win/Lose checks occur strictly post-action.",
+    "design_modules": [
+      "src/engine.js",
+      "src/game_logic.js"
+    ],
+    "exports": [
+      "checkGameState"
+    ],
+    "tests": [
+      "SCN-004"
+    ],
+    "status": "covered"
+  },
+  "REQ-06": {
+    "text": "If both hero.hp <= 0 and all enemies.hp <= 0, status = DEFEAT.",
+    "design_modules": [
+      "src/game_logic.js"
+    ],
+    "exports": [
+      "checkGameState"
+    ],
+    "tests": [
+      "SCN-004"
+    ],
+    "status": "covered"
+  },
+  "REQ-07": {
+    "text": "Initial enemy count 0 results in FINISHED, not VICTORY.",
+    "design_modules": [
+      "src/game_logic.js"
+    ],
+    "exports": [
+      "checkGameState"
+    ],
+    "tests": [
+      "SCN-001"
+    ],
+    "status": "covered"
+  },
+  "REQ-08": {
+    "text": "Output is a single JSON line with: status, turn, hero_hp, hero_pos, enemies (id, hp, pos).",
+    "design_modules": [
+      "main.js"
+    ],
+    "exports": [],
+    "tests": [
+      "SCN-001"
+    ],
+    "status": "covered"
+  }
+}

@@ -1,23 +1,20 @@
 # 08_questions — 질문 처리 (§6 분류)
 
-## 해소된 결정(decisions) 11
-- ATTACK command must include a target Enemy ID (e.g., 'ATTACK E1').
-- Target selection for ATTACK is explicit via ID; if the specified ID is not adjacent, the action fails.
-- A Turn Cycle consists of: 1. Player Action, 2. Enemy Actions (processed in ascending order of Enemy ID), 3. Turn Increment.
-- Enemy Action Priority: If adjacent to Hero, the enemy MUST ATTACK. If not adjacent, the enemy MUST MOVE toward the Hero.
-- Deterministic Enemy Movement: Enemies prioritize reducing X-distance first, then Y-distance. If the target tile is occupied by another enemy, the enemy stays put for that turn.
-- Collision: Only one entity may occupy a tile. The Hero cannot MOVE into a tile occupied by an enemy.
-- Invalid Input: Commands that are not 'MOVE [N/S/E/W]' or 'ATTACK [ID]' result in a log 'Invalid command' and the player's turn is consumed.
-- Invalid Direction: MOVE commands with directions other than N, S, E, W result in 'Invalid direction' and the turn is consumed.
-- Win/Lose Priority: If both conditions are met in the same cycle (impossible by current sequence, but defined for safety), 'LOSE' takes priority.
-- Damage Calculation: Damage is exactly equal to the attacker's attackPower; no modifiers or randomness.
-- Enemy Attack Trigger: Enemies attack during their phase if the Hero is in an adjacent orthogonal tile.
+## 해소된 결정(decisions) 10
+- Direction mapping: UP [0, -1], DOWN [0, 1], LEFT [-1, 0], RIGHT [1, 0].
+- Grid boundaries: The grid is infinite; no boundaries are enforced, removing MOVE failure cases related to bounds.
+- Collision: The hero can occupy the same coordinate as an enemy (no collision).
+- Enemy Existence: An enemy 'exists' if they are present in the scenario list, but they are only 'targetable' for ATTACK and capable of dealing damage if hp > 0.
+- Combat Logic: A mutual damage exchange occurs only if the target enemy's hp > 0. If the target is already dead (hp <= 0), the ATTACK action is a failure.
+- Termination: The action loop terminates immediately upon reaching a terminal state (VICTORY or DEFEAT). Remaining actions in the sequence are not processed and the turn counter does not increment further.
+- Failure Resolution: On a failed action (e.g., ATTACKing an empty cell or a dead enemy), no state changes occur to positions or HP, but the turn counter increments by 1 per REQ-002.
+- Invalid Input: If an invalid --scenario N is provided, the program must exit with process.exit(1) and no output.
+- Scenario Definition: A 'scenario' comprises the initial state (hero attributes, enemy attributes) and the ordered list of actions to execute.
+- Log Handling: Internal logs are maintained during execution but are strictly excluded from the final JSON output as per REQ-008.
 
-## ASSUMED(가정 고정) 3
-- Enemies do not attack the Hero during the Player's action phase, only during their own turn phase.
-- The 'Scenario N' argument in the CLI maps to a set of hardcoded initial states for testing.
-- The coordinate system is (x, y) where x is horizontal (E/W) and y is vertical (N/S).
+## ASSUMED(가정 고정) 2
+- The grid is infinite in all directions (no boundary checks needed).
+- The output JSON must strictly match the keys requested in REQ-008, ignoring internal log state.
 
-## DEFERRED(후속 미룸) 2
-- Support for multiple enemy types with different movement patterns.
-- Implementation of a persistent save/load state system.
+## DEFERRED(후속 미룸) 1
+- Loading scenarios from external JSON files instead of hardcoded JS objects.

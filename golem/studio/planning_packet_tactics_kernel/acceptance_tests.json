@@ -1,20 +1,26 @@
 [
   {
     "id": "SCN-001",
-    "setup": "Hero(0,0, hp:20, atk:5), Enemy(0,1, hp:5, atk:3), gridSize:5",
-    "input": "ATTACK E1",
-    "expect": "status: 'WIN', log contains 'Hero attacked Enemy E1 for 5 damage.'"
+    "setup": "Scenario 1: Hero[100hp, 20atk, [0,0]], Enemy[50hp, 10atk, [1,0]], Actions: [ATTACK RIGHT, ATTACK RIGHT, ATTACK RIGHT]",
+    "input": "--scenario 1",
+    "expect": "{\"status\":\"VICTORY\",\"turn\":3,\"hero_hp\":70,\"hero_pos\":[0,0],\"enemies\":[{\"id\":\"E1\",\"hp\":-10,\"pos\":[1,0]}]}"
   },
   {
     "id": "SCN-002",
-    "setup": "Hero(0,0, hp:2, atk:5), Enemy(0,1, hp:10, atk:3), gridSize:5",
-    "input": "MOVE E",
-    "expect": "status: 'LOSE', log contains 'Enemy E1 attacked Hero for 3 damage.'"
+    "setup": "Scenario 2: Hero[20hp, 10atk, [0,0]], Enemy[100hp, 30atk, [1,0]], Actions: [ATTACK RIGHT]",
+    "input": "--scenario 2",
+    "expect": "{\"status\":\"DEFEAT\",\"turn\":1,\"hero_hp\":-10,\"hero_pos\":[0,0],\"enemies\":[{\"id\":\"E1\",\"hp\":90,\"pos\":[1,0]}]}"
   },
   {
     "id": "SCN-003",
-    "setup": "Hero(0,0, hp:20, atk:5), Enemy(1,1, hp:10, atk:3), gridSize:5",
-    "input": "MOVE N",
-    "expect": "player.y: 1, Enemy E1 moved to (1,1) [Stayed put because X-dist was 1 but (1,0) was empty? No, X-axis first: Enemy moves to (0,1) if Hero at (0,1)], log contains 'Hero moved to [0, 1].'"
+    "setup": "Scenario 3: Hero[100hp, 20atk, [0,0]], Enemy[100hp, 10atk, [1,0]], Actions: [MOVE UP]",
+    "input": "--scenario 3",
+    "expect": "{\"status\":\"FINISHED\",\"turn\":1,\"hero_hp\":100,\"hero_pos\":[0,-1],\"enemies\":[{\"id\":\"E1\",\"hp\":100,\"pos\":[1,0]}]}"
+  },
+  {
+    "id": "SCN-004",
+    "setup": "Scenario 4: Hero[100hp, 20atk, [0,0]], Enemies: [], Actions: [MOVE RIGHT]",
+    "input": "--scenario 4",
+    "expect": "{\"status\":\"FINISHED\",\"turn\":1,\"hero_hp\":100,\"hero_pos\":[1,0],\"enemies\":[]}"
   }
 ]

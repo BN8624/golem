@@ -2,207 +2,100 @@
   "reviews": [
     {
       "ambiguous_terms": [
-        "moves toward Hero",
-        "immediately"
+        "Up",
+        "Down",
+        "Left",
+        "Right"
       ],
       "missing_rules": [
-        "Target selection logic for ATTACK when multiple enemies are adjacent",
-        "Enemy attack trigger and execution logic",
-        "Turn sequence/order (e.g., Player action then Enemy action)",
-        "Tie-breaking priority for Win/Lose if both conditions are met in the same turn cycle"
+        "Coordinate mapping for directions (e.g., does Up increment or decrement Y?)",
+        "State resolution for 'Failure Case' (e.g., does the unit remain stationary on a failed MOVE?)"
       ],
       "conflicting_rules": [],
-      "underspecified_outputs": [
-        "ATTACK log requires an Enemy [ID], but the action input does not provide a way to specify which ID is being targeted"
-      ],
+      "underspecified_outputs": [],
       "risky_assumptions": [
-        "Enemy movement occurs after the player's turn",
-        "Enemies attack automatically upon becoming adjacent"
+        "Grid boundaries are non-existent/infinite as they are mentioned as 'if defined' but never defined."
       ],
       "questions_for_lead": [
         {
-          "q": "How is the target identified for the ATTACK action if multiple enemies are adjacent?",
+          "q": "How are directions (Up, Down, Left, Right) mapped to [x, y] coordinate changes?",
           "class": "BLOCKING"
         },
         {
-          "q": "What is the exact sequence of a game turn, and what are the specific conditions/timing for enemy attacks?",
+          "q": "In a 'Failure Case', is it correct to assume that no state changes occur except for the turn increment defined in REQ-002?",
           "class": "BLOCKING"
         },
         {
-          "q": "When an enemy 'moves toward Hero', which axis (X or Y) is prioritized if the Hero is diagonal to the enemy?",
+          "q": "Are there specific grid boundaries to enforce, or is the coordinate system infinite?",
           "class": "ASSUMED"
         }
       ]
     },
     {
       "ambiguous_terms": [
-        "distance-closing algorithm"
+        "grid boundaries (if defined)"
       ],
       "missing_rules": [
-        "Movement into a tile occupied by an enemy",
-        "Movement into a tile occupied by another entity (Enemy to Enemy)",
-        "Target selection when multiple enemies are adjacent during an ATTACK action",
-        "Handling of invalid input commands (non-MOVE/ATTACK)",
-        "Handling of invalid directions (non-N/S/E/W)",
-        "Enemy turn trigger and action priority (move vs attack)",
-        "Collision handling when an enemy moves into the Hero's tile"
+        "Behavior when a MOVE action fails (does hero_pos remain unchanged?)",
+        "Behavior when an ATTACK action fails (what is the log output?)",
+        "Handling of an invalid scenario ID provided via --scenario N",
+        "Handling of an empty actions list within a scenario",
+        "Interaction between MOVE and enemy positions (is collision allowed?)",
+        "Whether dead enemies (hp <= 0) can still be attacked or if they block movement",
+        "Whether dead enemies still deal damage during a mutual attack"
       ],
       "conflicting_rules": [],
       "underspecified_outputs": [
-        "Log messages for failed MOVE actions",
-        "Log messages for failed ATTACK actions"
+        "Log message content for failed MOVE or ATTACK actions"
       ],
       "risky_assumptions": [
-        "Assumption that only one entity can occupy a tile at a time"
+        "Assuming the grid is infinite if no boundaries are provided in the scenario"
       ],
       "questions_for_lead": [
         {
-          "q": "What happens when a player attempts to MOVE into a tile currently occupied by an enemy?",
+          "q": "What is the expected behavior/exit code when an invalid scenario ID is passed?",
           "class": "BLOCKING"
         },
         {
-          "q": "If multiple enemies are adjacent to the Hero, how is the target of an ATTACK command determined?",
-          "class": "BLOCKING"
+          "q": "Are there specific grid boundaries to implement, or should the system assume an infinite coordinate plane?",
+          "class": "ASSUMED"
         },
         {
-          "q": "What is the precise turn sequence (e.g., Player Action -> Enemy Action -> Turn Increment)?",
-          "class": "BLOCKING"
-        }
-      ]
-    },
-    {
-      "ambiguous_terms": [],
-      "missing_rules": [
-        "Turn phase/active actor (who moves next) is not represented in the state object."
-      ],
-      "conflicting_rules": [],
-      "underspecified_outputs": [],
-      "risky_assumptions": [
-        "Assuming all enemies share the same hard-coded movement pattern since there is no pattern identifier or logic reference in the state object."
-      ],
-      "questions_for_lead": [
-        {
-          "q": "Should the state object track the current active phase (e.g., 'player_turn' vs 'enemy_turn') to manage the turn-based sequence?",
-          "class": "BLOCKING"
-        }
-      ]
-    },
-    {
-      "ambiguous_terms": [],
-      "missing_rules": [],
-      "conflicting_rules": [],
-      "underspecified_outputs": [],
-      "risky_assumptions": [
-        "REQ-001 is an implementation constraint that cannot be verified through observable output state or logs alone (black-box testing)."
-      ],
-      "questions_for_lead": [
-        {
-          "q": "How should the absence of non-deterministic logic (REQ-001) be verified if it has no distinct observable output indicator?",
-          "class": "BLOCKING"
-        }
-      ]
-    },
-    {
-      "ambiguous_terms": [
-        "fixed movement pattern"
-      ],
-      "missing_rules": [
-        "Target selection logic for ATTACK when multiple enemies are adjacent",
-        "Enemy turn sequence and attack trigger conditions"
-      ],
-      "conflicting_rules": [],
-      "underspecified_outputs": [],
-      "risky_assumptions": [
-        "Assuming 'distance-closing algorithm' is simple enough to not require pathfinding (A*)"
-      ],
-      "questions_for_lead": [
-        {
-          "q": "Does 'fixed movement pattern' mean a hardcoded sequence of moves or a simple distance-closing logic? (The terms 'fixed' and 'moves toward Hero' are contradictory).",
-          "class": "BLOCKING"
-        },
-        {
-          "q": "How should the game resolve the ATTACK target when multiple enemies are adjacent to avoid the need for an overly complex target selection system?",
-          "class": "BLOCKING"
-        },
-        {
-          "q": "Is the enemy turn a simple 'move then attack' sequence following the player's turn, or is a more complex turn manager required?",
-          "class": "BLOCKING"
-        }
-      ]
-    },
-    {
-      "ambiguous_terms": [],
-      "missing_rules": [],
-      "conflicting_rules": [],
-      "underspecified_outputs": [],
-      "risky_assumptions": [
-        "REQ-001 duplicates Concept/Non-Goals (determinism)",
-        "REQ-002 duplicates Concept/GDD MOVE (movement restrictions)",
-        "REQ-003 duplicates GDD MOVE failure (boundary checks)",
-        "REQ-004 duplicates GDD ATTACK (orthogonal adjacency)",
-        "REQ-005 duplicates GDD ATTACK (fixed damage value)",
-        "REQ-006 duplicates Concept/GDD Win Condition",
-        "REQ-007 duplicates Concept/GDD Lose Condition"
-      ],
-      "questions_for_lead": [
-        {
-          "q": "The Requirements section (REQ-001 through REQ-007) almost entirely duplicates the GDD and Concept; should these be consolidated to prevent specification divergence?",
-          "class": "DEFERRED"
-        }
-      ]
-    },
-    {
-      "ambiguous_terms": [
-        "target",
-        "player"
-      ],
-      "missing_rules": [],
-      "conflicting_rules": [],
-      "underspecified_outputs": [],
-      "risky_assumptions": [],
-      "questions_for_lead": [
-        {
-          "q": "The term 'target' is used to refer to a coordinate (MOVE) and an enemy entity (ATTACK); should these be distinct terms (e.g., 'target tile' vs 'target enemy')?",
-          "class": "BLOCKING"
-        },
-        {
-          "q": "The term 'player' refers to the Hero entity in the STATE but refers to the human user in the REQUIREMENTS; should the state key be renamed to 'hero' for consistency?",
+          "q": "Should enemies be 'removed' from the grid once hp <= 0, or do they remain as obstacles/targets?",
           "class": "ASSUMED"
         }
       ]
     },
     {
-      "ambiguous_terms": [
-        "distance-closing algorithm"
-      ],
-      "missing_rules": [
-        "Turn sequence/order (e.g., Hero action followed by Enemy actions)",
-        "Collision rules (can multiple entities occupy the same tile?)",
-        "Enemy action priority (does an enemy attack if adjacent, or move first?)",
-        "Target selection for ATTACK when multiple enemies are adjacent",
-        "Enemy movement tie-breaking (which axis is prioritized to maintain determinism?)"
-      ],
+      "ambiguous_terms": [],
+      "missing_rules": [],
       "conflicting_rules": [],
       "underspecified_outputs": [],
       "risky_assumptions": [
-        "Assumption that 'turn-based' implies a specific sequence of actor phases",
-        "Assumption that a generic 'ATTACK' command is sufficient without a target ID"
+        "The GDD mentions 'grid boundaries (if defined)' as a failure case for MOVE, but the state object lacks any grid dimensions (e.g., width, height) to enforce this rule."
       ],
       "questions_for_lead": [
         {
-          "q": "What is the exact turn order (e.g., Hero Action -> All Enemies Move -> All Enemies Attack)?",
+          "q": "Should the grid have defined boundaries? If so, where should the boundary constraints be stored in the state object?",
           "class": "BLOCKING"
-        },
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "GDD specifies log outputs for MOVE and ATTACK, but REQ-008 restricts the final output to a JSON object that excludes logs."
+      ],
+      "underspecified_outputs": [
+        "Log messages defined in the GDD are unobservable as they are not included in the final output schema required by REQ-008."
+      ],
+      "risky_assumptions": [
+        "The MOVE failure case relies on grid boundaries that are mentioned as '(if defined)' but are never defined, making this rule untestable."
+      ],
+      "questions_for_lead": [
         {
-          "q": "Are tiles exclusive to one entity, or can the Hero and Enemies overlap?",
-          "class": "BLOCKING"
-        },
-        {
-          "q": "If multiple enemies are adjacent during an ATTACK command, how is the target determined?",
-          "class": "BLOCKING"
-        },
-        {
-          "q": "To ensure determinism (REQ-001), what is the specific priority for enemy movement (e.g., move X then Y)?",
+          "q": "Are grid boundaries intended to be implemented? If so, what are the coordinate limits?",
           "class": "BLOCKING"
         }
       ]
@@ -216,123 +109,172 @@
       "questions_for_lead": []
     },
     {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Mutual damage logic is defined in the Concept, GDD (ATTACK), and REQ-003; should these be consolidated to avoid redundancy?",
+          "class": "DEFERRED"
+        },
+        {
+          "q": "Defeat priority over victory is specified in both the GDD and REQ-006; should these be consolidated?",
+          "class": "DEFERRED"
+        },
+        {
+          "q": "The timing for checking terminal status is defined in both the GDD and REQ-005; should these be consolidated?",
+          "class": "DEFERRED"
+        },
+        {
+          "q": "The rule for zero initial enemies resulting in FINISHED is duplicated in the GDD and REQ-007; should these be consolidated?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
       "ambiguous_terms": [
-        "distance-closing algorithm"
+        "scenario"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Does 'scenario' refer to the entire level configuration (initial enemies, hero position, and actions) or specifically to the sequence of actions as defined in the State JSON?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "grid boundaries"
       ],
       "missing_rules": [
-        "Turn order/sequence (who acts first, when turn increments)",
-        "Enemy attack trigger/logic (when and how enemies deal damage)",
-        "Target selection for ATTACK when multiple enemies are adjacent",
-        "Tie-breaking logic for enemy movement (e.g., X axis vs Y axis priority) to ensure determinism"
+        "Rule for whether the action sequence loop terminates immediately upon reaching a terminal state or continues to process remaining actions as 'failed' attempts."
       ],
       "conflicting_rules": [],
-      "underspecified_outputs": [
-        "Log format for enemy movement and enemy attacks"
-      ],
+      "underspecified_outputs": [],
       "risky_assumptions": [
-        "Assuming 'adjacent' implies orthogonal only (specified in REQs but not consistently in GDD entities)"
+        "Mapping of directions (Up, Down, Left, Right) to specific [x, y] coordinate changes."
       ],
       "questions_for_lead": [
         {
-          "q": "What is the exact sequence of a turn (e.g., Player Action -> Enemy Action -> Turn Increment)?",
+          "q": "If a terminal state (DEFEAT/VICTORY) is reached at turn 2 of a 5-action sequence, do turns 3-5 still execute as 'failed attempts' to increment the turn counter per REQ-002, or does the program stop immediately?",
           "class": "BLOCKING"
         },
         {
-          "q": "How should the system handle ATTACK if multiple enemies are within range? Does the command need a target ID?",
+          "q": "Are there specific grid boundaries to enforce, or should the grid be treated as infinite?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "GDD and State define a logging system, but REQ-008 restricts final output to a specific set of fields that excludes logs."
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The logging system is defined in the GDD and State but explicitly excluded from the final output in REQ-008; should it be removed entirely to avoid out-of-scope implementation?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "exists (referring to enemies: does a unit with hp <= 0 still 'exist' on the grid?)"
+      ],
+      "missing_rules": [
+        "Grid boundary definitions (GDD mentions 'if defined', but provides no values or source)",
+        "Collision rules: can the hero move into a cell occupied by an enemy?",
+        "Interaction with dead enemies: can a dead enemy (hp <= 0) be targeted by an ATTACK action?",
+        "Damage from dead enemies: does a mutual damage exchange occur if the target enemy's hp is already <= 0?"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "The specific structure of the 'enemies' field in the final JSON output (e.g., array of objects vs. map)."
+      ],
+      "risky_assumptions": [
+        "Design may assume an infinite grid if boundaries are not provided in the scenario data.",
+        "Design may assume 'exists' implies 'hp > 0' for combat logic."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Do enemies with hp <= 0 still occupy a grid cell and block the hero's movement?",
           "class": "BLOCKING"
         },
         {
-          "q": "To maintain determinism, what is the movement priority for enemies when both X and Y coordinates need to change to reach the Hero?",
+          "q": "Should the 'exists' check for ATTACK include enemies that are already dead (hp <= 0)?",
           "class": "BLOCKING"
         },
         {
-          "q": "Under what specific condition does an enemy execute an attack against the Hero?",
-          "class": "BLOCKING"
+          "q": "Are grid boundaries provided as part of the scenario JSON, or are they global constants?",
+          "class": "ASSUMED"
         }
       ]
     }
   ],
   "aggregated": {
     "ambiguous_terms": [
-      "moves toward Hero",
-      "immediately",
-      "distance-closing algorithm",
-      "fixed movement pattern",
-      "target",
-      "player",
-      "distance-closing algorithm",
-      "distance-closing algorithm"
+      "Up",
+      "Down",
+      "Left",
+      "Right",
+      "grid boundaries (if defined)",
+      "scenario",
+      "grid boundaries",
+      "exists (referring to enemies: does a unit with hp <= 0 still 'exist' on the grid?)"
     ],
     "missing_rules": [
-      "Target selection logic for ATTACK when multiple enemies are adjacent",
-      "Enemy attack trigger and execution logic",
-      "Turn sequence/order (e.g., Player action then Enemy action)",
-      "Tie-breaking priority for Win/Lose if both conditions are met in the same turn cycle",
-      "Movement into a tile occupied by an enemy",
-      "Movement into a tile occupied by another entity (Enemy to Enemy)",
-      "Target selection when multiple enemies are adjacent during an ATTACK action",
-      "Handling of invalid input commands (non-MOVE/ATTACK)",
-      "Handling of invalid directions (non-N/S/E/W)",
-      "Enemy turn trigger and action priority (move vs attack)",
-      "Collision handling when an enemy moves into the Hero's tile",
-      "Turn phase/active actor (who moves next) is not represented in the state object.",
-      "Target selection logic for ATTACK when multiple enemies are adjacent",
-      "Enemy turn sequence and attack trigger conditions",
-      "Turn sequence/order (e.g., Hero action followed by Enemy actions)",
-      "Collision rules (can multiple entities occupy the same tile?)",
-      "Enemy action priority (does an enemy attack if adjacent, or move first?)",
-      "Target selection for ATTACK when multiple enemies are adjacent",
-      "Enemy movement tie-breaking (which axis is prioritized to maintain determinism?)",
-      "Turn order/sequence (who acts first, when turn increments)",
-      "Enemy attack trigger/logic (when and how enemies deal damage)",
-      "Target selection for ATTACK when multiple enemies are adjacent",
-      "Tie-breaking logic for enemy movement (e.g., X axis vs Y axis priority) to ensure determinism"
+      "Coordinate mapping for directions (e.g., does Up increment or decrement Y?)",
+      "State resolution for 'Failure Case' (e.g., does the unit remain stationary on a failed MOVE?)",
+      "Behavior when a MOVE action fails (does hero_pos remain unchanged?)",
+      "Behavior when an ATTACK action fails (what is the log output?)",
+      "Handling of an invalid scenario ID provided via --scenario N",
+      "Handling of an empty actions list within a scenario",
+      "Interaction between MOVE and enemy positions (is collision allowed?)",
+      "Whether dead enemies (hp <= 0) can still be attacked or if they block movement",
+      "Whether dead enemies still deal damage during a mutual attack",
+      "Rule for whether the action sequence loop terminates immediately upon reaching a terminal state or continues to process remaining actions as 'failed' attempts.",
+      "Grid boundary definitions (GDD mentions 'if defined', but provides no values or source)",
+      "Collision rules: can the hero move into a cell occupied by an enemy?",
+      "Interaction with dead enemies: can a dead enemy (hp <= 0) be targeted by an ATTACK action?",
+      "Damage from dead enemies: does a mutual damage exchange occur if the target enemy's hp is already <= 0?"
     ],
-    "conflicting_rules": [],
+    "conflicting_rules": [
+      "GDD specifies log outputs for MOVE and ATTACK, but REQ-008 restricts the final output to a JSON object that excludes logs.",
+      "GDD and State define a logging system, but REQ-008 restricts final output to a specific set of fields that excludes logs."
+    ],
     "underspecified_outputs": [
-      "ATTACK log requires an Enemy [ID], but the action input does not provide a way to specify which ID is being targeted",
-      "Log messages for failed MOVE actions",
-      "Log messages for failed ATTACK actions",
-      "Log format for enemy movement and enemy attacks"
+      "Log message content for failed MOVE or ATTACK actions",
+      "Log messages defined in the GDD are unobservable as they are not included in the final output schema required by REQ-008.",
+      "The specific structure of the 'enemies' field in the final JSON output (e.g., array of objects vs. map)."
     ],
     "risky_assumptions": [
-      "Enemy movement occurs after the player's turn",
-      "Enemies attack automatically upon becoming adjacent",
-      "Assumption that only one entity can occupy a tile at a time",
-      "Assuming all enemies share the same hard-coded movement pattern since there is no pattern identifier or logic reference in the state object.",
-      "REQ-001 is an implementation constraint that cannot be verified through observable output state or logs alone (black-box testing).",
-      "Assuming 'distance-closing algorithm' is simple enough to not require pathfinding (A*)",
-      "REQ-001 duplicates Concept/Non-Goals (determinism)",
-      "REQ-002 duplicates Concept/GDD MOVE (movement restrictions)",
-      "REQ-003 duplicates GDD MOVE failure (boundary checks)",
-      "REQ-004 duplicates GDD ATTACK (orthogonal adjacency)",
-      "REQ-005 duplicates GDD ATTACK (fixed damage value)",
-      "REQ-006 duplicates Concept/GDD Win Condition",
-      "REQ-007 duplicates Concept/GDD Lose Condition",
-      "Assumption that 'turn-based' implies a specific sequence of actor phases",
-      "Assumption that a generic 'ATTACK' command is sufficient without a target ID",
-      "Assuming 'adjacent' implies orthogonal only (specified in REQs but not consistently in GDD entities)"
+      "Grid boundaries are non-existent/infinite as they are mentioned as 'if defined' but never defined.",
+      "Assuming the grid is infinite if no boundaries are provided in the scenario",
+      "The GDD mentions 'grid boundaries (if defined)' as a failure case for MOVE, but the state object lacks any grid dimensions (e.g., width, height) to enforce this rule.",
+      "The MOVE failure case relies on grid boundaries that are mentioned as '(if defined)' but are never defined, making this rule untestable.",
+      "Mapping of directions (Up, Down, Left, Right) to specific [x, y] coordinate changes.",
+      "Design may assume an infinite grid if boundaries are not provided in the scenario data.",
+      "Design may assume 'exists' implies 'hp > 0' for combat logic."
     ],
     "BLOCKING_questions": [
-      "How is the target identified for the ATTACK action if multiple enemies are adjacent?",
-      "What is the exact sequence of a game turn, and what are the specific conditions/timing for enemy attacks?",
-      "What happens when a player attempts to MOVE into a tile currently occupied by an enemy?",
-      "If multiple enemies are adjacent to the Hero, how is the target of an ATTACK command determined?",
-      "What is the precise turn sequence (e.g., Player Action -> Enemy Action -> Turn Increment)?",
-      "Should the state object track the current active phase (e.g., 'player_turn' vs 'enemy_turn') to manage the turn-based sequence?",
-      "How should the absence of non-deterministic logic (REQ-001) be verified if it has no distinct observable output indicator?",
-      "Does 'fixed movement pattern' mean a hardcoded sequence of moves or a simple distance-closing logic? (The terms 'fixed' and 'moves toward Hero' are contradictory).",
-      "How should the game resolve the ATTACK target when multiple enemies are adjacent to avoid the need for an overly complex target selection system?",
-      "Is the enemy turn a simple 'move then attack' sequence following the player's turn, or is a more complex turn manager required?",
-      "The term 'target' is used to refer to a coordinate (MOVE) and an enemy entity (ATTACK); should these be distinct terms (e.g., 'target tile' vs 'target enemy')?",
-      "What is the exact turn order (e.g., Hero Action -> All Enemies Move -> All Enemies Attack)?",
-      "Are tiles exclusive to one entity, or can the Hero and Enemies overlap?",
-      "If multiple enemies are adjacent during an ATTACK command, how is the target determined?",
-      "To ensure determinism (REQ-001), what is the specific priority for enemy movement (e.g., move X then Y)?",
-      "What is the exact sequence of a turn (e.g., Player Action -> Enemy Action -> Turn Increment)?",
-      "How should the system handle ATTACK if multiple enemies are within range? Does the command need a target ID?",
-      "To maintain determinism, what is the movement priority for enemies when both X and Y coordinates need to change to reach the Hero?",
-      "Under what specific condition does an enemy execute an attack against the Hero?"
+      "How are directions (Up, Down, Left, Right) mapped to [x, y] coordinate changes?",
+      "In a 'Failure Case', is it correct to assume that no state changes occur except for the turn increment defined in REQ-002?",
+      "What is the expected behavior/exit code when an invalid scenario ID is passed?",
+      "Should the grid have defined boundaries? If so, where should the boundary constraints be stored in the state object?",
+      "Are grid boundaries intended to be implemented? If so, what are the coordinate limits?",
+      "Does 'scenario' refer to the entire level configuration (initial enemies, hero position, and actions) or specifically to the sequence of actions as defined in the State JSON?",
+      "If a terminal state (DEFEAT/VICTORY) is reached at turn 2 of a 5-action sequence, do turns 3-5 still execute as 'failed attempts' to increment the turn counter per REQ-002, or does the program stop immediately?",
+      "Do enemies with hp <= 0 still occupy a grid cell and block the hero's movement?",
+      "Should the 'exists' check for ATTACK include enemies that are already dead (hp <= 0)?"
     ]
   }
 }
