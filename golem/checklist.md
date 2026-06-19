@@ -274,6 +274,10 @@ P1 (다음 실험 전):
 - [x] **장르 결정** — IF 취향 아님 → 전술 SRPG. 정사각 상하좌우 2D부터(검증·이미지추출·고도렌더 floor 정렬), 쿼터뷰/iso 나중. 비주얼=에셋팩+이미지→타일맵(결정CV·레이아웃만)+고도. 가챠=시드RNG로 검증가능.
 - [x] **(키0) 파이프라인 plumbing 점검** — `run_keyless.py` ALL PASS(compileall·replay·레버4·게이트#2·FROZEN#1).
 - [x] **(★키) 전술 커널 planning 첫 런 → OPEN** — `planning.py --synthesize --idea "…전술 그리드…영웅1·인접공격·처치=승리·결정적" --out planning_packet_tactics_kernel`. 골렘 설계 양호(BLOCKING 19→흡수 16: 결정11·가정3·보류2, 턴사이클·적AI·결정이동·충돌·데미지). FROZEN 못 박음.
-- [x] **(키0) 하네스 fix 완료** — `planning.py:262` n_block을 `_dedup`(A/B/C와 동일 토큰 Jaccard)로 distinct 카운트. STATUS에 "원본 N→distinct M" 병기. `_freeze_blocking_keyless.py`에 중복 회귀 4건 추가. 실제 패킷 재평가: 원본 19→distinct 16, 흡수 16≥16→FROZEN 가능. run_keyless ALL PASS. (synthesis가 unresolved 명시하는 더 견고한 버전은 ★키 백로그.)
-- [ ] **(★키) planning 재런 → FROZEN 확인 → `design.py`** — 골렘이 전술 커널 모듈 분해. 단계마다 끊어 검토.
-- [ ] (이후) specqa → build로 커널 산출 → 카드 누적(변칙검술→사거리→지형→유닛→루트).
+- [x] **(키0) 하네스 fix #1 — planning FROZEN 게이트(커밋 1f223f8)** — `planning.py:262` n_block을 `_dedup`로 distinct 카운트. 중복 BLOCKING 분모 인플레 차단. `_freeze_blocking_keyless.py` 회귀 4건. run_keyless ALL PASS.
+- [x] **(★키) 전술 커널 풀 파이프라인 — 골렘이 설계·빌드** — planning(FROZEN)→design(4모듈 main/engine/actions/state, validator PASS)→specqa→build. **사다리 합의 0.35→0.846**: 1차 0.35(출력계약 미고정, G33 재현) → 출력계약+공허승리 핀 → 0.846(게이트 6/11). 패킷=`*_tactics_kernel`, 빌드=`build_runs/tactics_kernel`(v1)·`tactics_kernel_v2`(0.846).
+- [x] **(진단) 남은 golden_diff 3종** — (a)적 출력 shape(빌드 full vs oracle partial) (b)승리 타이밍(빈 적→VICTORY/FINISHED 빌드 분열) (c)SCN-010 specqa 오라클버그(적을 영웅칸 스폰).
+- [x] **(★키) 3핀 재파생 planning FROZEN** — 출력 5키 고정·enemies{id,hp,pos}만·승패 액션직후만·위치 유일성 → REQ-005/007/008로 핀. 단 specqa v3 환각(TAKE_DAMAGE·좌표MOVE 지어냄, REQ-007 위반) → 빌드 전 손검산이 잡음.
+- [x] **(키0) 하네스 fix #2 — specqa 환각 차단(미커밋)** — `specqa.py` lead·synth 프롬프트에 FROZEN CONTRACT 전문 주입(명령·출력 모델) + "계약 밖 명령/키 금지" + 옛 `prints key:value` 줄 제거. **사후 validator 2종은 기각**(어휘 substring·키일관성 둘 다 정상 런 막는 false positive — specqa_demo fixture 깨짐 실증). specqa replay·run_keyless ALL PASS. 효과는 ★키 재런으로만 확인.
+- [ ] **(다음 세션, ★키) specqa 재런(프롬프트 fix 효과 확인) → 손검산 → build → 1.0 목표.** 깨끗하면 커널 완성 → 카드 base. 또 환각이면 다음 핀 자리.
+- [ ] (이후) 카드 누적(변칙검술→사거리→지형→유닛→루트) / specqa 오라클버그(같은칸 스폰) 흡수 / 1.0 커널을 driver_showcase에 등록.
