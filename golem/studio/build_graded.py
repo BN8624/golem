@@ -48,6 +48,10 @@ MODULE DESIGN (responsibilities — split the logic this way, do NOT collapse in
 
 FILES YOU MUST CREATE (exact paths/exports/imports):
 {files}
+NOTE: the import paths listed above are project-root-relative (for reference). In actual require() calls use
+MODULE-relative paths that resolve from the requiring file's OWN directory — e.g. from `src/engine.js`, require a
+sibling in `src/` as `require('./game_logic')`, NOT `require('./src/game_logic')`. From `main.js` (at root),
+require `require('./src/engine')`.
 
 INPUT (FIXED — `scenarios.json` is a JSON array; `node main.js --scenario N` reads element N-1, 1-based,
 and runs it deterministically). Match this EXACT input format (these are the real scenario elements you must
