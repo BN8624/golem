@@ -259,7 +259,12 @@ def _write_packet(idea, draft, reviews, issues, packet, outdir):
         json.dumps(packet.get("acceptance_tests", []), ensure_ascii=False, indent=2),
         encoding="utf-8")
 
-    n_block = len(issues.get("BLOCKING_questions", []))
+    # 리뷰어 여럿이 같은 BLOCKING을 각자 제기하므로 distinct로 접고 센다(G81).
+    # 원본 카운트를 쓰면 중복이 분모를 부풀려, distinct 이슈를 다 흡수해도 FROZEN이 산술적으로 불가했다.
+    # A/B/C 메트릭과 동일한 _dedup(토큰 Jaccard)을 재사용해 중복 판정을 일관되게 한다.
+    blocking_raw = issues.get("BLOCKING_questions", []) or []
+    blocking_distinct = _dedup(blocking_raw)
+    n_block = len(blocking_distinct)
     decisions = packet.get("decisions", [])
     assumed = packet.get("assumed", [])
     deferred = packet.get("deferred", [])
@@ -277,13 +282,14 @@ def _write_packet(idea, draft, reviews, issues, packet, outdir):
         ensure_ascii=False, indent=2), encoding="utf-8")
 
     # BLOCKING은 synthesis가 decisions/assumed/deferred로 흡수해야 0이 된다.
-    # 흡수 항목 수가 BLOCKING 질문 수 이상이어야 FROZEN — 질문 여럿인데 결정 하나면 OPEN(외부리뷰 #1).
+    # 흡수 항목 수가 distinct BLOCKING 수 이상이어야 FROZEN — 질문 여럿인데 결정 하나면 OPEN(외부리뷰 #1).
+    # distinct로 비교(원본 아님): 리뷰어 중복이 분모를 부풀려 FROZEN을 막던 결함 차단(G81).
     n_resolved = len(decisions) + len(assumed) + len(deferred)
     n_open = max(0, n_block - n_resolved)
     frozen = n_open == 0
     status = ["# STATUS", "",
               f"- 아이디어: {idea}",
-              f"- 리뷰어가 올린 BLOCKING 원본: {n_block}",
+              f"- 리뷰어 BLOCKING 원본 {len(blocking_raw)} → distinct {n_block}(중복 제거)",
               f"- 흡수: decisions {len(decisions)} / assumed {len(assumed)} / deferred {len(deferred)}",
               f"- 미해소 BLOCKING(흡수 부족분): {n_open}",
               f"- interface_contract 파일 수: {len(packet.get('interface_contract', {}).get('files', []))}",
@@ -291,7 +297,8 @@ def _write_packet(idea, draft, reviews, issues, packet, outdir):
               "",
               f"CONTRACT_STATUS: {'FROZEN' if frozen else 'OPEN (BLOCKING 미해소)'}"]
     (outdir / "STATUS.md").write_text("\n".join(status) + "\n", encoding="utf-8")
-    return {"frozen": frozen, "blocking_original": n_block, "blocking_open": n_open,
+    return {"frozen": frozen, "blocking_raw": len(blocking_raw),
+            "blocking_distinct": n_block, "blocking_original": n_block, "blocking_open": n_open,
             "decisions": len(decisions), "assumed": len(assumed), "deferred": len(deferred),
             "interface_files": len(packet.get("interface_contract", {}).get("files", [])),
             "acceptance_tests": len(packet.get("acceptance_tests", []))}
