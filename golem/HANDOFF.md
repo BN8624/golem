@@ -2,7 +2,13 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-20, G82) — 전술 카드 5장 누적 완료·다섯 다 ★키 빌드 깨끗하게 닫힘(게이트 11/11·합의 1.0·golden_diff 0). l1=마나방패+ANOMALY(9), l2=사거리(12), l3=지형(15), l4=유닛(19), l5=루트맵(22세계). "변칙검술→사거리→지형→유닛→루트맵" 누적 순서 완주. 다음=사용자 결정(밸런스·외형·캠페인 콘텐츠 / 카드 더). (운영: 카드마다 취향 안 묻고 골렘 자율 설계, 키 안 멈추고 끝까지 — 사용자 교정 G82, [[golem-no-taste-questions]]. 종착점=골렘 처음부터 끝까지 자율, 지금은 초반이라 클로드가 하네스로 컨트롤.)**
+**현재 상태 (2026-06-20, G82) — "다 하기" 진행 중: 전술 카드 6장 누적·외형 렌더러 완료. 사용자="다 하면 안돼?"로 4트랙(외형·카드더·밸런스·캠페인) 다 하라 지시.**
+- **외형(트랙1) 완료** — `gen_tactics_play.py` → `tactics_play/index.html`(키0·읽기전용 l5 엔진 재사용). 정사각 탑다운 canvas, 22세계 턴 재생(영웅/적/Wall/Conductive·unit_type·hp/마나·루트 전투번호). 커밋·사용자 전달 완료.
+- **카드더(트랙2) 진행 — l6=상태이상(Corrosion) ★키 빌드 닫힘(run=graded-20260620-015304).** ranged가 hero.corrosion opt-in시 Corrosion 부여, 매 행동 끝 틱(Glass ×2)·루트 전환 전. 25세계(회귀22+상태3). **게이트 11/11·golden_diff []·overall_agreement 0.971(라우트+중독 복합 SCN-020~022·025서 11빌드 중 2개 오답 — 합의 첫 1.0 미달이나 다수+골든 일치라 정확히 닫힘. 정답앵커=실Node 골든).** 첫 파생 OPEN(골렘이 적 턴/AI 환각)→HERO-ONLY 불변 명시 재파생 FROZEN. 커밋 다음.
+- **남은 트랙: 밸런스 config(3)·캠페인 콘텐츠(4).** 다음 동작서 진행.
+- 운영: 취향 안 묻고 골렘 자율, 키 안 멈추고 끝까지([[golem-no-taste-questions]]). 종착점=골렘 완전자율, 지금은 하네스 컨트롤. (이전 5카드 상태는 아래 보존.)
+
+**(G82 이전) 전술 카드 5장 누적 완료·다섯 다 ★키 빌드 깨끗하게 닫힘(게이트 11/11·합의 1.0·golden_diff 0). l1=마나방패+ANOMALY(9), l2=사거리(12), l3=지형(15), l4=유닛(19), l5=루트맵(22세계). "변칙검술→사거리→지형→유닛→루트맵" 누적 순서 완주.**
 - **(★키) 전술 카드 l5 빌드 그린(run=graded-20260620-012604).** 골렘이 루트 맵(캠페인 전투 체인) 자율 설계(`planning_packet_tactics_l5_design` FROZEN) → 그래프트. route=뒤따르는 전투 목록, 현재 전투 전멸→다음 로드(hero hp/mana/atk 이월·pos [0,0] 리셋), 최종 전투만 VICTORY·중간 사망 DEFEAT·액션 소진 FINISHED. **전투 전환을 updateState/checkGameState에만 넣어 engine.js 불변·출력 5필드 유지·inject는 game_logic.js 하나로 유지(첫 갈림길 후보였으나 갈림길 아님 — 다층 구조도 game_logic 한 모듈에 담김).** REQ-018 추가. 22세계(회귀19+루트3) 전원 합의 1.0·golden_diff []·engine/main verbatim. 커밋 다음.
 - **(★키) 전술 카드 l4 빌드 그린(run=graded-20260620-010559).** 적 unit_type: Hardened(멜레 -1)·Glass(받는 모든 피해 ×2)·Resonant(anomaly 맞으면 영웅 1 반사). REQ-017. 19세계 전원 합의 1.0·golden_diff []. 커밋 42f6c86/e70881a.
 - **(★키) 전술 카드 l3 빌드 그린(run=graded-20260620-004658).** 지형: Wall(이동 차단, ranged 무시)·Conductive(파열시 anomaly ×2). terrain={"x,y":type} initialState static. REQ-015/016. 15세계 전원 합의 1.0·golden_diff []. 커밋 73b7f16.
