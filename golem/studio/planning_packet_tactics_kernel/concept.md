@@ -1,0 +1,1 @@
+A deterministic, turn-based tactical grid game where a single Hero navigates a small square map to eliminate enemies. The player moves one tile orthogonally or attacks an adjacent enemy per turn. Victory is achieved by depleting all enemy HP, while defeat occurs if the Hero's HP reaches zero.

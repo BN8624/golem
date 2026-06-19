@@ -1,0 +1,338 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "moves toward Hero",
+        "immediately"
+      ],
+      "missing_rules": [
+        "Target selection logic for ATTACK when multiple enemies are adjacent",
+        "Enemy attack trigger and execution logic",
+        "Turn sequence/order (e.g., Player action then Enemy action)",
+        "Tie-breaking priority for Win/Lose if both conditions are met in the same turn cycle"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "ATTACK log requires an Enemy [ID], but the action input does not provide a way to specify which ID is being targeted"
+      ],
+      "risky_assumptions": [
+        "Enemy movement occurs after the player's turn",
+        "Enemies attack automatically upon becoming adjacent"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "How is the target identified for the ATTACK action if multiple enemies are adjacent?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the exact sequence of a game turn, and what are the specific conditions/timing for enemy attacks?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "When an enemy 'moves toward Hero', which axis (X or Y) is prioritized if the Hero is diagonal to the enemy?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "distance-closing algorithm"
+      ],
+      "missing_rules": [
+        "Movement into a tile occupied by an enemy",
+        "Movement into a tile occupied by another entity (Enemy to Enemy)",
+        "Target selection when multiple enemies are adjacent during an ATTACK action",
+        "Handling of invalid input commands (non-MOVE/ATTACK)",
+        "Handling of invalid directions (non-N/S/E/W)",
+        "Enemy turn trigger and action priority (move vs attack)",
+        "Collision handling when an enemy moves into the Hero's tile"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Log messages for failed MOVE actions",
+        "Log messages for failed ATTACK actions"
+      ],
+      "risky_assumptions": [
+        "Assumption that only one entity can occupy a tile at a time"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What happens when a player attempts to MOVE into a tile currently occupied by an enemy?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If multiple enemies are adjacent to the Hero, how is the target of an ATTACK command determined?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What is the precise turn sequence (e.g., Player Action -> Enemy Action -> Turn Increment)?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Turn phase/active actor (who moves next) is not represented in the state object."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming all enemies share the same hard-coded movement pattern since there is no pattern identifier or logic reference in the state object."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Should the state object track the current active phase (e.g., 'player_turn' vs 'enemy_turn') to manage the turn-based sequence?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "REQ-001 is an implementation constraint that cannot be verified through observable output state or logs alone (black-box testing)."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "How should the absence of non-deterministic logic (REQ-001) be verified if it has no distinct observable output indicator?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "fixed movement pattern"
+      ],
+      "missing_rules": [
+        "Target selection logic for ATTACK when multiple enemies are adjacent",
+        "Enemy turn sequence and attack trigger conditions"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'distance-closing algorithm' is simple enough to not require pathfinding (A*)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does 'fixed movement pattern' mean a hardcoded sequence of moves or a simple distance-closing logic? (The terms 'fixed' and 'moves toward Hero' are contradictory).",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "How should the game resolve the ATTACK target when multiple enemies are adjacent to avoid the need for an overly complex target selection system?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is the enemy turn a simple 'move then attack' sequence following the player's turn, or is a more complex turn manager required?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "REQ-001 duplicates Concept/Non-Goals (determinism)",
+        "REQ-002 duplicates Concept/GDD MOVE (movement restrictions)",
+        "REQ-003 duplicates GDD MOVE failure (boundary checks)",
+        "REQ-004 duplicates GDD ATTACK (orthogonal adjacency)",
+        "REQ-005 duplicates GDD ATTACK (fixed damage value)",
+        "REQ-006 duplicates Concept/GDD Win Condition",
+        "REQ-007 duplicates Concept/GDD Lose Condition"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The Requirements section (REQ-001 through REQ-007) almost entirely duplicates the GDD and Concept; should these be consolidated to prevent specification divergence?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "target",
+        "player"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The term 'target' is used to refer to a coordinate (MOVE) and an enemy entity (ATTACK); should these be distinct terms (e.g., 'target tile' vs 'target enemy')?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "The term 'player' refers to the Hero entity in the STATE but refers to the human user in the REQUIREMENTS; should the state key be renamed to 'hero' for consistency?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "distance-closing algorithm"
+      ],
+      "missing_rules": [
+        "Turn sequence/order (e.g., Hero action followed by Enemy actions)",
+        "Collision rules (can multiple entities occupy the same tile?)",
+        "Enemy action priority (does an enemy attack if adjacent, or move first?)",
+        "Target selection for ATTACK when multiple enemies are adjacent",
+        "Enemy movement tie-breaking (which axis is prioritized to maintain determinism?)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that 'turn-based' implies a specific sequence of actor phases",
+        "Assumption that a generic 'ATTACK' command is sufficient without a target ID"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the exact turn order (e.g., Hero Action -> All Enemies Move -> All Enemies Attack)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Are tiles exclusive to one entity, or can the Hero and Enemies overlap?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If multiple enemies are adjacent during an ATTACK command, how is the target determined?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "To ensure determinism (REQ-001), what is the specific priority for enemy movement (e.g., move X then Y)?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "distance-closing algorithm"
+      ],
+      "missing_rules": [
+        "Turn order/sequence (who acts first, when turn increments)",
+        "Enemy attack trigger/logic (when and how enemies deal damage)",
+        "Target selection for ATTACK when multiple enemies are adjacent",
+        "Tie-breaking logic for enemy movement (e.g., X axis vs Y axis priority) to ensure determinism"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Log format for enemy movement and enemy attacks"
+      ],
+      "risky_assumptions": [
+        "Assuming 'adjacent' implies orthogonal only (specified in REQs but not consistently in GDD entities)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the exact sequence of a turn (e.g., Player Action -> Enemy Action -> Turn Increment)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "How should the system handle ATTACK if multiple enemies are within range? Does the command need a target ID?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "To maintain determinism, what is the movement priority for enemies when both X and Y coordinates need to change to reach the Hero?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Under what specific condition does an enemy execute an attack against the Hero?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "moves toward Hero",
+      "immediately",
+      "distance-closing algorithm",
+      "fixed movement pattern",
+      "target",
+      "player",
+      "distance-closing algorithm",
+      "distance-closing algorithm"
+    ],
+    "missing_rules": [
+      "Target selection logic for ATTACK when multiple enemies are adjacent",
+      "Enemy attack trigger and execution logic",
+      "Turn sequence/order (e.g., Player action then Enemy action)",
+      "Tie-breaking priority for Win/Lose if both conditions are met in the same turn cycle",
+      "Movement into a tile occupied by an enemy",
+      "Movement into a tile occupied by another entity (Enemy to Enemy)",
+      "Target selection when multiple enemies are adjacent during an ATTACK action",
+      "Handling of invalid input commands (non-MOVE/ATTACK)",
+      "Handling of invalid directions (non-N/S/E/W)",
+      "Enemy turn trigger and action priority (move vs attack)",
+      "Collision handling when an enemy moves into the Hero's tile",
+      "Turn phase/active actor (who moves next) is not represented in the state object.",
+      "Target selection logic for ATTACK when multiple enemies are adjacent",
+      "Enemy turn sequence and attack trigger conditions",
+      "Turn sequence/order (e.g., Hero action followed by Enemy actions)",
+      "Collision rules (can multiple entities occupy the same tile?)",
+      "Enemy action priority (does an enemy attack if adjacent, or move first?)",
+      "Target selection for ATTACK when multiple enemies are adjacent",
+      "Enemy movement tie-breaking (which axis is prioritized to maintain determinism?)",
+      "Turn order/sequence (who acts first, when turn increments)",
+      "Enemy attack trigger/logic (when and how enemies deal damage)",
+      "Target selection for ATTACK when multiple enemies are adjacent",
+      "Tie-breaking logic for enemy movement (e.g., X axis vs Y axis priority) to ensure determinism"
+    ],
+    "conflicting_rules": [],
+    "underspecified_outputs": [
+      "ATTACK log requires an Enemy [ID], but the action input does not provide a way to specify which ID is being targeted",
+      "Log messages for failed MOVE actions",
+      "Log messages for failed ATTACK actions",
+      "Log format for enemy movement and enemy attacks"
+    ],
+    "risky_assumptions": [
+      "Enemy movement occurs after the player's turn",
+      "Enemies attack automatically upon becoming adjacent",
+      "Assumption that only one entity can occupy a tile at a time",
+      "Assuming all enemies share the same hard-coded movement pattern since there is no pattern identifier or logic reference in the state object.",
+      "REQ-001 is an implementation constraint that cannot be verified through observable output state or logs alone (black-box testing).",
+      "Assuming 'distance-closing algorithm' is simple enough to not require pathfinding (A*)",
+      "REQ-001 duplicates Concept/Non-Goals (determinism)",
+      "REQ-002 duplicates Concept/GDD MOVE (movement restrictions)",
+      "REQ-003 duplicates GDD MOVE failure (boundary checks)",
+      "REQ-004 duplicates GDD ATTACK (orthogonal adjacency)",
+      "REQ-005 duplicates GDD ATTACK (fixed damage value)",
+      "REQ-006 duplicates Concept/GDD Win Condition",
+      "REQ-007 duplicates Concept/GDD Lose Condition",
+      "Assumption that 'turn-based' implies a specific sequence of actor phases",
+      "Assumption that a generic 'ATTACK' command is sufficient without a target ID",
+      "Assuming 'adjacent' implies orthogonal only (specified in REQs but not consistently in GDD entities)"
+    ],
+    "BLOCKING_questions": [
+      "How is the target identified for the ATTACK action if multiple enemies are adjacent?",
+      "What is the exact sequence of a game turn, and what are the specific conditions/timing for enemy attacks?",
+      "What happens when a player attempts to MOVE into a tile currently occupied by an enemy?",
+      "If multiple enemies are adjacent to the Hero, how is the target of an ATTACK command determined?",
+      "What is the precise turn sequence (e.g., Player Action -> Enemy Action -> Turn Increment)?",
+      "Should the state object track the current active phase (e.g., 'player_turn' vs 'enemy_turn') to manage the turn-based sequence?",
+      "How should the absence of non-deterministic logic (REQ-001) be verified if it has no distinct observable output indicator?",
+      "Does 'fixed movement pattern' mean a hardcoded sequence of moves or a simple distance-closing logic? (The terms 'fixed' and 'moves toward Hero' are contradictory).",
+      "How should the game resolve the ATTACK target when multiple enemies are adjacent to avoid the need for an overly complex target selection system?",
+      "Is the enemy turn a simple 'move then attack' sequence following the player's turn, or is a more complex turn manager required?",
+      "The term 'target' is used to refer to a coordinate (MOVE) and an enemy entity (ATTACK); should these be distinct terms (e.g., 'target tile' vs 'target enemy')?",
+      "What is the exact turn order (e.g., Hero Action -> All Enemies Move -> All Enemies Attack)?",
+      "Are tiles exclusive to one entity, or can the Hero and Enemies overlap?",
+      "If multiple enemies are adjacent during an ATTACK command, how is the target determined?",
+      "To ensure determinism (REQ-001), what is the specific priority for enemy movement (e.g., move X then Y)?",
+      "What is the exact sequence of a turn (e.g., Player Action -> Enemy Action -> Turn Increment)?",
+      "How should the system handle ATTACK if multiple enemies are within range? Does the command need a target ID?",
+      "To maintain determinism, what is the movement priority for enemies when both X and Y coordinates need to change to reach the Hero?",
+      "Under what specific condition does an enemy execute an attack against the Hero?"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "gridSize": "number",
+      "status": "PLAYING | WIN | LOSE",
+      "player": {
+        "x": "number",
+        "y": "number",
+        "hp": "number",
+        "attackPower": "number"
+      },
+      "enemies": [
+        {
+          "id": "string",
+          "x": "number",
+          "y": "number",
+          "hp": "number",
+          "attackPower": "number"
+        }
+      ],
+      "log": [
+        "string"
+      ]
+    },
+    "rules": [
+      "REQ-001: No Math.random() or non-deterministic logic permitted.",
+      "REQ-002: Player movement is exactly 1 tile orthogonally per turn.",
+      "REQ-003: Movement fails if target coordinates are < 0 or >= gridSize.",
+      "REQ-004: Attacks target enemies exactly 1 tile away orthogonally.",
+      "REQ-005: Damage dealt is exactly equal to attackPower.",
+      "REQ-006: Transition to 'WIN' immediately when all enemies' hp <= 0.",
+      "REQ-007: Transition to 'LOSE' immediately when hero's hp <= 0.",
+      "RULE-008: Enemy movement priority is X-axis then Y-axis.",
+      "RULE-009: Entities cannot overlap on the same tile.",
+      "RULE-010: Enemy turn order is sorted by Enemy ID ascending."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ],
+        "description": "CLI entry point; handles --scenario argument and maps it to initial state."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "GameStateManager"
+        ],
+        "imports": [],
+        "description": "Contains core game loop, deterministic movement, and combat logic."
+      }
+    ]
+  }
+}

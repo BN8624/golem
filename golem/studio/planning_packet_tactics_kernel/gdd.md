@@ -1,0 +1,19 @@
+- **Player Actions**
+    - `MOVE [N/S/E/W]`: Change Hero coordinates by 1 in the specified direction. 
+        - *Failure*: Target tile is outside grid boundaries.
+        - *Log*: "Hero moved to [x, y]."
+    - `ATTACK`: Deal fixed damage to an enemy in an adjacent tile (N, S, E, or W).
+        - *Failure*: No enemy exists in any adjacent tile.
+        - *Log*: "Hero attacked Enemy [ID] for [X] damage."
+- **Entities**
+    - **Hero**: Possesses `hp`, `attackPower`, and `position {x, y}`.
+    - **Enemy**: Possesses `hp`, `attackPower`, `position {x, y}`, and a fixed movement pattern (e.g., always moves toward Hero).
+    - **Tiles**: Simple coordinate pairs; no special terrain effects.
+- **Win/Lose Conditions**
+    - **Win**: All enemy entities have `hp <= 0`.
+    - **Lose**: Hero entity has `hp <= 0`.
+- **NON-GOALS**
+    - No `Math.random()` or probability-based hits/misses.
+    - No graphical UI (text/log only).
+    - No complex AI (enemies use a simple deterministic distance-closing algorithm).
+    - No item system or skill cooldowns.

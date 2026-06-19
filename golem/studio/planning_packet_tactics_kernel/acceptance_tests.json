@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero(0,0, hp:20, atk:5), Enemy(0,1, hp:5, atk:3), gridSize:5",
+    "input": "ATTACK E1",
+    "expect": "status: 'WIN', log contains 'Hero attacked Enemy E1 for 5 damage.'"
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero(0,0, hp:2, atk:5), Enemy(0,1, hp:10, atk:3), gridSize:5",
+    "input": "MOVE E",
+    "expect": "status: 'LOSE', log contains 'Enemy E1 attacked Hero for 3 damage.'"
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero(0,0, hp:20, atk:5), Enemy(1,1, hp:10, atk:3), gridSize:5",
+    "input": "MOVE N",
+    "expect": "player.y: 1, Enemy E1 moved to (1,1) [Stayed put because X-dist was 1 but (1,0) was empty? No, X-axis first: Enemy moves to (0,1) if Hero at (0,1)], log contains 'Hero moved to [0, 1].'"
+  }
+]

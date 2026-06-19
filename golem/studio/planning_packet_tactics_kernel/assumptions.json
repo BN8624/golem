@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Enemies do not attack the Hero during the Player's action phase, only during their own turn phase.",
+    "The 'Scenario N' argument in the CLI maps to a set of hardcoded initial states for testing.",
+    "The coordinate system is (x, y) where x is horizontal (E/W) and y is vertical (N/S)."
+  ]
+}

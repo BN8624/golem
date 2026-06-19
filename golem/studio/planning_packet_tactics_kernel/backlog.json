@@ -1,0 +1,7 @@
+{
+  "consumer": "다음 버전/카드 planning이 입력으로 읽는다",
+  "deferred": [
+    "Support for multiple enemy types with different movement patterns.",
+    "Implementation of a persistent save/load state system."
+  ]
+}
