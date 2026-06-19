@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "The 'combat kernel' anomaly threshold is exactly 3 hits to trigger a rupture.",
+    "The scenario provided via CLI will always have valid integers for coordinates and stats.",
+    "The L-shaped path for LOS is defined as moving along the X axis first, then the Y axis."
+  ]
+}

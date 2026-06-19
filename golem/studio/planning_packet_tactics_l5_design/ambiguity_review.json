@@ -1,0 +1,280 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "blocked by Wall",
+        "consumed"
+      ],
+      "missing_rules": [
+        "Definition of line-of-sight for ranged_attack using Manhattan distance (which path is checked for Walls)"
+      ],
+      "conflicting_rules": [
+        "REQ-002 (always increment and load battle N+1 upon defeat) vs REQ-006 (Victory on final battle defeat) — loading N+1 after the final battle will result in an index out-of-bounds error"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that an action is 'consumed' from the list even if it results in a 'Failure' log"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does a failed action (e.g., moving into a Wall) still count as being 'consumed' from the shared action list?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "For ranged_attack, if multiple Manhattan paths exist between the hero and target, is the attack blocked only if ALL paths are blocked, or if a specific primary path is blocked?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "out of bounds"
+      ],
+      "missing_rules": [
+        "Handling of actions targeting an enemy_id that is not present in the current battle",
+        "Conflict resolution if a Wall or Enemy occupies (0,0) upon battle transition",
+        "Behavior for battles in the route containing zero enemies",
+        "Priority/Resolution when the final action in the list kills the final enemy of the final battle (VICTORY vs FINISHED)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Whether a failed action (e.g., move to Wall) still increments the 'turn' counter"
+      ],
+      "risky_assumptions": [
+        "Assumption that enemy_id is unique across the entire route rather than just within a single battle"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If the final action kills the final enemy, does the game trigger VICTORY or FINISHED?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What are the defined map boundaries for the 'out of bounds' check?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Should actions targeting IDs from future or past battles be treated as failures or ignored?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming the combat kernel's 'deterministic threshold' for anomaly ruptures is managed by an external system and does not require per-enemy state tracking (e.g., an anomaly counter)."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The GDD mentions anomaly ruptures based on a deterministic threshold; should the state object's enemy entities include a field to track current anomaly accumulation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Mana consumption from the Mana Shield and Mana persistence across battle transitions (REQ-003) are not observable because 'mana' is excluded from the CLI output string defined in REQ-007."
+      ],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Should 'mana' be added to the CLI output format in REQ-007 to enable verification of the Mana Shield logic and stat persistence?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Including backward compatibility (REQ-001) introduces production-level architectural overhead unnecessary for a small prototype.",
+        "The 'Resonant' trait introduces reactive trigger logic (Enemy hit -> Hero damaged) which significantly increases the complexity of the deterministic state update loop.",
+        "Adding both a campaign structure AND a comprehensive trait/terrain system (Hardened, Glass, Resonant, Wall, Conductive) creates too many intersecting variables for a 'small' prototype."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Can the Trait and Terrain systems be deferred or simplified to focus exclusively on the Route Map progression and action list consumption?",
+          "class": "DEFERRED"
+        },
+        {
+          "q": "Is REQ-001 (backward compatibility) strictly necessary for this prototype phase, or can it be removed to streamline the implementation?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "CONCEPT and REQ-005 both define the shared action list usage",
+        "GDD Hero and REQ-003 both define stat persistence across battles",
+        "GDD Hero and REQ-004 both define hero position reset",
+        "GDD Win/Lose (VICTORY) and REQ-006 both define victory conditions",
+        "GDD Terrain (Conductive) and REQ-008 both define conductive tile effects"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "status"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Does 'status' in the CLI output format (GDD) refer to the state variable 'status' (e.g., 'ACTIVE') or the result conditions (VICTORY/DEFEAT/FINISHED)?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "blocked by Wall (for ranged_attack): does this refer to any wall existing between the points, or a specific line-of-sight algorithm?)",
+        "deterministic threshold (for anomaly ruptures): the specific logic for when a rupture is triggered is not defined in this spec"
+      ],
+      "missing_rules": [
+        "Order of operations for damage modifiers: does 'Hardened' (-1) apply before or after 'Glass' (x2)?",
+        "Evaluation priority: if the final action kills the final enemy, is the result VICTORY or FINISHED?"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "CLI output format 'enemies' segment: lacks definition of how enemy state (ID, pos, HP) is serialized into the string"
+      ],
+      "risky_assumptions": [
+        "Transition timing: REQ-002 implies transition occurs 'When all enemies are defeated'. If this happens mid-turn, it may conflict with the resolution of the action that caused the defeat."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Should the transition to the next battle (REQ-002) happen immediately upon the killing blow, or at the start of the next turn?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "For ranged_attack, is the 'Wall' check based on a clear path (Bresenham/Raycast) or simply the presence of a wall at any coordinate between hero and target?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Inclusion of new combat mechanics (Enemy Traits: Hardened, Glass, Resonant; Terrain: Conductive) within a structural Route Map update."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Are the Enemy Traits and Conductive terrain already part of the existing Combat Kernel, or are they new features? If new, they appear out-of-scope for a 'Route Map' structural update.",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "anomaly rupture",
+        "combat kernel logic"
+      ],
+      "missing_rules": [
+        "Enemy attack triggers (when do enemies act relative to player actions?)",
+        "Turn counter behavior during battle transitions (does it reset or persist?)",
+        "Collision handling if the reset position [0,0] is a Wall in the new battle",
+        "Specific line-of-sight (LOS) calculation for ranged_attack 'blocked by Wall'"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Detailed string format for the 'enemies' segment of the CLI output (REQ-007)"
+      ],
+      "risky_assumptions": [
+        "Assumption that 'combat kernel' is an external reference sufficiently known by the design team to implement anomaly ruptures"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the trigger for enemy turns?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the 'turn' state reset to 0 upon entering a new battle?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "How is line-of-sight defined for ranged attacks (e.g., direct line or Manhattan bounding box)?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "blocked by Wall",
+      "consumed",
+      "out of bounds",
+      "status",
+      "blocked by Wall (for ranged_attack): does this refer to any wall existing between the points, or a specific line-of-sight algorithm?)",
+      "deterministic threshold (for anomaly ruptures): the specific logic for when a rupture is triggered is not defined in this spec",
+      "anomaly rupture",
+      "combat kernel logic"
+    ],
+    "missing_rules": [
+      "Definition of line-of-sight for ranged_attack using Manhattan distance (which path is checked for Walls)",
+      "Handling of actions targeting an enemy_id that is not present in the current battle",
+      "Conflict resolution if a Wall or Enemy occupies (0,0) upon battle transition",
+      "Behavior for battles in the route containing zero enemies",
+      "Priority/Resolution when the final action in the list kills the final enemy of the final battle (VICTORY vs FINISHED)",
+      "Order of operations for damage modifiers: does 'Hardened' (-1) apply before or after 'Glass' (x2)?",
+      "Evaluation priority: if the final action kills the final enemy, is the result VICTORY or FINISHED?",
+      "Enemy attack triggers (when do enemies act relative to player actions?)",
+      "Turn counter behavior during battle transitions (does it reset or persist?)",
+      "Collision handling if the reset position [0,0] is a Wall in the new battle",
+      "Specific line-of-sight (LOS) calculation for ranged_attack 'blocked by Wall'"
+    ],
+    "conflicting_rules": [
+      "REQ-002 (always increment and load battle N+1 upon defeat) vs REQ-006 (Victory on final battle defeat) — loading N+1 after the final battle will result in an index out-of-bounds error",
+      "CONCEPT and REQ-005 both define the shared action list usage",
+      "GDD Hero and REQ-003 both define stat persistence across battles",
+      "GDD Hero and REQ-004 both define hero position reset",
+      "GDD Win/Lose (VICTORY) and REQ-006 both define victory conditions",
+      "GDD Terrain (Conductive) and REQ-008 both define conductive tile effects"
+    ],
+    "underspecified_outputs": [
+      "Whether a failed action (e.g., move to Wall) still increments the 'turn' counter",
+      "Mana consumption from the Mana Shield and Mana persistence across battle transitions (REQ-003) are not observable because 'mana' is excluded from the CLI output string defined in REQ-007.",
+      "CLI output format 'enemies' segment: lacks definition of how enemy state (ID, pos, HP) is serialized into the string",
+      "Detailed string format for the 'enemies' segment of the CLI output (REQ-007)"
+    ],
+    "risky_assumptions": [
+      "Assumption that an action is 'consumed' from the list even if it results in a 'Failure' log",
+      "Assumption that enemy_id is unique across the entire route rather than just within a single battle",
+      "Assuming the combat kernel's 'deterministic threshold' for anomaly ruptures is managed by an external system and does not require per-enemy state tracking (e.g., an anomaly counter).",
+      "Including backward compatibility (REQ-001) introduces production-level architectural overhead unnecessary for a small prototype.",
+      "The 'Resonant' trait introduces reactive trigger logic (Enemy hit -> Hero damaged) which significantly increases the complexity of the deterministic state update loop.",
+      "Adding both a campaign structure AND a comprehensive trait/terrain system (Hardened, Glass, Resonant, Wall, Conductive) creates too many intersecting variables for a 'small' prototype.",
+      "Transition timing: REQ-002 implies transition occurs 'When all enemies are defeated'. If this happens mid-turn, it may conflict with the resolution of the action that caused the defeat.",
+      "Inclusion of new combat mechanics (Enemy Traits: Hardened, Glass, Resonant; Terrain: Conductive) within a structural Route Map update.",
+      "Assumption that 'combat kernel' is an external reference sufficiently known by the design team to implement anomaly ruptures"
+    ],
+    "BLOCKING_questions": [
+      "Does a failed action (e.g., moving into a Wall) still count as being 'consumed' from the shared action list?",
+      "For ranged_attack, if multiple Manhattan paths exist between the hero and target, is the attack blocked only if ALL paths are blocked, or if a specific primary path is blocked?",
+      "If the final action kills the final enemy, does the game trigger VICTORY or FINISHED?",
+      "Should actions targeting IDs from future or past battles be treated as failures or ignored?",
+      "The GDD mentions anomaly ruptures based on a deterministic threshold; should the state object's enemy entities include a field to track current anomaly accumulation?",
+      "Should 'mana' be added to the CLI output format in REQ-007 to enable verification of the Mana Shield logic and stat persistence?",
+      "Does 'status' in the CLI output format (GDD) refer to the state variable 'status' (e.g., 'ACTIVE') or the result conditions (VICTORY/DEFEAT/FINISHED)?",
+      "Should the transition to the next battle (REQ-002) happen immediately upon the killing blow, or at the start of the next turn?",
+      "Are the Enemy Traits and Conductive terrain already part of the existing Combat Kernel, or are they new features? If new, they appear out-of-scope for a 'Route Map' structural update.",
+      "What is the trigger for enemy turns?",
+      "How is line-of-sight defined for ranged attacks (e.g., direct line or Manhattan bounding box)?"
+    ]
+  }
+}

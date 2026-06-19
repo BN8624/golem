@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Route with 2 battles. Battle 1: 1 enemy (HP 1). Battle 2: 1 enemy (HP 1). Hero ATK 1.",
+    "input": "[{type: 'attack', params: [1]}, {type: 'attack', params: [1]}]",
+    "expect": "VICTORY (After 2 turns, both enemies defeated, index advanced)."
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Route with 1 battle. Enemy Glass (HP 2). Hero ATK 1.",
+    "input": "[{type: 'attack', params: [1]}]",
+    "expect": "VICTORY (Glass doubles 1 dmg to 2, killing enemy in 1 hit)."
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Route with 1 battle. Wall at [0,1]. Hero at [0,0].",
+    "input": "[{type: 'move', params: [0, 1]}]",
+    "expect": "ACTIVE (Move fails, turn increments, status remains ACTIVE)."
+  }
+]

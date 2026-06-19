@@ -1,0 +1,23 @@
+- **Player Actions**
+    - `move {x, y}`: Change hero position to target. Failure: Target is a Wall or out of bounds. Log: `status/turn/...`
+    - `attack {enemy_id}`: Melee strike (dist=1). Damage = `hero.atk`. Failure: Target not adjacent. Log: `status/turn/...`
+    - `ranged_attack {enemy_id}`: Strike at Manhattan distance 2..3. Damage = `hero.atk`. Failure: Distance not 2..3 or blocked by Wall. Log: `status/turn/...`
+- **Entities & Rules**
+    - **Hero**: Carries `hp`, `atk`, `mana`, `anomaly_dmg` across battles. Position resets to `(0,0)` at the start of each new battle.
+    - **Enemy Traits**: 
+        - `Hardened`: Subtract 1 from incoming melee damage.
+        - `Glass`: Multiply all incoming damage by 2.
+        - `Resonant`: Hero takes 1 damage whenever this enemy is hit by an anomaly rupture.
+    - **Terrain**: 
+        - `Wall`: Blocks movement and ranged line-of-sight.
+        - `Conductive`: Anomaly damage dealt to enemies on this tile is doubled.
+    - **Combat Kernel**: Mana Shield absorbs damage using mana first. Anomaly ruptures occur based on kernel logic (deterministic threshold).
+- **Win/Lose Conditions**
+    - **VICTORY**: All enemies in the current battle are dead AND no further battles remain in the route.
+    - **DEFEAT**: Hero `hp <= 0` at any point.
+    - **FINISHED**: Action list is exhausted before all enemies in the route are defeated.
+- **NON-GOALS**
+    - Branching paths or non-linear maps.
+    - Healing between battles.
+    - Dynamic enemy spawning or RNG.
+    - Changes to the fixed CLI output string.

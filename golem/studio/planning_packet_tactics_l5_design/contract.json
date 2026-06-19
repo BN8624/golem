@@ -1,0 +1,77 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "hero": {
+        "hp": "number",
+        "atk": "number",
+        "mana": "number",
+        "anomaly_dmg": "number",
+        "pos": "[x, y]"
+      },
+      "route": [
+        {
+          "enemies": [
+            {
+              "id": "number",
+              "hp": "number",
+              "atk": "number",
+              "pos": "[x, y]",
+              "unit_type": "string",
+              "anomaly": "number"
+            }
+          ],
+          "terrain": {
+            "x,y": "string"
+          }
+        }
+      ],
+      "current_battle_index": "number",
+      "actions": [
+        {
+          "type": "string",
+          "params": "any[]"
+        }
+      ],
+      "status": "string (ACTIVE|VICTORY|DEFEAT|FINISHED)"
+    },
+    "rules": [
+      "REQ-001: If 'route' is missing, treat 'enemies' and 'terrain' as a single-battle route.",
+      "REQ-002: When all enemies in battle N are defeated, current_battle_index increments and next battle loads.",
+      "REQ-003: HP, ATK, MANA, ANOMALY_DMG persist across battles.",
+      "REQ-004: Hero position resets to [0,0] on battle entry.",
+      "REQ-005: Action list is shared and consumed sequentially across the entire route.",
+      "REQ-006: VICTORY triggers only after the final enemy of the final battle is defeated.",
+      "REQ-007: CLI format: 'status/turn/hero_hp/hero_pos/enemies'.",
+      "REQ-008: Conductive tiles double anomaly damage."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runGame"
+        ],
+        "imports": [
+          "src/state.js"
+        ]
+      },
+      {
+        "path": "src/state.js",
+        "exports": [
+          "initialState"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

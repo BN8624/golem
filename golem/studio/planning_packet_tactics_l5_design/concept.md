@@ -1,0 +1,1 @@
+The "Route Map" transforms the combat kernel into a linear campaign. The hero progresses through a sequence of battles defined in the scenario, using a single shared action list for the entire journey. A run ends when all enemies across all battles are defeated, the hero dies, or actions are exhausted.
