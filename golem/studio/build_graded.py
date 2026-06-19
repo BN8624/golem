@@ -399,10 +399,11 @@ def main(argv=None):
     scen_inputs = [{k: v for k, v in s.items() if k not in grading_keys} for s in scenarios]
 
     # 계약 scenario_data가 있으면 src/scenarios.js를 그 고정 세계로 하네스가 써넣어 모든 빌드가
-    # 동일 입력을 받게 한다(scratch 전용; --base는 held_out 메커니즘이 따로 있음).
+    # 동일 입력을 받게 한다. --base(카드 누적)서도 강제: 카드가 새 세계를 추가하면 base의 6세계
+    # 대신 계약 세계를 verbatim 주입해야 한다(frozen_modules는 held_out 복사 뒤에 덮어씀).
     frozen_modules = {}
     scenario_data = contract.get("data_contract", {}).get("scenario_data")
-    if scenario_data and not args.base:
+    if scenario_data:
         frozen_modules["src/scenarios.js"] = _gen_scenarios_module(scenario_data)
 
     base_code = None
