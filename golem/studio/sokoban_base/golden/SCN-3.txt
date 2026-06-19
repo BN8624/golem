@@ -1,0 +1,7 @@
+moves: 1
+player: 2,1
+boxes: ["3,1"]
+on_target: 1
+isWon: true
+isGameOver: true
+logs: ["D:push"]

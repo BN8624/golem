@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "전 시나리오 oracle_risk.risk=false. 소코반 카드3(구덩이, 누적) — 골든은 base+카드1~3 참조 실Node 역산(모델 독립)."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "전 시나리오 oracle_risk.risk=false. 소코반 카드2(텔레포트, 누적) — 골든은 base+카드1+카드2 참조 실Node 역산(모델 독립)."
+    }
+  ]
+}

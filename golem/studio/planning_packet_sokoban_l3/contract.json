@@ -1,0 +1,31 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "moves": "number",
+      "player": "string (\"r,c\")",
+      "boxes": "string[] (sorted \"r,c\")",
+      "on_target": "number",
+      "isWon": "boolean",
+      "isGameOver": "boolean",
+      "logs": "string[]"
+    },
+    "rules": [
+      "RULE-01: input has level_id or an inline level (grid-row strings). '#' wall, ' ' floor, '.' target, '@' player, '$' box, '*' box-on-target, '+' player-on-target; any other char is a generic tile in state.tiles. Apply input.moves in order up to MAX_MOVES.",
+      "RULE-02: A move steps the player one cell; into floor/target advances; log '<dir>:move'.",
+      "RULE-03: Into a wall is blocked; log '<dir>:block'.",
+      "RULE-04: Into a box: push if the cell beyond is free; log '<dir>:push'; else blocked.",
+      "RULE-05: WIN when every box is on a target; set isWon=isGameOver=true and stop. on_target = boxes on targets.",
+      "RULE-06: KEY/DOOR (card 1). 'D' blocks while no key; 'K' grants key (+key, K removed); with key 'D' is floor.",
+      "RULE-07: TELEPORT (card 2). Player stepping onto 'T' jumps to the matching other 'T' (+tp), once per move; boxes never teleport.",
+      "RULE-08 (THIS CARD): HOLE tiles. The level data (including a level with 'O' tiles) is ALREADY in the frozen levels.js — this card edits ONLY move_logic.js. When a box is pushed into a cell that is a hole 'O', the hole is filled: remove that box from state.boxes, delete the 'O' from state.tiles (it becomes floor), advance the player into the box's old cell, and log '<dir>:fill' (instead of ':push'). A filled box no longer counts toward the win. Any play on a level with no 'O' tiles produces byte-for-byte identical output to before this card."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "touched": ["src/move_logic.js"],
+    "files": [
+      {"path": "src/move_logic.js", "exports": ["resolveMove", "boxIndexAt"], "imports": ["src/constants.js"],
+       "description": "Move resolution. THIS card adds the hole case inside the push branch: if the box's destination cell is an 'O' tile, fill it (remove box, delete tile, move player, log ':fill'). Keep all existing wall/push/move/door/key/teleport behavior intact. levels.js is FROZEN."}
+    ]
+  }
+}
