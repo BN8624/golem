@@ -44,7 +44,11 @@ ISSUE_KEYS = ["untestable_reqs", "ambiguous_expected", "missing_scenarios",
               "nondeterministic", "oracle_errors", "risky_assumptions"]
 
 _LEAD_PROMPT = """You are the SPEC QA LEAD. Turn the prose acceptance criteria into CONCRETE, machine-runnable
-scenarios for a deterministic Node.js game (`node main.js --scenario N`, prints `key: value` lines).
+scenarios for a deterministic Node.js game (`node main.js --scenario N`).
+
+FROZEN CONTRACT (the authoritative input commands AND output shape — DO NOT invent commands or output keys
+not derivable from this contract):
+{contract}
 
 CONCEPT:
 {concept}
@@ -63,8 +67,10 @@ Output ONE JSON object EXACTLY:
   ],
   "oracle_risk_summary": ["short note on any expected value that can't be pinned exactly"]
 }}
-RULES: "input" must be concrete machine data (action list / numbers), NOT prose. If you cannot pin
-"expected" exactly (e.g. float rounding), set "expected": null and oracle_risk.risk=true with a reason.
+HARD RULES: "input" must be concrete machine data (action list / numbers), NOT prose. Every command in an
+input MUST be one the contract defines — never invent commands. "expected" keys MUST be exactly the output
+keys the contract specifies, identical across ALL scenarios (a deterministic game prints one fixed shape).
+If you cannot pin "expected" exactly, set "expected": null and oracle_risk.risk=true with a reason.
 Every REQ id must appear in some scenario's covers_reqs. JSON only, no prose."""
 
 _REVIEW_INSTRUCTIONS = """Do NOT rewrite the game. ONLY hunt problems on your axis. Output ONE JSON object EXACTLY
@@ -95,9 +101,13 @@ _SYNTHESIS_PROMPT = """You are the SPEC QA LEAD doing SYNTHESIS. Your scenario d
 Reviewers found these issues (JSON):
 {issues}
 
+FROZEN CONTRACT (authoritative commands + output keys — never invent beyond it):
+{contract}
+
 Fix them and finalize. Output ONE JSON object EXACTLY in the same shape (scenarios, oracle_risk_summary).
-HARD RULES: every REQ in {reqs} covered by >=1 scenario; inputs concrete machine data; any unpinnable
-expected set to null with oracle_risk.risk=true; resolve every BLOCKING question. JSON only."""
+HARD RULES: every REQ in {reqs} covered by >=1 scenario; inputs concrete machine data using ONLY
+contract-defined commands; "expected" keys identical across all scenarios and exactly the contract's output
+keys; any unpinnable expected set to null with oracle_risk.risk=true; resolve every BLOCKING question. JSON only."""
 
 
 def load_inputs(pdir, ddir):
@@ -109,11 +119,16 @@ def load_inputs(pdir, ddir):
     for i, r in enumerate(rules, 1):
         m = re.match(r"\s*(RULE-\d+)\s*[:\-]\s*(.*)", str(r))
         reqs.append({"id": m.group(1) if m else f"REQ-{i:02d}", "text": m.group(2) if m else str(r)})
-    return concept, reqs, acceptance
+    contract_text = json.dumps(contract, ensure_ascii=False, indent=1)
+    return concept, reqs, acceptance, contract_text
 
 
 def specqa_validate(final, reqs):
-    """§13 Step4·§8.4 검증. (ok, errors, risky) 반환."""
+    """§13 Step4·§8.4 검증. (ok, errors, risky) 반환.
+    주의(G81): specqa 출력을 사후 검사로 막으려 했으나 — 명령 어휘 substring은 false pos/neg,
+    expected 키 일관성은 '시나리오별 관련 키만 검사'하는 정상 패턴(예: specqa_demo)을 막는
+    false positive — 둘 다 안전한 가드가 못 됐다. 환각 차단은 사후 검사가 아니라 프롬프트가
+    FROZEN CONTRACT(명령·출력 모델)를 먹는 것으로 한다(_LEAD_PROMPT/_SYNTHESIS_PROMPT)."""
     errors = []
     scenarios = final.get("scenarios", [])
     if not scenarios:
@@ -151,7 +166,7 @@ class FakeCaller:
     def reviews(self, spec, axes):
         return self.fx["reviews"][:len(axes)]
 
-    def synth(self, spec, issues, reqs):
+    def synth(self, spec, issues, reqs, contract=""):
         return self.fx.get("synthesis", spec)
 
 
@@ -183,21 +198,22 @@ class RealCaller:
                 out[futs[fut]] = _extract_json(fut.result())
         return out
 
-    def synth(self, spec, issues, reqs):
+    def synth(self, spec, issues, reqs, contract=""):
         return _extract_json(self._one(_SYNTHESIS_PROMPT.format(
             spec=json.dumps(spec, ensure_ascii=False),
-            issues=json.dumps(issues, ensure_ascii=False), reqs=reqs)))
+            issues=json.dumps(issues, ensure_ascii=False), reqs=reqs, contract=contract or "(none)")))
 
 
-def run(concept, reqs, acceptance, caller):
+def run(concept, reqs, acceptance, caller, contract_text=""):
     ctx = {"concept": concept.strip() or "(none)",
            "reqs": "\n".join(f"- {r['id']}: {r['text']}" for r in reqs) or "(none)",
-           "acceptance": json.dumps(acceptance, ensure_ascii=False)}
+           "acceptance": json.dumps(acceptance, ensure_ascii=False),
+           "contract": contract_text or "(none)"}
     draft = caller.lead(ctx)
     reviews = caller.reviews(draft, AXES)
     issues = {k: [i for r in reviews for i in (r.get(k) or [])] for k in ISSUE_KEYS}
     issues["BLOCKING"] = _blocking(reviews)
-    final = caller.synth(draft, issues, [r["id"] for r in reqs])
+    final = caller.synth(draft, issues, [r["id"] for r in reqs], contract_text)
     return draft, reviews, issues, final
 
 
@@ -229,14 +245,15 @@ def main(argv=None):
     if args.replay:
         fx = json.loads(Path(args.replay).read_text(encoding="utf-8"))
         concept, reqs, acceptance = fx["concept"], fx["reqs"], fx.get("acceptance", [])
+        contract_text = fx.get("contract", "")
         caller = FakeCaller(fx)
         api_calls = 0
     else:
-        concept, reqs, acceptance = load_inputs(Path(args.packet), Path(args.design))
+        concept, reqs, acceptance, contract_text = load_inputs(Path(args.packet), Path(args.design))
         caller = RealCaller()
         api_calls = None
 
-    draft, reviews, issues, final = run(concept, reqs, acceptance, caller)
+    draft, reviews, issues, final = run(concept, reqs, acceptance, caller, contract_text)
     outdir = Path(args.out) if args.out else (HERE / "specqa_packet")
     ok, errors, risky = specqa_validate(final, reqs)
     _write_packet(final, risky, outdir)
