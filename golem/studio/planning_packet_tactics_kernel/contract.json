@@ -24,7 +24,7 @@
       "REQ-004: HP can be negative.",
       "REQ-005: Win/Lose checks occur strictly post-action.",
       "REQ-006: If, post-action, both hero.hp <= 0 and all enemies.hp <= 0, status = DEFEAT (checked before VICTORY).",
-      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY.",
+      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY. This status is still determined post-action per REQ-005 — the scenario's actions still run and turn increments normally (it is NOT short-circuited before the first action).",
       "REQ-008: Print these lines, in order, nothing else: status, turn, hero_hp, hero_pos, enemies. hero_pos is [x, y]. enemies is a JSON array where each enemy is EXACTLY {id, hp, pos} — DO NOT include atk.",
       "REQ-009: When all actions are exhausted with neither VICTORY nor DEFEAT reached, status = FINISHED.",
       "REQ-010: A move is blocked (hero.pos unchanged, no combat) when the destination cell has any negative coordinate (off-grid; the grid minimum coordinate is 0) OR is occupied by a living enemy. turn still increments per REQ-002.",
