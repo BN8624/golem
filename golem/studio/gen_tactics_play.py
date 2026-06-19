@@ -13,8 +13,30 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 BASE = HERE / "tactics_kernel_base"
-PACKET = HERE / "planning_packet_tactics_l5"
+PACKET = HERE / "planning_packet_tactics_l6"
 OUT = HERE / "tactics_play"
+
+# 캠페인 한 편 — 6카드 엔진을 루트맵으로 엮은 4전투 데모(검증된 l6 엔진으로 결정적 실행). 콘텐츠는 엔진과 분리.
+CAMPAIGN = {
+    "id": "CAMPAIGN",
+    "initialState": {
+        "hero": {"hp": 150, "atk": 40, "pos": [0, 0], "mana": 0, "anomaly_dmg": 0,
+                 "corrosion": {"dmg": 10, "duration": 3}},
+        "enemies": [{"id": "G1", "hp": 40, "atk": 10, "pos": [1, 0]}],
+        "route": [
+            {"enemies": [{"id": "A1", "hp": 30, "atk": 0, "pos": [2, 0]}], "terrain": {"1,0": "Wall"}},
+            {"enemies": [{"id": "T1", "hp": 50, "atk": 5, "pos": [1, 0], "unit_type": "Hardened"}]},
+            {"enemies": [{"id": "B1", "hp": 100, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]}
+        ]
+    },
+    "actions": [
+        {"type": "attack", "target": "G1"},
+        {"type": "ranged_attack", "target": "A1"},
+        {"type": "attack", "target": "T1"},
+        {"type": "attack", "target": "T1"},
+        {"type": "ranged_attack", "target": "B1"}
+    ]
+}
 
 # 시나리오 라벨(어떤 메커니즘을 보여주나).
 LABELS = {
@@ -26,12 +48,14 @@ LABELS = {
     "SCN-016": "유닛 Hardened(멜레 -1)", "SCN-017": "유닛 Glass 사거리 ×2", "SCN-018": "유닛 Glass ANOMALY ×2→VICTORY",
     "SCN-019": "유닛 Resonant 반사피해", "SCN-020": "루트맵 2전투 승리(hp 이월)",
     "SCN-021": "루트 전환 후 FINISHED", "SCN-022": "루트 2전투에서 DEFEAT",
+    "SCN-023": "상태이상 Corrosion DoT 처치", "SCN-024": "Corrosion ×2(Glass)",
+    "SCN-025": "Corrosion 처치→루트 전환", "CAMPAIGN": "★ 캠페인 — 6카드 4전투 한 편",
 }
 
-# 검증된 l5 참조 game_logic을 가져온다(gen_tactics_l5_golden 단일 출처).
-def l5_game_logic():
+# 검증된 l6 참조 game_logic을 가져온다(gen_tactics_l6_golden 단일 출처 — 6카드 전부 포함).
+def l6_game_logic():
     sys.path.insert(0, str(HERE))
-    from gen_tactics_l5_golden import REF_GAME_LOGIC
+    from gen_tactics_l6_golden import REF_GAME_LOGIC
     return REF_GAME_LOGIC
 
 # 턴별 상태를 뽑는 node 트레이서(engine 초기화 재현 + updateState/checkGameState 스텝마다 스냅샷).
@@ -83,16 +107,16 @@ def main():
     import build_graded as bg
 
     contract = json.loads((PACKET / "contract.json").read_text(encoding="utf-8"))
-    scenario_data = contract["data_contract"]["scenario_data"]
+    scenario_data = list(contract["data_contract"]["scenario_data"]) + [CAMPAIGN]  # 25세계 + 캠페인 1편
     scenarios_js = bg._gen_scenarios_module(scenario_data)
 
-    # 검증된 엔진 워크스페이스(읽기전용 재사용).
+    # 검증된 l6 엔진 워크스페이스(읽기전용 재사용).
     ws = HERE / "_tactics_play_engine_tmp"
     if ws.exists():
         shutil.rmtree(ws)
     shutil.copytree(BASE, ws)
     (ws / "module_manifest.json").unlink(missing_ok=True)
-    (ws / "src" / "game_logic.js").write_text(l5_game_logic(), encoding="utf-8")
+    (ws / "src" / "game_logic.js").write_text(l6_game_logic(), encoding="utf-8")
     (ws / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
     (ws / "trace.js").write_text(TRACER_JS, encoding="utf-8")
 
@@ -109,11 +133,19 @@ def main():
 
     shutil.rmtree(ws)
 
+    # 캠페인 한 편이 결정적으로 VICTORY로 닫히는지 sanity(엔진은 검증됨, 캠페인은 콘텐츠 입력).
+    camp = next(t for t in traces if t["id"] == "CAMPAIGN")
+    camp_final = camp["frames"][-1]
+    if camp_final["status"] != "VICTORY":
+        print(f"  CAMPAIGN sanity FAIL: 최종 status={camp_final['status']} (VICTORY 기대)")
+        return 1
+
     OUT.mkdir(parents=True, exist_ok=True)
     html = HTML_TEMPLATE.replace("__TRACES__", json.dumps(traces, ensure_ascii=False))
     (OUT / "index.html").write_text(html, encoding="utf-8")
-    print(f"  트레이스 {len(traces)}세계 → {OUT / 'index.html'}")
-    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l5 엔진).")
+    print(f"  트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
+    print(f"  캠페인 4전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
+    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l6 엔진).")
     return 0
 
 
