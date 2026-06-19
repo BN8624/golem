@@ -1,0 +1,7 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Initial action list is provided as a JSON array of command objects.",
+    "The CLI argument --scenario N maps to an index in the SCENARIOS object."
+  ]
+}

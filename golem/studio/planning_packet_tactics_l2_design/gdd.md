@@ -1,0 +1,18 @@
+- **Player Actions**
+    - `move {dir: [dx, dy]}`: Updates hero position by adding dx and dy. Failure: None (infinite grid). Log: "Hero moved to [x, y]".
+    - `attack {target: id}`: (Existing Melee) If target is orthogonally adjacent (dist=1), hero and enemy deal simultaneous damage to each other. Failure: Target not adjacent. Log: "Melee attack on {id}: mutual damage".
+    - `ranged_attack {target: id}`: (New) If target is within Manhattan distance $>1$ and $\le 3$, hero deals damage to target; target does NOT counterattack. Failure: Target is either adjacent (dist=1) or too far (dist>3). Log: "Ranged attack on {id}: one-way damage".
+- **Entities**
+    - **Hero**: Possesses `hp`, `atk`, `pos`, `mana`, and `anomaly_dmg`.
+    - **Enemy**: Possesses `id`, `hp`, `atk`, `pos`.
+    - **Mana Shield**: An additive layer to Hero. All incoming damage is subtracted from `mana` first. If `mana` is 0, damage hits `hp`.
+    - **Anomaly**: Triggered if a single attack reduces `mana` from $>0$ to $\le 0$. Deals `anomaly_dmg` to all living enemies currently orthogonally adjacent (dist=1) to the hero.
+- **Win/Lose Conditions**
+    - **VICTORY**: All enemies have `hp <= 0`.
+    - **DEFEAT**: Hero `hp <= 0` (even if last enemy also dies in same turn).
+    - **FINISHED**: Action list exhausted or 0 initial enemies.
+- **NON-GOALS**
+    - Line-of-sight/obstacle blocking.
+    - Enemy AI/Movement.
+    - Random critical hits or miss chances.
+    - UI/Graphics.

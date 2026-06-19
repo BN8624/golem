@@ -1,0 +1,70 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "integer",
+      "hero": {
+        "hp": "integer",
+        "atk": "integer",
+        "pos": [
+          "integer",
+          "integer"
+        ],
+        "mana": "integer",
+        "anomaly_dmg": "integer"
+      },
+      "enemies": [
+        {
+          "id": "integer",
+          "hp": "integer",
+          "atk": "integer",
+          "pos": [
+            "integer",
+            "integer"
+          ]
+        }
+      ],
+      "log": [
+        "string"
+      ],
+      "status": "string ('ACTIVE' | 'VICTORY' | 'DEFEAT' | 'FINISHED')"
+    },
+    "rules": [
+      "Distance = abs(x1-x2) + abs(y1-y2).",
+      "move {dir: [dx, dy]} updates pos by adding dx and dy.",
+      "attack {target: id} requires dist == 1. Both deal 'atk' damage. Hero damage processed via Mana Shield.",
+      "ranged_attack {target: id} requires 2 <= dist <= 3. Target takes 'atk' damage. Hero takes 0 damage.",
+      "Mana Shield: Damage reduces mana first; if mana == 0, reduces hp.",
+      "Anomaly: Triggered if mana was > 0 and becomes <= 0 in one action. Deals anomaly_dmg to all living enemies at dist == 1.",
+      "Victory: All enemies hp <= 0.",
+      "Defeat: Hero hp <= 0.",
+      "Finished: Action list exhausted without Victory or Defeat."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js",
+          "src/scenarios.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runSimulation"
+        ],
+        "imports": []
+      },
+      {
+        "path": "src/scenarios.js",
+        "exports": [
+          "SCENARIOS"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}
