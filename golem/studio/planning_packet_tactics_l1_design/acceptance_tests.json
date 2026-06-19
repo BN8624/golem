@@ -1,0 +1,26 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero [0,0], Enemy 1 [0,1], Mana 30, HP 100, Enemy HP 50, Enemy Atk 10",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Enemy 1 HP=30, Hero Mana=20, Log contains 'Hero attacks Enemy 1', Status=ACTIVE"
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero [0,0], Enemy 1 [0,1], Mana 5, HP 100, Enemy HP 50, Enemy Atk 20",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Enemy 1 HP=30, Hero Mana=0, Hero HP=85, Log contains 'Mana Shield ruptured!', Status=ACTIVE"
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero [0,0], Enemy 1 [0,1], Mana 0, HP 10, Enemy HP 10, Enemy Atk 20",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Enemy 1 HP<=0, Hero HP<=0, Status=DEFEAT (Hero death priority)"
+  },
+  {
+    "id": "SCN-004",
+    "setup": "Hero [0,0], Enemy 1 [0,1], Mana 10, HP 100, Enemy HP 10, Enemy Atk 10",
+    "input": "[{type: 'attack', target: 1}]",
+    "expect": "Enemy 1 dead, Hero Mana=0, Status=VICTORY"
+  }
+]

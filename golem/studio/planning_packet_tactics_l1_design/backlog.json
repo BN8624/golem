@@ -1,0 +1,8 @@
+{
+  "consumer": "다음 버전/카드 planning이 입력으로 읽는다",
+  "deferred": [
+    "Mana regeneration mechanics.",
+    "Multiple different enemy types with varying behaviors.",
+    "Complex grid obstacles (walls/terrain)."
+  ]
+}

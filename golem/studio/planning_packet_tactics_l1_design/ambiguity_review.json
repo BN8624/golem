@@ -1,0 +1,261 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "reaches 0 (in REQ-005): unclear if this refers to an exact value of 0 or any value <= 0 resulting from damage)",
+        "simultaneous damage (in REQ-002): unclear if the Anomaly burst (REQ-005) is part of the simultaneous damage phase or occurs immediately after the hero's HP is reduced"
+      ],
+      "missing_rules": [
+        "Anomaly trigger condition when mana is already 0: does an attack that deals damage to a hero who already has 0 mana trigger the Anomaly again?"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assume {dir: [dx, dy]} in the Move action is a relative displacement vector rather than an absolute target coordinate"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does the Anomaly burst trigger only on the transition from mana > 0 to mana == 0, or every time damage is taken while mana is 0?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is the 'dir' input for the Move action intended to be a relative offset (e.g., [0, 1]) or an absolute coordinate (e.g., [0, 1])?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the Anomaly burst damage apply to the enemy that initiated the attack?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "reaches 0"
+      ],
+      "missing_rules": [
+        "behavior when mana is already 0 at the start of an attack",
+        "handling of target IDs that exist but have hp <= 0",
+        "handling of invalid move directions (e.g., non-integers or length != 2)",
+        "behavior for move [0, 0]",
+        "action queue behavior if the queue is initially empty"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "specific log text for Move failure cases",
+        "specific log text for Attack failure cases"
+      ],
+      "risky_assumptions": [
+        "mana always starts at a value greater than 0"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does 'mana reaches 0' trigger the Anomaly if the mana was already 0 before the attack began?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Are enemies with hp <= 0 immediately removed from the grid, or do they remain as obstacles for the Move action?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "The 'Anomaly' burst 'upon rupture' (GDD) and 'reaches 0' (REQ-005) is assumed to be a one-time state transition, but the state object lacks a flag (e.g., 'is_ruptured') to prevent the effect from triggering on every attack while mana remains at 0."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Is the Anomaly burst a one-time event per game, or does it trigger every time an attack occurs while mana is 0? If it is a one-time event, we need to add a tracking property to the hero state to mark the shield as ruptured.",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "reaches 0 (in REQ-005: unclear if this is a state transition from >0 to 0, or if it triggers whenever mana is 0)"
+      ],
+      "missing_rules": [
+        "Log entry for the Anomaly burst trigger",
+        "Log entries for failed Attack actions (target not adjacent or ID missing)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Specific error string for REQ-001 move failures",
+        "Log output for mana shield absorption vs. HP damage transition"
+      ],
+      "risky_assumptions": [
+        "Assuming that enemy HP reduction is a sufficient observable for Anomaly verification without a distinct log event"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does the Anomaly effect trigger only on the specific turn mana drops to 0, or every single attack while mana remains 0?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [
+        "REQ-001 duplicates GDD Move failure logic (grid bounds/occupied)",
+        "REQ-002 duplicates GDD Attack adjacency and simultaneous damage logic",
+        "REQ-006 duplicates GDD Defeat logic (hero.hp <= 0 priority)",
+        "REQ-007 overlaps GDD Victory logic (enemies list empty vs enemies dead and hero.hp > 0)"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The Requirements section (REQ-001, REQ-002, REQ-006, REQ-007) largely duplicates the GDD logic; which section is the definitive source of truth for implementation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "simultaneous damage"
+      ],
+      "missing_rules": [
+        "Whether the Anomaly effect triggers if hero.mana is already 0 at the start of an attack",
+        "Whether Anomaly damage is logged in the action log"
+      ],
+      "conflicting_rules": [
+        "REQ-002 (simultaneous damage) vs REQ-005 (immediately deal anomaly_dmg): it is unclear if the Anomaly burst occurs as part of the simultaneous exchange or as a subsequent step after the exchange is resolved"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that 'mana reaches 0' implies a state transition from >0 to 0, rather than simply being 0"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Does the Anomaly burst trigger if the hero's mana is already 0 when the attack begins, or only when a hit causes it to drop to 0?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In the 'simultaneous' damage phase, does the Anomaly burst happen before, during, or after the mutual HP/mana subtraction?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "simultaneous damage (order of state update for HP/Mana vs Enemy HP)"
+      ],
+      "missing_rules": [
+        "Action queue behavior upon failure (does the simulation halt or skip to the next action?)",
+        "Enemy attack triggers (is the 'mutual damage' in Attack the only way the hero takes damage?)",
+        "Enemy movement rules (are enemies stationary for the duration of the simulation?)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "Log entries for Mana Shield rupture",
+        "Log entries for Anomaly burst damage",
+        "Log entries for Victory/Defeat/Finished states"
+      ],
+      "risky_assumptions": [
+        "Assumption that enemies are passive and do not have their own action turns",
+        "Assumption that the 'simultaneous' damage doesn't check if the enemy died before dealing damage to the hero"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If a Move action fails (REQ-001), should the simulator skip to the next action in the queue or terminate the entire scenario immediately?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Confirming: The only way the Hero takes damage is through the 'mutual damage' trigger during a Hero Attack action. Are there no independent enemy turns?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "reaches 0 (in REQ-005): unclear if this refers to an exact value of 0 or any value <= 0 resulting from damage)",
+      "simultaneous damage (in REQ-002): unclear if the Anomaly burst (REQ-005) is part of the simultaneous damage phase or occurs immediately after the hero's HP is reduced",
+      "reaches 0",
+      "reaches 0 (in REQ-005: unclear if this is a state transition from >0 to 0, or if it triggers whenever mana is 0)",
+      "simultaneous damage",
+      "simultaneous damage (order of state update for HP/Mana vs Enemy HP)"
+    ],
+    "missing_rules": [
+      "Anomaly trigger condition when mana is already 0: does an attack that deals damage to a hero who already has 0 mana trigger the Anomaly again?",
+      "behavior when mana is already 0 at the start of an attack",
+      "handling of target IDs that exist but have hp <= 0",
+      "handling of invalid move directions (e.g., non-integers or length != 2)",
+      "behavior for move [0, 0]",
+      "action queue behavior if the queue is initially empty",
+      "Log entry for the Anomaly burst trigger",
+      "Log entries for failed Attack actions (target not adjacent or ID missing)",
+      "Whether the Anomaly effect triggers if hero.mana is already 0 at the start of an attack",
+      "Whether Anomaly damage is logged in the action log",
+      "Action queue behavior upon failure (does the simulation halt or skip to the next action?)",
+      "Enemy attack triggers (is the 'mutual damage' in Attack the only way the hero takes damage?)",
+      "Enemy movement rules (are enemies stationary for the duration of the simulation?)"
+    ],
+    "conflicting_rules": [
+      "REQ-001 duplicates GDD Move failure logic (grid bounds/occupied)",
+      "REQ-002 duplicates GDD Attack adjacency and simultaneous damage logic",
+      "REQ-006 duplicates GDD Defeat logic (hero.hp <= 0 priority)",
+      "REQ-007 overlaps GDD Victory logic (enemies list empty vs enemies dead and hero.hp > 0)",
+      "REQ-002 (simultaneous damage) vs REQ-005 (immediately deal anomaly_dmg): it is unclear if the Anomaly burst occurs as part of the simultaneous exchange or as a subsequent step after the exchange is resolved"
+    ],
+    "underspecified_outputs": [
+      "specific log text for Move failure cases",
+      "specific log text for Attack failure cases",
+      "Specific error string for REQ-001 move failures",
+      "Log output for mana shield absorption vs. HP damage transition",
+      "Log entries for Mana Shield rupture",
+      "Log entries for Anomaly burst damage",
+      "Log entries for Victory/Defeat/Finished states"
+    ],
+    "risky_assumptions": [
+      "Assume {dir: [dx, dy]} in the Move action is a relative displacement vector rather than an absolute target coordinate",
+      "mana always starts at a value greater than 0",
+      "The 'Anomaly' burst 'upon rupture' (GDD) and 'reaches 0' (REQ-005) is assumed to be a one-time state transition, but the state object lacks a flag (e.g., 'is_ruptured') to prevent the effect from triggering on every attack while mana remains at 0.",
+      "Assuming that enemy HP reduction is a sufficient observable for Anomaly verification without a distinct log event",
+      "Assumption that 'mana reaches 0' implies a state transition from >0 to 0, rather than simply being 0",
+      "Assumption that enemies are passive and do not have their own action turns",
+      "Assumption that the 'simultaneous' damage doesn't check if the enemy died before dealing damage to the hero"
+    ],
+    "BLOCKING_questions": [
+      "Does the Anomaly burst trigger only on the transition from mana > 0 to mana == 0, or every time damage is taken while mana is 0?",
+      "Is the 'dir' input for the Move action intended to be a relative offset (e.g., [0, 1]) or an absolute coordinate (e.g., [0, 1])?",
+      "Does 'mana reaches 0' trigger the Anomaly if the mana was already 0 before the attack began?",
+      "Are enemies with hp <= 0 immediately removed from the grid, or do they remain as obstacles for the Move action?",
+      "Is the Anomaly burst a one-time event per game, or does it trigger every time an attack occurs while mana is 0? If it is a one-time event, we need to add a tracking property to the hero state to mark the shield as ruptured.",
+      "Does the Anomaly effect trigger only on the specific turn mana drops to 0, or every single attack while mana remains 0?",
+      "The Requirements section (REQ-001, REQ-002, REQ-006, REQ-007) largely duplicates the GDD logic; which section is the definitive source of truth for implementation?",
+      "Does the Anomaly burst trigger if the hero's mana is already 0 when the attack begins, or only when a hit causes it to drop to 0?",
+      "In the 'simultaneous' damage phase, does the Anomaly burst happen before, during, or after the mutual HP/mana subtraction?",
+      "If a Move action fails (REQ-001), should the simulator skip to the next action in the queue or terminate the entire scenario immediately?",
+      "Confirming: The only way the Hero takes damage is through the 'mutual damage' trigger during a Hero Attack action. Are there no independent enemy turns?"
+    ]
+  }
+}

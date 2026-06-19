@@ -1,0 +1,1 @@
+A deterministic tactical combat simulator where a hero executes a pre-defined list of actions on a grid to eliminate enemies. The player manages health and positioning, now enhanced by a Mana Shield that absorbs damage and triggers a destructive "Anomaly" burst upon rupture.

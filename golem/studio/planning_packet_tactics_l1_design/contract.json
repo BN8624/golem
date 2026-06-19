@@ -1,0 +1,66 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "Integer",
+      "grid": {
+        "width": "Integer",
+        "height": "Integer"
+      },
+      "hero": {
+        "hp": "Integer",
+        "atk": "Integer",
+        "pos": "[x, y] (Integers)",
+        "mana": "Integer",
+        "anomaly_dmg": "Integer"
+      },
+      "enemies": [
+        {
+          "id": "Integer",
+          "hp": "Integer",
+          "atk": "Integer",
+          "pos": "[x, y] (Integers)"
+        }
+      ],
+      "action_queue": [
+        {
+          "type": "String ('move'|'attack')",
+          "dir": "[dx, dy] (Optional)",
+          "target": "Integer (Optional)"
+        }
+      ],
+      "log": [
+        "String"
+      ],
+      "status": "String ('ACTIVE'|'VICTORY'|'DEFEAT'|'FINISHED')"
+    },
+    "rules": [
+      "Move: NewPos = currentPos + dir. Valid if 0 <= NewPos.x < width AND 0 <= NewPos.y < height AND NewPos is not occupied by any enemy in the current enemies list.",
+      "Attack Failure: Log 'Attack failed: Target [id] not adjacent or does not exist' if target is not orthogonally adjacent or id not found.",
+      "Damage Application: IncomingDamage is subtracted from hero.mana. If IncomingDamage > hero.mana, hero.hp is reduced by (IncomingDamage - hero.mana) and hero.mana is set to 0.",
+      "Anomaly Trigger: If hero.mana was > 0 and becomes <= 0 after an attack, all enemies orthogonally adjacent to the hero take anomaly_dmg.",
+      "Win/Loss Priority: If hero.hp <= 0, status = 'DEFEAT' immediately, even if all enemies are also dead. If enemies list is empty and hero.hp > 0, status = 'VICTORY'.",
+      "Log Requirements: Move success: 'Hero moved to [x,y]'; Move failure: 'Move failed: [reason]'; Attack: 'Hero attacks Enemy [id]'; Rupture: 'Mana Shield ruptured! Anomaly deals [dmg] to adjacent enemies'; Damage: 'Hero takes [dmg] damage'."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ],
+        "description": "Handles CLI arguments (--scenario N), loads the initial state, and invokes the engine to process the action queue."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "processScenario"
+        ],
+        "imports": [],
+        "description": "Contains the deterministic logic for processing actions, managing the grid, calculating damage, and evaluating game status."
+      }
+    ]
+  }
+}

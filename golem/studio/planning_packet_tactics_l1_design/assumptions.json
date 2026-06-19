@@ -1,0 +1,8 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "The simulation is strictly single-threaded and sequential.",
+    "Grid coordinates are always integers.",
+    "The scenario file provides a valid JSON state matching the state_shape."
+  ]
+}

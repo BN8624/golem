@@ -1,0 +1,16 @@
+- **Player Actions**
+    - **Move**: Input `{dir: [dx, dy]}`. State Change: Updates `hero.pos`. Failure: Target position is outside grid boundaries or occupied by an enemy. Log: "Hero moved to [x,y]".
+    - **Attack**: Input `{target: id}`. State Change: Checks orthogonal adjacency. If adjacent, calculates mutual damage. Hero damage is subtracted from enemy HP; enemy damage is processed by the Mana Shield/HP layer. Failure: Target not adjacent or ID does not exist. Log: "Hero attacks Enemy [id]".
+- **Entities**
+    - **Hero**: Has `hp`, `atk`, `pos`, `mana` (shield), and `anomaly_dmg`.
+    - **Enemy**: Has `id`, `hp`, `atk`, `pos`.
+    - **Grid**: Fixed integer coordinate system.
+- **Win/Lose Conditions**
+    - **Victory**: `enemies` list is empty (all `hp <= 0`).
+    - **Defeat**: `hero.hp <= 0`. If both hero and last enemy reach $\le 0$ in the same turn, it is a Defeat.
+    - **Finished**: No actions remaining in the list and enemies still exist.
+- **Non-Goals**
+    - No random chance or critical hits.
+    - No user input during runtime (scenario-based).
+    - No pathfinding; moves are explicit.
+    - No visual rendering; CLI text only.
