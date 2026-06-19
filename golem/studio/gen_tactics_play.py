@@ -16,25 +16,41 @@ BASE = HERE / "tactics_kernel_base"
 PACKET = HERE / "planning_packet_tactics_l7"
 OUT = HERE / "tactics_play"
 
-# 캠페인 한 편 — 7카드 엔진을 루트맵으로 엮은 4전투 데모(검증된 l7 엔진으로 결정적 실행). 콘텐츠는 엔진과 분리.
+# 스토리 캠페인 — 검증된 l7 엔진을 루트맵으로 엮은 6전투 + 서사 데이터(B겹, 출력전용). 엔진/룰은 안 건드림.
+# story.scenes[i] = 전투 i의 장면(이름/도입/처치문). 프롤로그·에필로그는 캠페인 양끝.
 CAMPAIGN = {
     "id": "CAMPAIGN",
+    "title": "변칙검술 연대기 — 각인된 칼날",
+    "prologue": "제국이 '변칙'을 봉인한 지 백 년. 마나로 칼을 두른 마지막 변칙검사 카이런이, 무너진 성채를 거슬러 변칙의 핵으로 향한다.",
+    "epilogue": "변칙의 핵이 갈라지고, 봉인의 쇠사슬이 빛으로 흩어진다. 카이런의 칼끝에서 백 년의 침묵이 끝났다.",
+    "scenes": [
+        {"name": "Ⅰ. 성문 앞 보초", "intro": "허물어진 성문에 보초 하나가 창을 들고 막아선다.", "clear": "창이 부러지고, 길이 열린다."},
+        {"name": "Ⅱ. 무너진 다리", "intro": "끊어진 다리 건너 궁수가 시위를 겨눈다. 사이를 가른 잔벽은 칼은 막아도 변칙의 사거리는 막지 못한다.", "clear": "벽 너머로 변칙의 일격이 꽂힌다."},
+        {"name": "Ⅲ. 독안개 늪", "intro": "늪의 파수병은 두껍다. 단숨에 베지 못하면, 스며든 부식이 대신 갉아먹는다.", "clear": "부식이 끝까지 번져 파수병이 주저앉는다."},
+        {"name": "Ⅳ. 강철 관문", "intro": "강철로 두른 문지기. 한 겹씩 갑주를 깎아내야 한다.", "clear": "갑주가 마지막으로 갈라진다."},
+        {"name": "Ⅴ. 유리 성소", "intro": "성소를 지키는 유리 우상. 단단해 보이나, 받는 모든 충격이 두 배로 되돌아 깨진다.", "clear": "우상이 산산이 부서진다."},
+        {"name": "Ⅵ. 변칙의 핵", "intro": "핵을 지키는 수문장과 그 곁의 잔재. 마지막 두 그림자를 넘으면 봉인에 닿는다.", "clear": "두 그림자가 스러지고, 핵이 드러난다."}
+    ],
     "initialState": {
-        "hero": {"hp": 150, "atk": 40, "pos": [0, 0], "mana": 0, "anomaly_dmg": 0,
-                 "corrosion": {"dmg": 10, "duration": 3}},
-        "enemies": [{"id": "G1", "hp": 40, "atk": 10, "pos": [1, 0]}],
+        "hero": {"hp": 220, "atk": 50, "pos": [0, 0], "mana": 0, "anomaly_dmg": 0,
+                 "corrosion": {"dmg": 15, "duration": 3}},
+        "enemies": [{"id": "보초", "hp": 40, "atk": 12, "pos": [1, 0]}],
         "route": [
-            {"enemies": [{"id": "A1", "hp": 30, "atk": 0, "pos": [2, 0]}], "terrain": {"1,0": "Wall"}},
-            {"enemies": [{"id": "T1", "hp": 50, "atk": 5, "pos": [1, 0], "unit_type": "Hardened"}]},
-            {"enemies": [{"id": "B1", "hp": 100, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]}
+            {"enemies": [{"id": "궁수", "hp": 45, "atk": 0, "pos": [2, 0]}], "terrain": {"1,0": "Wall"}},
+            {"enemies": [{"id": "파수병", "hp": 80, "atk": 0, "pos": [2, 0]}]},
+            {"enemies": [{"id": "문지기", "hp": 60, "atk": 8, "pos": [1, 0], "unit_type": "Hardened"}]},
+            {"enemies": [{"id": "유리우상", "hp": 90, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]},
+            {"enemies": [{"id": "수문장", "hp": 60, "atk": 10, "pos": [1, 0]},
+                          {"id": "잔재", "hp": 40, "atk": 0, "pos": [0, 1]}]}
         ]
     },
     "actions": [
-        {"type": "attack", "target": "G1"},
-        {"type": "ranged_attack", "target": "A1"},
-        {"type": "attack", "target": "T1"},
-        {"type": "attack", "target": "T1"},
-        {"type": "ranged_attack", "target": "B1"}
+        {"type": "attack", "target": "보초"},
+        {"type": "ranged_attack", "target": "궁수"},
+        {"type": "ranged_attack", "target": "파수병"}, {"type": "move", "dir": [0, 1]},
+        {"type": "attack", "target": "문지기"}, {"type": "attack", "target": "문지기"},
+        {"type": "ranged_attack", "target": "유리우상"},
+        {"type": "attack", "target": "수문장"}, {"type": "attack", "target": "수문장"}, {"type": "attack", "target": "잔재"}
     ]
 }
 
@@ -51,7 +67,7 @@ LABELS = {
     "SCN-023": "상태이상 Corrosion DoT 처치", "SCN-024": "Corrosion ×2(Glass)",
     "SCN-025": "Corrosion 처치→루트 전환",
     "SCN-026": "밸런스 recMult→DEFEAT", "SCN-027": "밸런스 atkMult→원샷", "SCN-028": "밸런스 anomMult→일소",
-    "CAMPAIGN": "★ 캠페인 — 7카드 4전투 한 편",
+    "CAMPAIGN": "★ 캠페인 — 변칙검술 연대기(6전투·스토리)",
 }
 
 # 검증된 l7 참조 game_logic을 가져온다(gen_tactics_l7_golden 단일 출처 — 6카드 전부 포함).
@@ -131,6 +147,8 @@ def main():
         t = json.loads(r.stdout)
         t["id"] = s["id"]
         t["label"] = LABELS.get(s["id"], s["id"])
+        if s.get("scenes"):  # 스토리 캠페인 — 서사 데이터(B겹) 부착(엔진과 분리)
+            t["story"] = {k: s[k] for k in ("title", "prologue", "epilogue", "scenes")}
         traces.append(t)
 
     shutil.rmtree(ws)
@@ -146,7 +164,7 @@ def main():
     html = HTML_TEMPLATE.replace("__TRACES__", json.dumps(traces, ensure_ascii=False))
     (OUT / "index.html").write_text(html, encoding="utf-8")
     print(f"  트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
-    print(f"  캠페인 4전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
+    print(f"  캠페인 {camp_final['battles']}전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
     print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l7 엔진).")
     return 0
 
@@ -180,6 +198,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .legend span { display:inline-block; margin-right:10px; }
   .dot { display:inline-block; width:10px; height:10px; border-radius:3px; vertical-align:middle; margin-right:3px; }
   .log { font-size:12px; color:var(--dim); margin-top:6px; min-height:18px; }
+  .story { background:linear-gradient(180deg,#1d2440,#161b2e); border:1px solid var(--grid); border-left:3px solid #ffd866; border-radius:10px; padding:11px 14px; margin-bottom:12px; display:none; }
+  .story.on { display:block; }
+  .story .title { color:#ffd866; font-weight:700; font-size:13px; margin-bottom:4px; }
+  .story .scene { color:var(--txt); font-weight:600; font-size:13px; }
+  .story .text { color:var(--dim); font-size:13px; margin-top:3px; line-height:1.5; }
+  .story .text.epi { color:var(--ok); }
 </style>
 </head>
 <body>
@@ -193,6 +217,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <button id="next">다음 ▶</button>
     <span id="frameinfo" class="sub" style="margin:0"></span>
   </div>
+  <div id="story" class="story"></div>
   <div class="stage">
     <canvas id="cv" width="440" height="440"></canvas>
     <div class="side">
@@ -278,6 +303,21 @@ function renderSide(tr, f){
   const a = f.lastAction;
   document.getElementById('log').textContent = a ? ('액션: '+a.type+(a.target?(' → '+a.target):(a.dir?(' '+JSON.stringify(a.dir)):''))) : '초기 상태';
   document.getElementById('frameinfo').textContent = '프레임 '+(fi+1)+'/'+tr.frames.length;
+  renderStory(tr, f);
+}
+
+// 서사 패널(B겹) — 캠페인에만. 프롤로그(첫 프레임)→현재 전투 장면→승리시 에필로그.
+function renderStory(tr, f){
+  const box = document.getElementById('story');
+  if (!tr.story) { box.className='story'; box.innerHTML=''; return; }
+  box.className='story on';
+  const s = tr.story, last = fi === tr.frames.length-1;
+  const sc = s.scenes[Math.min(f.battle, s.scenes.length) - 1] || {};
+  let html = '<div class="title">'+s.title+'</div>';
+  if (fi === 0) html += '<div class="text">'+s.prologue+'</div>';
+  html += '<div class="scene">'+(sc.name||'')+'</div><div class="text">'+(sc.intro||'')+'</div>';
+  if (last && f.status==='VICTORY') html += '<div class="text epi">'+(sc.clear||'')+' '+s.epilogue+'</div>';
+  box.innerHTML = html;
 }
 
 function setScn(i){ cur=i; fi=0; stop(); draw(); }
