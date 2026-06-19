@@ -1,0 +1,8 @@
+turn: 3
+scene: hub
+fragments: ["F1"]
+beats: ["AWAKENING"]
+eclipse: 7
+ending: null
+isGameOver: false
+logs: ["선택:infiltrate","선택:attune","선택:altar_1","조각:F1","BEAT:AWAKENING"]

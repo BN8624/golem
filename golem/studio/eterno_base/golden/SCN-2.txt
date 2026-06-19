@@ -1,8 +1,8 @@
-turn: 1
-scene: end_fled
-fragments: []
-beats: []
-eclipse: null
-ending: FLED
+turn: 3
+scene: end_ritual
+fragments: ["F1"]
+beats: ["AWAKENING"]
+eclipse: 8
+ending: RITUAL_COMPLETE
 isGameOver: true
-logs: ["선택:turn_back"]
+logs: ["선택:enter","선택:altar_1","조각:F1","BEAT:AWAKENING","선택:march"]

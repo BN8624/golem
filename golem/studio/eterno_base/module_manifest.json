@@ -7,7 +7,7 @@
     {"path": "src/engine.js", "exports": ["runScenario"], "imports": ["src/constants.js", "src/scenes.js", "src/state.js", "src/beats.js"]},
     {"path": "src/scenes.js", "exports": ["SCENES"], "imports": []},
     {"path": "src/beats.js", "exports": ["fireBeats"], "imports": ["src/constants.js"]},
-    {"path": "src/state.js", "exports": ["createInitialState"], "imports": []},
+    {"path": "src/state.js", "exports": ["createInitialState"], "imports": ["src/constants.js"]},
     {"path": "src/format.js", "exports": ["render"], "imports": []},
     {"path": "src/constants.js", "exports": ["ALL_FRAGMENTS", "MAX_STEPS", "ECLIPSE_TURNS"], "imports": []}
   ]

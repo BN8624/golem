@@ -1,4 +1,4 @@
-// 에테르노 IF 진행 루프 — 선택을 순서대로 적용해 장면 전이·조각 수집·비트 발동·일식 카운트다운·결말 판정을 결정적으로 수행한다. 카드는 scenes/beats를 편집한다
+// 에테르노 IF 진행 루프 — 선택을 순서대로 적용해 장면 전이·조각 수집·비트 발동·보름 카운트다운·결말 판정을 결정적으로 수행한다. 카드는 scenes/beats를 편집한다
 const C = require('./constants');
 const { SCENES } = require('./scenes');
 const { createInitialState } = require('./state');
@@ -23,7 +23,7 @@ exports.runScenario = (scenario) => {
 
     const choiceId = choices[i];
     const option = scene.choices && scene.choices[choiceId];
-    if (!option) { state.logs.push('무시:' + choiceId); continue; } // 무효 선택은 상태 변화 없이 무시
+    if (!option) { state.logs.push('무시:' + choiceId); continue; } // 무효 선택은 턴·시간을 소모하지 않고 무시
 
     state.turn += 1;
     state.logs.push('선택:' + choiceId);
@@ -34,19 +34,15 @@ exports.runScenario = (scenario) => {
       applyBeats(state); // 조각을 얻을 때마다 비트 조건을 재평가한다
     }
 
-    if (option.startTimer && state.eclipse === null) {
-      state.eclipse = C.ECLIPSE_TURNS; // 개기일식까지의 보름 카운트다운 점화
-    }
-
     if (option.verdict) { // 찬탈자 대면: 다섯 조각 완비 여부로 결말이 갈린다
       state.scene = C.ALL_FRAGMENTS.every((f) => state.fragments.includes(f)) ? 'end_dawn' : 'end_ritual';
     } else {
       state.scene = option.to;
     }
 
-    // 일식이 점화됐고 아직 결말이 아니면 매 턴 보름이 줄고, 0이면 피의 제사가 완성된다
+    // 개기일식: 결말이 아닌 장면에 머무는 매 턴 보름이 1 줄고, 0이 되면 피의 제사가 완성된다(end_ritual)
     const next = SCENES[state.scene];
-    if (state.eclipse !== null && next && next.ending == null) {
+    if (next && next.ending == null) {
       state.eclipse -= 1;
       if (state.eclipse <= 0) state.scene = 'end_ritual';
     }

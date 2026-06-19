@@ -1,8 +1,8 @@
-turn: 2
-scene: altar_1
-fragments: []
-beats: []
-eclipse: null
-ending: null
-isGameOver: false
-logs: ["선택:infiltrate","무시:nonsense","선택:attune"]
+turn: 8
+scene: end_dawn
+fragments: ["F1","F2","F3","F4","F5"]
+beats: ["AWAKENING","RESONANCE"]
+eclipse: 3
+ending: NEW_DAWN
+isGameOver: true
+logs: ["선택:infiltrate","선택:attune","선택:altar_1","조각:F1","BEAT:AWAKENING","선택:altar_2","조각:F2","선택:altar_3","조각:F3","선택:altar_4","조각:F4","선택:altar_5","조각:F5","BEAT:RESONANCE","선택:march"]

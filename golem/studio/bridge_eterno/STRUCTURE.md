@@ -31,9 +31,9 @@
 turn        number      진행 카운터
 scene       string      현재 노드
 fragments   string[]    수집한 조각 ['F1'..'F5'] (유니크, 5개 목표)
-eclipse     number|null 개기일식까지 남은 보름 카운트다운(decision에서 15로 점화, null=미점화)
-beats       string[]    발동한 서사 비트
-ending      string|null NEW_DAWN | CAUGHT | RITUAL_COMPLETE | null
+eclipse     number      개기일식까지 남은 보름; 시작=ECLIPSE_TURNS(10), 결말 아닌 장면 매 턴 −1, 0이면 RITUAL
+beats       string[]    발동한 서사 비트(AWAKENING=F1, RESONANCE=F1~5)
+ending      string|null NEW_DAWN | RITUAL_COMPLETE | FLED | CAUGHT | null
 isGameOver  boolean
 logs        string[]
 ```
@@ -46,8 +46,9 @@ logs        string[]
 1. **조각 수집(F1~F5)** — detective 단서(clue) 패턴 직역. 제단 노드에서 "피를 떨어뜨린다" 선택 시
    해당 조각을 `fragments`에 유니크 추가·`조각:F<n>` 로그. 5개 모두 모여야 보스 노드가 진실 결말로 분기.
    → `detective_base` clue 메커니즘과 1:1. **검증 가능**(개수·유니크·로그 결정적).
-2. **개기일식 타이머(보름)** — `decision` 노드 진입 시 `eclipse=15` 점화. 이후 매 턴 −1.
-   `eclipse<=0`인데 보스를 못 깼으면 결말 `RITUAL_COMPLETE`(피의 제사 완성=BAD). **검증 가능**(카운트다운 결정적).
+2. **개기일식 타이머(보름)** — `eclipse`가 시작부터 카운트다운(always-on, ECLIPSE_TURNS=10). 결말 아닌
+   장면에 머무는 매 턴 −1, 0이면 결말 `RITUAL_COMPLETE`(피의 제사 완성=BAD). always-on이라 시작턴 off-by-one
+   모호성 없음. **검증 가능**(카운트다운 결정적).
 3. **변칙검술(정석=막힘/변칙=관통)** — `combat_base`로 직역. 적은 *마나 방패*(정석 궤적 필터) 보유.
    - 정석 ATTACK(RULE-04)은 방패가 흘려보냄 → 데미지 0(막힘).
    - 신규 ANOMALY 액션: "환상통으로 무게중심 붕괴"를 비용으로(자세 불안정 토큰) 방패 사각 관통 → 데미지 적중.
@@ -58,22 +59,28 @@ logs        string[]
 
 원작엔 없는 "질 수 있는 길"을 넣어 게임으로 만든다. 충실도 훼손 없이 *원작 결말을 정답 경로*로 둔다.
 
-- **NEW_DAWN(원작 결말, 정답)**: F1~F5 전부 수집 + 보스 전투를 변칙으로 승리 + `eclipse>0`.
-- **CAUGHT(실패)**: 검문(scene1)·잠입(scene10)에서 정석/들킴 선택 → 즉시 구금. 원작에서 카엘이 *피한* 분기.
-- **RITUAL_COMPLETE(실패)**: 조각 미완 또는 타이머 소진(`eclipse<=0`)으로 보스 도달 실패/지연 → 피의 제사 완성.
-- (전투 패배도 CAUGHT/RITUAL로 환원.)
+- **NEW_DAWN(원작 결말, 정답)**: F1~F5 전부 수집 + `march`로 대면 승리(타이머 만료 전).
+- **RITUAL_COMPLETE(실패)**: 조각 미완으로 대면하거나 타이머 소진(`eclipse<=0`) → 피의 제사 완성.
+- **FLED(이탈)**: `turn_back`/`flee`로 퀘스트 포기.
+- **CAUGHT(실패)**: 검문에서 `bluff`로 들킴 → 즉시 구금(Card1이 더하는 분기). 원작에서 카엘이 *피한* 길.
+- (이후 전투 패배도 CAUGHT/RITUAL로 환원.)
 
-이 셋은 detective의 TRUTH/COLD_CASE/WALKED_AWAY 3결말 구조와 동형 → 패턴 재사용.
+base 결말 셋(NEW_DAWN/RITUAL_COMPLETE/FLED)은 detective의 TRUTH/COLD_CASE/WALKED_AWAY와 동형, CAUGHT는 카드가 add-only로 추가.
 
-## 5. 카드 분해 (누적 — engine/state 고정, 콘텐츠+규칙만 성장)
+## 5. 카드 분해 (허브형 add-only 누적 — engine/state/beats 고정, scenes 곁가지만 성장)
 
-- **Card 1 (IF, detective 패턴)** — `checkpoint`+`altar_1`(원작 1·2장면). 검문 잠입 분기(들킴=CAUGHT) +
-  조각1 수집. 골렘 쇼케이스의 detective_base 그대로 쓰되 clue→fragment, 결말 라벨만 교체. **첫 빌드 대상.**
-- **Card 2 (전투)** — `combat_discover`(4장면). combat_base에 마나방패+ANOMALY 규칙 추가(변칙검술 발견).
-- **Card 3 (IF 누적)** — `altar_2`·`armory`·`sanctum`(5·6·8장면) 조각 2·3·5 수집 + `decision` 타이머 점화.
-- **Card 4 (전투 누적)** — `combat_master`·`final_combat`(7·11장면) 변칙 숙달·보스, 결말 분기 확정.
+**핵심 규율(A1, 수정)**: detective/sokoban처럼 **base가 완결된 줄거리**이고 카드는 **허브(hub)에 곁가지를
+ADD**한다(기존 전이 불변 → 회귀 바이트동일 보장). 줄거리를 "앞으로 늘리는"(기존 종료를 전이로 바꾸는) 방식은
+누적 회귀를 깨므로 금지.
 
-각 카드는 직전 카드 출력 위에 누적, 직전 전체 시나리오 회귀 0 깨짐이 불변식(쇼케이스 규율 + 사전필터 ②).
+- **eterno_base(완결)** — `start`→(`enter`)→`hub`에서 다섯 조각(altar_1~5) 회수→`march` 대면→
+  NEW_DAWN/RITUAL_COMPLETE/FLED. AWAKENING(F1)·RESONANCE(F1~5)·타이머 전부 base가 실행. **엔진 기계장치 완비.**
+- **Card 1 (l1, scenes.js만)** — `start`에 `infiltrate` 곁가지 ADD → `checkpoint`(attune→hub / bluff→CAUGHT).
+  기존 enter/turn_back 불변 = 회귀 무결. **패킷화 완료, 첫 빌드 대상.**
+- **Card 2 (combat, 누적)** — hub에 전투 곁가지(`patrol`→combat_base 마나방패+ANOMALY→hub) ADD. 변칙검술.
+- **Card 3 (beats/scenes 누적)** — 조각 회수 시 추가 서사 비트(배신 기억 등) + 곁가지 장면. add-only.
+
+각 카드는 직전 카드 출력 위에 누적, 직전 전체 시나리오 회귀 0 깨짐이 불변식(쇼케이스 규율 + 사전필터 ①).
 
 ## 6. 경계 — 골렘 vs 사람
 
@@ -83,7 +90,7 @@ logs        string[]
 
 ## 7. 다음 단계
 
-1. (다음) **Card 1 패킷화** — `planning_packet_eterno_l1`(contract: state_shape+RULE-01..07) +
-   `specqa_packet_eterno_l1`(시나리오+골든, REF node 역산). detective_l1을 템플릿으로. ★빌드는 키.
-2. Card 2 combat 규칙(마나방패+ANOMALY) 계약화.
-3. 누적 빌드 → 사전필터 ② 통과 → 사람 검토.
+1. **Card 1 패킷화 — 완료.** `eterno_base`(7모듈, RULE-01~07 완비) + `planning_packet_eterno_l1`(RULE-08) +
+   `specqa_packet_eterno_l1`(누적 8시나리오, REF node 역산, 회귀 base 골든과 바이트동일). driver 등록(l1).
+2. (다음) **무인 빌드 `driver_showcase.py eterno`(★키)** — 31B가 base에 Card1(scenes.js) 패치 → 게이트·합의·골든 diff.
+3. Card 2 combat 규칙(마나방패+ANOMALY) 계약화 → 누적 빌드 → 사전필터 ① 통과 → 사람 검토.
