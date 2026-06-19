@@ -1,4 +1,0 @@
-[
-  { "id": "misattributed", "draft": "beatsheet_misattributed.md", "golden": ["S2", "S4"] },
-  { "id": "partial", "draft": "beatsheet_partial.md", "golden": ["S3"] }
-]

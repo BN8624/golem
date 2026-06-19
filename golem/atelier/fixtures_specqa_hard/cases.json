@@ -1,4 +1,0 @@
-[
-  { "id": "scene_fp_trap", "golden_canon": [] },
-  { "id": "scene_atomized", "golden_canon": ["C1", "C2", "C3", "C4"] }
-]

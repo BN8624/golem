@@ -1,4 +1,0 @@
-[
-  { "id": "clean", "draft": "chapter_clean.md", "golden": [] },
-  { "id": "violation", "draft": "chapter_violation.md", "golden": ["C1", "C2"] }
-]
