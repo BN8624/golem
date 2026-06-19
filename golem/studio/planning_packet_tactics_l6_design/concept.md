@@ -1,0 +1,1 @@
+The player controls a single hero in a deterministic tactical grid, executing a pre-defined list of actions to eliminate passive enemies. The core loop involves managing health and mana to trigger high-damage "Anomaly" explosions while utilizing ranged attacks to apply lingering status effects that degrade enemy health over time.

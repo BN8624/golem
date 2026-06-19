@@ -1,0 +1,270 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "modified by unit_type (order of operations for Hardened -1 and Glass x2 is undefined)"
+      ],
+      "missing_rules": [
+        "Handling of excess damage when enemy.atk > hero.mana (does it bleed into hero.hp?)",
+        "Target of Resonant self-damage (does it reduce hero.hp or hero.mana?)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Whether the Corrosion tick occurs on the same turn the effect is applied by ranged_attack",
+        "Whether the target of a melee attack is included in the Rupture AoE if they are orthogonally adjacent"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If an enemy is both Hardened and Glass, is the damage calculated as (atk - 1) * 2 or (atk * 2) - 1?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "When mana is absorbed and reaches 0, does any remaining attack damage from that specific hit reduce the hero's HP?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the self-damage from Resonant enemies bypass the mana shield and hit HP directly?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Does the 'end of every hero action attempt' tick for Corrosion include the turn the Corrosion was first applied?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Behavior when action_list targets an enemy ID that is already dead.",
+        "Mana recovery/recharge mechanism (or confirmation that mana is a non-renewable resource for the entire route).",
+        "Order of resolution for simultaneous death (e.g., hero and enemy both hit 0 HP in the same attack).",
+        "Whether Corrosion ticks apply to enemies that were killed during the action phase of the same turn."
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that 'drops from >0 to <= 0' means Rupture cannot trigger again until mana is somehow replenished.",
+        "Assumption that targets of attacks must be alive to satisfy distance conditions."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If an action targets a dead enemy, is the action skipped (failure) or does it execute against a 'ghost'?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is there any way to restore mana, or is the Rupture a one-time event per route/battle?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Does the 'Battle Transition' happen immediately upon the last enemy's death, or after the final action's Corrosion tick and decay?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "CLI output (REQ-010) omits 'hero.mana', making it impossible to directly verify mana absorption (REQ-001) and the exact moment of Rupture transition (REQ-002) without indirect inference.",
+        "CLI output (REQ-010) omits 'Corrosion duration', making the verification of duration resets (REQ-006) dependent on waiting for expiration rather than direct observation.",
+        "CLI output (REQ-010) omits 'current_battle_idx', making the 'increment route index' part of the Battle Transition rule non-observable if subsequent battles share identical enemy/terrain layouts."
+      ],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Should the CLI output format in REQ-010 be expanded to include 'mana', 'current_battle_idx', and 'status durations' to ensure these rules are directly testable?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "The multi-battle route system (Battle Transition, route index, persisting stats across battles) introduces campaign-level state management that may be too large for a small core-mechanic prototype."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Can the route system be simplified to a single-battle scenario to focus exclusively on the Anomaly and Corrosion interaction loop?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Conductive terrain effect is defined three times: in GDD 'attack' action, GDD 'Tiles' section, and REQ-003.",
+        "Unit type modifiers (Glass, Hardened, Resonant) are duplicated across GDD 'Entities & Rules' and REQ-007, 008, 009.",
+        "Corrosion application, tick, and duration logic are duplicated across GDD 'ranged_attack', GDD 'Status Effect', and REQ-004, 005, 006.",
+        "Mana absorption and Rupture triggers are duplicated across GDD 'attack' and REQ-001, 002.",
+        "Battle transition position reset is duplicated across GDD 'Battle Transition' and REQ-011."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The Requirements section is a near-total mirror of the GDD. Should these be consolidated into a single source of truth to prevent synchronization errors during updates?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "status"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The term 'status' is used to refer to three different concepts: the global game state (game_status), unit-specific debuffs (Status Effect/enemy.status), and the log reporting (status update). Should these be disambiguated to avoid confusion during implementation?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "modified by unit_type (Order of operations for Glass x2 and Hardened -1 is not defined)"
+      ],
+      "missing_rules": [
+        "Mana recovery mechanism (Currently, Rupture can only occur once per route as mana is persisted and never replenished)",
+        "Execution order of end-of-turn events (Whether Corrosion ticks occur before or after the Battle Transition)",
+        "Damage source for Resonant penalty (Whether the 1 self-damage is absorbed by mana or subtracted directly from HP)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "The 'status update' log mentioned in Actions is not defined in the required CLI output format (REQ-010)"
+      ],
+      "risky_assumptions": [
+        "Assumption that the target of a melee attack is included in the 'all living enemies' group for the Rupture effect",
+        "Assumption that mana can drop below 0 (negative values) rather than clamping at 0"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Should damage modifiers be applied as (Base - Hardened) * Glass or (Base * Glass) - Hardened?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is mana intended to be a non-renewable resource for the entire route, or is a recovery rule missing?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the Corrosion tick trigger on the turn the last enemy is killed, before the Battle Transition occurs?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The Concept defines a tactical grid encounter to eliminate passive enemies, but the GDD, State, and REQ-011 introduce a 'Route' system (multiple battles, battle transitions, and stat persistence). Is this multi-stage campaign progression intended, or is it an out-of-scope feature?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "managing health and mana (mana has no recovery mechanism, implying 'managing' only means 'spending')"
+      ],
+      "missing_rules": [
+        "Damage overflow: behavior when enemy.atk exceeds remaining hero.mana (does remaining damage hit hero.hp immediately?)",
+        "Damage floor: whether damage calculations (especially Hardened -1) can result in negative values/healing",
+        "Multiplier stacking: order of operations for Conductive (x2) and Glass (x2) modifiers (additive vs multiplicative)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Battle transition timing: whether victory/transition checks occur immediately after an enemy dies via Corrosion tick or only after a full action is resolved",
+        "Action execution: assumption that the action_list is processed sequentially/automatically"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "Is mana intended to be a non-renewable resource for the entire route, or is a recovery mechanic missing?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the damage from a Rupture apply to the enemy that triggered it if they are orthogonally adjacent?",
+          "class": "ASSUMED"
+        },
+        {
+          "q": "Should the 'Finished' state trigger if the action list is empty but enemies remain, even if a Corrosion tick would have killed the last enemy on that final turn?",
+          "class": "DEFERRED"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "modified by unit_type (order of operations for Hardened -1 and Glass x2 is undefined)",
+      "status",
+      "modified by unit_type (Order of operations for Glass x2 and Hardened -1 is not defined)",
+      "managing health and mana (mana has no recovery mechanism, implying 'managing' only means 'spending')"
+    ],
+    "missing_rules": [
+      "Handling of excess damage when enemy.atk > hero.mana (does it bleed into hero.hp?)",
+      "Target of Resonant self-damage (does it reduce hero.hp or hero.mana?)",
+      "Behavior when action_list targets an enemy ID that is already dead.",
+      "Mana recovery/recharge mechanism (or confirmation that mana is a non-renewable resource for the entire route).",
+      "Order of resolution for simultaneous death (e.g., hero and enemy both hit 0 HP in the same attack).",
+      "Whether Corrosion ticks apply to enemies that were killed during the action phase of the same turn.",
+      "Mana recovery mechanism (Currently, Rupture can only occur once per route as mana is persisted and never replenished)",
+      "Execution order of end-of-turn events (Whether Corrosion ticks occur before or after the Battle Transition)",
+      "Damage source for Resonant penalty (Whether the 1 self-damage is absorbed by mana or subtracted directly from HP)",
+      "Damage overflow: behavior when enemy.atk exceeds remaining hero.mana (does remaining damage hit hero.hp immediately?)",
+      "Damage floor: whether damage calculations (especially Hardened -1) can result in negative values/healing",
+      "Multiplier stacking: order of operations for Conductive (x2) and Glass (x2) modifiers (additive vs multiplicative)"
+    ],
+    "conflicting_rules": [],
+    "underspecified_outputs": [
+      "CLI output (REQ-010) omits 'hero.mana', making it impossible to directly verify mana absorption (REQ-001) and the exact moment of Rupture transition (REQ-002) without indirect inference.",
+      "CLI output (REQ-010) omits 'Corrosion duration', making the verification of duration resets (REQ-006) dependent on waiting for expiration rather than direct observation.",
+      "CLI output (REQ-010) omits 'current_battle_idx', making the 'increment route index' part of the Battle Transition rule non-observable if subsequent battles share identical enemy/terrain layouts.",
+      "The 'status update' log mentioned in Actions is not defined in the required CLI output format (REQ-010)"
+    ],
+    "risky_assumptions": [
+      "Whether the Corrosion tick occurs on the same turn the effect is applied by ranged_attack",
+      "Whether the target of a melee attack is included in the Rupture AoE if they are orthogonally adjacent",
+      "Assumption that 'drops from >0 to <= 0' means Rupture cannot trigger again until mana is somehow replenished.",
+      "Assumption that targets of attacks must be alive to satisfy distance conditions.",
+      "The multi-battle route system (Battle Transition, route index, persisting stats across battles) introduces campaign-level state management that may be too large for a small core-mechanic prototype.",
+      "Conductive terrain effect is defined three times: in GDD 'attack' action, GDD 'Tiles' section, and REQ-003.",
+      "Unit type modifiers (Glass, Hardened, Resonant) are duplicated across GDD 'Entities & Rules' and REQ-007, 008, 009.",
+      "Corrosion application, tick, and duration logic are duplicated across GDD 'ranged_attack', GDD 'Status Effect', and REQ-004, 005, 006.",
+      "Mana absorption and Rupture triggers are duplicated across GDD 'attack' and REQ-001, 002.",
+      "Battle transition position reset is duplicated across GDD 'Battle Transition' and REQ-011.",
+      "Assumption that the target of a melee attack is included in the 'all living enemies' group for the Rupture effect",
+      "Assumption that mana can drop below 0 (negative values) rather than clamping at 0",
+      "Battle transition timing: whether victory/transition checks occur immediately after an enemy dies via Corrosion tick or only after a full action is resolved",
+      "Action execution: assumption that the action_list is processed sequentially/automatically"
+    ],
+    "BLOCKING_questions": [
+      "If an enemy is both Hardened and Glass, is the damage calculated as (atk - 1) * 2 or (atk * 2) - 1?",
+      "When mana is absorbed and reaches 0, does any remaining attack damage from that specific hit reduce the hero's HP?",
+      "If an action targets a dead enemy, is the action skipped (failure) or does it execute against a 'ghost'?",
+      "Should the CLI output format in REQ-010 be expanded to include 'mana', 'current_battle_idx', and 'status durations' to ensure these rules are directly testable?",
+      "Should damage modifiers be applied as (Base - Hardened) * Glass or (Base * Glass) - Hardened?",
+      "Is mana intended to be a non-renewable resource for the entire route, or is a recovery rule missing?",
+      "The Concept defines a tactical grid encounter to eliminate passive enemies, but the GDD, State, and REQ-011 introduce a 'Route' system (multiple battles, battle transitions, and stat persistence). Is this multi-stage campaign progression intended, or is it an out-of-scope feature?",
+      "Is mana intended to be a non-renewable resource for the entire route, or is a recovery mechanic missing?"
+    ]
+  }
+}

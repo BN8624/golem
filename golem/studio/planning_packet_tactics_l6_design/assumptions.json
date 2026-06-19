@@ -1,0 +1,7 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "The action_list is processed sequentially in a single execution flow.",
+    "Mana is clamped at 0 (cannot be negative)."
+  ]
+}

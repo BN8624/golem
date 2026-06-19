@@ -1,0 +1,77 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "number",
+      "hero": {
+        "hp": "number",
+        "atk": "number",
+        "pos": "[x, y]",
+        "mana": "number",
+        "anomaly_dmg": "number"
+      },
+      "enemies": [
+        {
+          "id": "string",
+          "hp": "number",
+          "atk": "number",
+          "pos": "[x, y]",
+          "unit_type": "Hardened | Glass | Resonant | Normal",
+          "status": {
+            "type": "Corrosion",
+            "duration": "number"
+          }
+        }
+      ],
+      "terrain": {
+        "x,y": "Empty | Wall | Conductive"
+      },
+      "route": [
+        {
+          "enemies": "Enemy[]",
+          "terrain": "TerrainMap"
+        }
+      ],
+      "current_battle_idx": "number",
+      "action_list": "Action[]",
+      "game_status": "PLAYING | VICTORY | DEFEAT | FINISHED"
+    },
+    "rules": [
+      "Turn Sequence: 1. Execute Action -> 2. Resolve Melee Damage/Mana absorption -> 3. Trigger Rupture (if mana >0 -> <=0) -> 4. Process Corrosion Ticks -> 5. Decay Status Durations -> 6. Check Victory/Transition.",
+      "Melee Damage Formula: target.hp -= max(0, (hero.atk - (target.unit_type == 'Hardened' ? 1 : 0)) * (target.unit_type == 'Glass' ? 2 : 1)).",
+      "Hero Damage Resolution: damage = enemy.atk; mana_absorbed = min(hero.mana, damage); hero.mana -= mana_absorbed; hero.hp -= (damage - mana_absorbed).",
+      "Rupture Trigger: If hero.mana transitions from > 0 to <= 0 during a melee attack, all living enemies with Manhattan distance 1 from hero take damage.",
+      "Rupture Damage Formula: dmg = hero.anomaly_dmg * (terrain[hero.pos] == 'Conductive' ? 2 : 1) * (target.unit_type == 'Glass' ? 2 : 1).",
+      "Corrosion Tick: Every enemy with Corrosion duration > 0 takes max(0, 1 * (target.unit_type == 'Glass' ? 2 : 1)) damage.",
+      "Resonant Penalty: If a Resonant enemy is hit by Rupture, hero.hp -= 1.",
+      "Battle Transition: If all enemies in current_battle_idx are dead, current_battle_idx++, hero.pos = [0,0], load next battle enemies/terrain. If no more battles, status = VICTORY."
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "GameEngine"
+        ],
+        "imports": [
+          "src/state.js"
+        ]
+      },
+      {
+        "path": "src/state.js",
+        "exports": [
+          "initialState"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

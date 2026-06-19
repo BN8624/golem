@@ -1,0 +1,32 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero(atk:2), Enemy(Hardened+Glass, hp:10)",
+    "input": "attack {target:e1}",
+    "expect": "Damage = (2-1)*2 = 2. Enemy hp = 8."
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero(mana:2, hp:10), Enemy(atk:5)",
+    "input": "attack {target:e1}",
+    "expect": "Mana becomes 0, Hero hp becomes 10 - (5-2) = 7. Rupture triggers."
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero(mana:1, anomaly_dmg:3, pos:[0,0]), Terrain[0,0]=Conductive, Enemy(Glass, pos:[0,1])",
+    "input": "attack {target:e1}",
+    "expect": "Rupture triggers. Damage = 3 * 2 (Conductive) * 2 (Glass) = 12. Enemy dies."
+  },
+  {
+    "id": "SCN-004",
+    "setup": "Hero(pos:[0,0]), Enemy(hp:5, pos:[0,2])",
+    "input": "ranged_attack {target:e1}",
+    "expect": "Enemy takes atk damage, gains Corrosion(dur:3). End of turn: Enemy takes 1 corrosion damage. hp = 4, dur = 2."
+  },
+  {
+    "id": "SCN-005",
+    "setup": "Route with 2 battles. Battle 1: 1 enemy.",
+    "input": "attack {target:e1} (kills enemy)",
+    "expect": "Battle 1 cleared. current_battle_idx = 1. hero.pos = [0,0]. Battle 2 enemies loaded."
+  }
+]

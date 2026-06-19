@@ -1,0 +1,89 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "integer",
+      "status": "string (READY | VICTORY | DEFEAT | FINISHED)",
+      "hero": {
+        "hp": "integer", "atk": "integer", "pos": "integer[2]",
+        "mana": "integer (optional; default 0)",
+        "anomaly_dmg": "integer (optional; default 0)",
+        "corrosion": "object (optional) {dmg:int, duration:int} — if present, ranged attacks inflict Corrosion"
+      },
+      "enemies": [
+        {"id": "string", "hp": "integer", "atk": "integer", "pos": "integer[2]",
+         "unit_type": "string (optional; 'Hardened'|'Glass'|'Resonant')",
+         "status": "object (internal) {type:'Corrosion', duration:int, dmg:int}"}
+      ],
+      "terrain": "object (optional, in initialState): 'x,y' -> 'Wall'|'Conductive'.",
+      "route": "array (optional): FOLLOWING battles, each {enemies:[...], terrain?:{...}}.",
+      "route_index": "integer (internal; default 0)"
+    },
+    "rules": [
+      "REQ-001: CLI argument --scenario N selects the world from src/scenarios.js (getScenario(N), 1-based).",
+      "REQ-002: turn = turn + 1 after every action attempt (including a blocked move or a no-op attack). Battle advancement (REQ-018) and Corrosion ticks (REQ-019) consume no extra turn.",
+      "REQ-003: A melee attack deals simultaneous mutual damage: hero damages the target (amount per REQ-017) AND that enemy subtracts its atk from the hero (mediated by Mana Shield REQ-012). Enemies never act on their own; there is no enemy turn, movement, or AI.",
+      "REQ-004: HP can be negative.",
+      "REQ-005: Win/Lose checks occur strictly post-action (after Corrosion ticks and any battle advancement).",
+      "REQ-006: If, post-action, both hero.hp <= 0 and all current-battle enemies <= 0, status = DEFEAT (before VICTORY).",
+      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY.",
+      "REQ-008: Print these lines, in order, nothing else: status, turn, hero_hp, hero_pos, enemies. Each enemy is EXACTLY {id, hp, pos} — DO NOT include atk/unit_type/status. mana, anomaly_dmg, corrosion, terrain, unit_type, status, route, route_index are INTERNAL and NEVER printed.",
+      "REQ-009: Actions exhausted with neither VICTORY nor DEFEAT -> FINISHED.",
+      "REQ-010: A move is blocked (pos unchanged, no combat) when destination is off-grid (negative), occupied by a living enemy, or a 'Wall' cell (REQ-015). turn still increments.",
+      "REQ-011: An action is {type:'attack', target} (melee, REQ-003), {type:'move', dir:[dx,dy]} (REQ-010), or {type:'ranged_attack', target} (REQ-014). Melee needs orthogonal adjacency (dist==1) else no-op.",
+      "REQ-012: Mana Shield. hero.mana (default 0) absorbs incoming melee damage first: absorbed=min(incoming,mana); mana-=absorbed (>=0); overflow hits hp. mana only changes on received melee damage.",
+      "REQ-013: Anomaly rupture. If within a single MELEE attack hero.mana goes >0 -> <=0, then after damage and before post-action checks, every orthogonally-adjacent living enemy takes the rupture's anomaly damage (REQ-016/017), once per action, melee only.",
+      "REQ-014: Ranged attack. {type:'ranged_attack', target} hits only if the target is alive and 2<=Manhattan distance<=3: hero damages it (REQ-017), takes nothing in return (mana unaffected, never ruptures), and (REQ-019) inflicts Corrosion if hero.corrosion is set. Adjacent/out-of-range/missing/dead = no-op. Terrain does not block ranged. turn still increments.",
+      "REQ-015: Terrain (static). 'Wall' blocks the hero's move (added to REQ-010), not ranged/melee/mana/anomaly. 'Conductive' under the hero at rupture time doubles the base anomaly amount (REQ-016). Terrain never changes within a battle.",
+      "REQ-016: Conductive doubles the base anomaly amount (hero.anomaly_dmg*2) before per-enemy REQ-017 multipliers.",
+      "REQ-017: Enemy unit_type (optional, one). 'Hardened' = melee to it -1 (min 0) before other factors; ranged/anomaly/corrosion unaffected. 'Glass' = ALL incoming damage to it doubled (melee, ranged, anomaly, AND corrosion ticks). 'Resonant' = hero takes 1 hp damage each time this enemy is hit by an anomaly rupture. Damage to a targeted enemy: melee=(Glass?2:1)*max(0,hero.atk-(Hardened?1:0)); ranged=(Glass?2:1)*hero.atk; anomaly=(Glass?2:1)*baseAnomaly.",
+      "REQ-018: Route map. initialState may include 'route' (array of FOLLOWING battles; the first battle is top-level enemies/terrain). If absent, single battle, behavior unchanged. After an action (and after Corrosion ticks), if the CURRENT battle's enemies are all dead AND the hero is alive AND further battles remain (route_index < route.length), immediately load the next battle: enemies = fresh copies of route[route_index].enemies, terrain replaced by that battle's, hero.pos reset to [0,0], hero hp/atk/mana/anomaly_dmg/corrosion persist, route_index += 1 (no extra turn). VICTORY only when all current enemies are dead AND no further battles remain. DEFEAT (hp<=0) ends the run any time. The printed enemies are always the current battle's.",
+      "REQ-019: Status effect — Corrosion (damage over time). The hero may carry an optional hero.corrosion = {dmg:int, duration:int}. If absent, ranged attacks inflict no status and all prior behavior is byte-for-byte unchanged. If present, a successful ranged_attack (REQ-014) ALSO inflicts Corrosion on the target: set the target's status to {type:'Corrosion', duration: hero.corrosion.duration, dmg: hero.corrosion.dmg} (re-applying refreshes the duration to that value; no additive stacking). At the END of every hero action attempt — after the action's combat/rupture, and BEFORE route advancement (REQ-018) and the post-action win/loss check (REQ-005) — each living enemy (hp>0) carrying a Corrosion status with duration>0 takes status.dmg damage (doubled if that enemy is Glass per REQ-017; Hardened does NOT reduce it), then that enemy's status.duration decreases by 1 and the status is removed when it reaches 0. A corrosion tick can kill an enemy and thereby clear a battle (which then advances per REQ-018). status is INTERNAL and never printed."
+    ],
+    "output_contract": {
+      "fields": ["status", "turn", "hero_hp", "hero_pos", "enemies"],
+      "lines": [
+        "status: <one of READY|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "hero_hp: <integer, may be negative>",
+        "hero_pos: <a JSON array [x, y] of integers>",
+        "enemies: <a JSON array; each enemy is EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — DO NOT include atk>"
+      ]
+    },
+    "scenario_data": [
+      {"id": "SCN-001", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}, {"type": "attack", "target": "E1"}, {"type": "attack", "target": "E1"}]},
+      {"id": "SCN-002", "initialState": {"hero": {"hp": 20, "atk": 10, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 100, "atk": 30, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-003", "initialState": {"hero": {"hp": 1, "atk": 10, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 100, "atk": 50, "pos": [1, 0]}]}, "actions": [{"type": "move", "dir": [1, 0]}]},
+      {"id": "SCN-004", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": []}, "actions": [{"type": "move", "dir": [-1, 0]}]},
+      {"id": "SCN-005", "initialState": {"hero": {"hp": 10, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 10, "atk": 20, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-006", "initialState": {"hero": {"hp": 20, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 20, "atk": 20, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-007", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0], "mana": 50, "anomaly_dmg": 30}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-008", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0], "mana": 5, "anomaly_dmg": 30}, "enemies": [{"id": "E1", "hp": 100, "atk": 10, "pos": [1, 0]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-009", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 60}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}, {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-010", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [2, 0]}]}, "actions": [{"type": "ranged_attack", "target": "E1"}]},
+      {"id": "SCN-011", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [4, 0]}]}, "actions": [{"type": "ranged_attack", "target": "E1"}, {"type": "move", "dir": [1, 0]}, {"type": "ranged_attack", "target": "E1"}]},
+      {"id": "SCN-012", "initialState": {"hero": {"hp": 100, "atk": 50, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [3, 0]}]}, "actions": [{"type": "ranged_attack", "target": "E1"}]},
+      {"id": "SCN-013", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 10, "atk": 0, "pos": [5, 5]}], "terrain": {"1,0": "Wall"}}, "actions": [{"type": "move", "dir": [1, 0]}, {"type": "move", "dir": [0, 1]}]},
+      {"id": "SCN-014", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}, {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1]}], "terrain": {"1,1": "Conductive"}}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-015", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [2, 0]}], "terrain": {"1,0": "Wall"}}, "actions": [{"type": "ranged_attack", "target": "E1"}]},
+      {"id": "SCN-016", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [1, 0], "unit_type": "Hardened"}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-017", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]}, "actions": [{"type": "ranged_attack", "target": "E1"}]},
+      {"id": "SCN-018", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]}, {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1], "unit_type": "Glass"}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-019", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [1, 1], "mana": 5, "anomaly_dmg": 30}, "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0], "unit_type": "Resonant"}, {"id": "E2", "hp": 40, "atk": 0, "pos": [0, 1], "unit_type": "Resonant"}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-020", "initialState": {"hero": {"hp": 100, "atk": 50, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [1, 0]}], "route": [{"enemies": [{"id": "E2", "hp": 40, "atk": 10, "pos": [1, 0]}]}]}, "actions": [{"type": "attack", "target": "E1"}, {"type": "attack", "target": "E2"}]},
+      {"id": "SCN-021", "initialState": {"hero": {"hp": 100, "atk": 50, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 40, "atk": 0, "pos": [1, 0]}], "route": [{"enemies": [{"id": "E2", "hp": 40, "atk": 0, "pos": [1, 0]}]}]}, "actions": [{"type": "attack", "target": "E1"}]},
+      {"id": "SCN-022", "initialState": {"hero": {"hp": 30, "atk": 50, "pos": [0, 0]}, "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [1, 0]}], "route": [{"enemies": [{"id": "E2", "hp": 200, "atk": 25, "pos": [1, 0]}]}]}, "actions": [{"type": "attack", "target": "E1"}, {"type": "attack", "target": "E2"}]},
+      {"id": "SCN-023", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0], "corrosion": {"dmg": 5, "duration": 3}}, "enemies": [{"id": "E1", "hp": 35, "atk": 0, "pos": [2, 0]}]}, "actions": [{"type": "ranged_attack", "target": "E1"}, {"type": "move", "dir": [0, 1]}, {"type": "move", "dir": [0, 1]}]},
+      {"id": "SCN-024", "initialState": {"hero": {"hp": 100, "atk": 20, "pos": [0, 0], "corrosion": {"dmg": 5, "duration": 2}}, "enemies": [{"id": "E1", "hp": 100, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]}, "actions": [{"type": "ranged_attack", "target": "E1"}, {"type": "move", "dir": [0, 1]}]},
+      {"id": "SCN-025", "initialState": {"hero": {"hp": 100, "atk": 40, "pos": [0, 0], "corrosion": {"dmg": 10, "duration": 2}}, "enemies": [{"id": "E1", "hp": 50, "atk": 0, "pos": [2, 0]}], "route": [{"enemies": [{"id": "E2", "hp": 40, "atk": 0, "pos": [1, 0]}]}]}, "actions": [{"type": "ranged_attack", "target": "E1"}, {"type": "attack", "target": "E2"}]}
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {"path": "main.js", "exports": [], "imports": ["src/engine.js", "src/scenarios.js"]},
+      {"path": "src/engine.js", "exports": ["runScenario"], "imports": ["src/game_logic.js"]},
+      {"path": "src/game_logic.js", "exports": ["applyAction", "checkGameState", "updateState"], "imports": []},
+      {"path": "src/scenarios.js", "exports": ["getScenario"], "imports": []}
+    ]
+  }
+}
