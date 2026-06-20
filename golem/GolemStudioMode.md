@@ -1197,3 +1197,22 @@ context-notes 대화 G(서사·밸런스·스케일) 참조.
 - 외형은 엔진 상태를 **읽기만** 한다(룰 복제 금지 = 검증 보장 유지). 첫 외형 = 이모지 웹(`studio/eterno_play/server.js`, 아이폰 테일스케일).
 - 가챠/카드뽑기 가능 — **시드 PRNG**(결정적·검증 가능)로. 금지는 `Math.random`(비결정)뿐. 골렘이 확률·천장 정확성까지 검증.
 - 환원 불가 = 재미·밸런스 취향·아트·게임 "손맛". 사람 몫.
+
+## 23. 실현된 자율 파이프라인 — 완결-후보 무인 생성 (2026-06-20, G82)
+
+§22의 "골렘 완전 자율"이 전술 SRPG에서 실제로 동작하는 형태. 누적 9카드(l1 변칙검술·l2 사거리·l3 지형·l4 유닛·l5 루트맵·l6 상태이상·l7 밸런스·l8 흡혈·l9 처형) 전부 게이트 11/11·골든 diff 0. 클로드 손번역 없이 골렘+하네스가 "엔진+카드+스토리+렌더" 완결 후보를 찍는다.
+
+### 23.1 카드 = base 가산 델타 (그래프트 모델)
+한 카드 = 직전 계약(REQ-001..0NN) **verbatim 이월** + 새 REQ 1개(자기완결) + 새 세계 + 참조 game_logic의 **순수 슈퍼셋**(분기만 추가). 가산성 덕에 직전 세계는 자동 바이트동일(회귀 무결). 메커니즘은 hero/enemy의 **opt-in 필드**로 게이팅(없으면 기존과 동일) — 출력 5필드 고정, engine/main/scenarios 불변, **`game_logic.js` 한 모듈만** 변경. 다층 구조(루트맵의 전투 전환)도 updateState/checkGameState에 담아 engine 불변을 유지.
+
+### 23.2 4조각 도구 (각 단계가 무인)
+- **(a) 설계 = `card_delta.py` + `graft.py`.** card_delta: 골렘이 현 base 계약+참조 game_logic을 FROZEN으로 받아 가산 델타(new_req·new_worlds+골렘 자기 expected·game_logic 전문)를 base 관례로 직접 출력(HERO-ONLY 불변 앵커로 적턴/AI 환각 차단). graft: 델타를 조립해 키0 검증(회귀 바이트동일·gate·골든·결정성) + **교차검산**(골렘 코드 실행 결과 ↔ 골렘이 적은 expected — 어긋나면 그럴듯하게 틀림으로 보고 기각).
+- **빌드 = patch-누적 base.** graft 검증된 lN 참조를 `tactics_base_lN`으로 동결 → 다음 카드는 `build_graded --base tactics_base_lN --inject-modules src/game_logic.js --patch`. 빌더가 전체가 아니라 **델타(FIND/REPLACE)만** 출력 → 출력이 누적 게임 크기와 분리. **전체 재출력(A)은 8카드 깊이에서 붕괴(overall 0.718, 빌더가 누적 코드 축약), patch는 1.0 회복**(§21.5 입증). patch_apply는 줄끝공백 폴백으로 적용 성공률 보강(앞 들여쓰기·모호는 거부=오적용 방지).
+- **(b) 스토리 = `gen_tactics_story.py`.** 골렘이 캠페인 전투 시퀀스(고정 비트)를 받아 서사(title/prologue/scenes[name/intro/clear]/epilogue) 저작. 검증은 **구조만**(장면 수=전투 수·키 채움), 엔진/룰 불변(출력전용 B겹), 문장 질은 사람. 산출=campaign_story.json.
+- **(c) 렌더 = `gen_tactics_play.py --level lN`.** 패킷·참조 자동 로드, 정사각 탑다운 canvas로 전 세계+캠페인 턴 재생(읽기전용·검증 엔진 require). campaign_story.json 있으면 서사 패널 표시.
+
+### 23.3 종착점 드라이버 = `driver_autocard.py`
+한 줄 아이디어 → card_delta(설계+검증) → 참조 동결 → patch 빌드(그린 판정 gate≥1·합의1.0·golden []) → 누적 → 끝나면 스토리+렌더 → REPORT. 실패 단계면 마지막 그린 base 보존하고 중단(키 낭비 방지). 한 바퀴 무인 시연 = l9 처형 카드(손번역 0·5.7분).
+
+### 23.4 "어디까지 만드냐"의 답
+스코프는 골렘이 계산하는 고정선이 아니라 **선별 퍼널(§1.5)이 닫는다.** 골렘은 "안 깨진 완결 후보"까지 싸게·많이 찍고, "더 키울지"는 사람 판단("재미있나")·실노출 신호가 정한다. driver_autocard가 이 "완결 후보까지·선별에서 멈춤"을 코드로 구현. 남은 손작업(card_delta·patch 1패스율, 인터랙티브 플레이, 선별 퍼널 결합)은 점진 흡수 대상.

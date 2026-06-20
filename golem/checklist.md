@@ -279,5 +279,15 @@ P1 (다음 실험 전):
 - [x] **(진단) 남은 golden_diff 3종** — (a)적 출력 shape(빌드 full vs oracle partial) (b)승리 타이밍(빈 적→VICTORY/FINISHED 빌드 분열) (c)SCN-010 specqa 오라클버그(적을 영웅칸 스폰).
 - [x] **(★키) 3핀 재파생 planning FROZEN** — 출력 5키 고정·enemies{id,hp,pos}만·승패 액션직후만·위치 유일성 → REQ-005/007/008로 핀. 단 specqa v3 환각(TAKE_DAMAGE·좌표MOVE 지어냄, REQ-007 위반) → 빌드 전 손검산이 잡음.
 - [x] **(키0) 하네스 fix #2 — specqa 환각 차단(미커밋)** — `specqa.py` lead·synth 프롬프트에 FROZEN CONTRACT 전문 주입(명령·출력 모델) + "계약 밖 명령/키 금지" + 옛 `prints key:value` 줄 제거. **사후 validator 2종은 기각**(어휘 substring·키일관성 둘 다 정상 런 막는 false positive — specqa_demo fixture 깨짐 실증). specqa replay·run_keyless ALL PASS. 효과는 ★키 재런으로만 확인.
-- [ ] **(다음 세션, ★키) specqa 재런(프롬프트 fix 효과 확인) → 손검산 → build → 1.0 목표.** 깨끗하면 커널 완성 → 카드 base. 또 환각이면 다음 핀 자리.
-- [ ] (이후) 카드 누적(변칙검술→사거리→지형→유닛→루트) / specqa 오라클버그(같은칸 스폰) 흡수 / 1.0 커널을 driver_showcase에 등록.
+- [x] **(★키) specqa 재런 → 환각 멈춤 확인 → build v6 합의 1.0·golden_diff 0 → 커널 닫힘 → `tactics_kernel_base` 동결(G81).**
+
+## 전술 카드 9장 누적 + 자율 완결-후보 파이프라인 (G82, 2026-06-19~20) — 이유 context-notes G82
+- [x] **카드 l1~l5 손그래프트 누적 — 전부 게이트 11/11·합의 1.0·golden_diff 0.** l1 변칙검술(마나방패+ANOMALY)·l2 사거리·l3 지형(Wall/Conductive)·l4 유닛(Hardened/Glass/Resonant)·l5 루트맵. 각 골렘 planning ★키 설계 → base 관례 그래프트(직전 REQ 이월+새 REQ) → 확장 참조(직전 순수 슈퍼셋) 골든 → `_validate_tactics_lN_keyless` → `build_graded --inject src/game_logic.js`. engine/main/scenarios 불변·출력 5필드 고정.
+- [x] **운영 교정** — 카드마다 취향 안 묻고 골렘 자율·키 안 멈추고 끝까지(메모리 golem-no-taste-questions). 종착점=골렘 완전자율, 지금은 하네스 컨트롤.
+- [x] **"다 하기" 4트랙** — ①외형 `gen_tactics_play.py`(정사각 탑다운 렌더러, 키0) ②카드더 l6 상태이상(Corrosion DoT) ③밸런스 l7 config(atkMult/recMult/anomMult) ④캠페인 루트맵 6전투+서사. l6 합의 첫 1.0 미달(0.971)이나 golden_diff 0.
+- [x] **patch-누적 base 빌드(스케일링 fix)** — 전체재작성 l8=0.718 붕괴(8카드 깊이) → l7 참조 `tactics_base_l7` 동결 후 l8 `--patch`=1.0·golden 0·출력 ~1.3KB. go-forward=`tactics_base_lN` 동결 후 `--patch`.
+- [x] **자율 인프라 4조각** — (a)`card_delta.py`(골렘 base-델타)+`graft.py`(조립·키0검증·교차검산) / 빌드 patch-누적 / (b)`gen_tactics_story.py`(골렘 서사·구조검증) / (c)`gen_tactics_play.py --level` 일반화.
+- [x] **종착점 `driver_autocard.py`** — idea→설계→base동결→patch빌드(그린)→스토리→렌더 한 바퀴 무인. 시연 l9 처형: gate 11/11·합의1.0·golden0(34세계)·손번역 0·5.7분. REPORT.json.
+- [x] **견고화** — graft 신규세계 "≥1 발동"으로 완화(l3식 비발동 유효) / patch_apply 줄끝공백 폴백(`_locate`, l8 3/11 CARD 흡수). 단위테스트+run_keyless 그린.
+- [x] **외형 호평·아이폰 서버** — 서사 한 겹에 사용자 "느낌이 확 달라"(메모리 golem-story-layer-matters). 테일스케일 서버 확인 후 내림.
+- [ ] **(다음, 사용자 결정)** 카드 여러 장 PLAN 밤샘 누적 / card_delta·patch 1패스율↑ / 인터랙티브 플레이(사용자 "그 다음") / 선별 퍼널(card_proposer 결합) / 콘텐츠·문장 다듬기.
