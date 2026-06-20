@@ -62,7 +62,24 @@ def main(argv=None):
     ap.add_argument("--start", default="l8", help="시작 base 레벨(이미 graft 검증된 최신)")
     ap.add_argument("--setting", default="백 년 전 봉인된 '변칙' 검술을 되살린 마지막 검사가 무너진 제국 성채를 거슬러 봉인의 핵으로 향한다.",
                     help="캠페인 서사 세계관 한 줄")
+    ap.add_argument("--ideas-file", default=None,
+                    help="propose_cards.py 산출(tactics_ideas.json) 경로. 주면 그 아이디어들로 PLAN 자동 구성(선별 퍼널).")
+    ap.add_argument("--max-cards", type=int, default=0, help="ideas-file에서 누적할 카드 수 상한(0=전부)")
     args = ap.parse_args(argv)
+
+    # 선별 퍼널: 제안 아이디어가 있으면 그걸로 PLAN 구성(start 위로 lN+1, lN+2 …). 없으면 기본 PLAN.
+    plan = PLAN
+    if args.ideas_file:
+        ideas = json.loads(Path(args.ideas_file).read_text(encoding="utf-8"))
+        if args.max_cards > 0:
+            ideas = ideas[:args.max_cards]
+        plan = []
+        prev = args.start
+        for x in ideas:
+            nxt = f"l{int(prev[1:]) + 1}"
+            idea_text = f"{x.get('name','')}: {x.get('mechanic','')} (관측: {x.get('observable','')})".strip()
+            plan.append((nxt, prev, idea_text))
+            prev = nxt
 
     sys.path.insert(0, str(HERE))
     sys.path.insert(0, str(ROOT))
@@ -84,7 +101,7 @@ def main(argv=None):
     results = []
     last_good = args.start
     stopped = None
-    for level, prev, idea in PLAN:
+    for level, prev, idea in plan:
         if time.time() - started > MAX_SECONDS:
             stopped = "시간 상한"
             break

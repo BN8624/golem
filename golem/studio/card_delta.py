@@ -122,21 +122,26 @@ def main(argv=None):
         game_logic=prev_ref, invariants=INVARIANTS, idea=args.idea,
         nextreq=nextreq, firstworld=f"{prev_n + 1:03d}")
 
-    def gen():
+    def gen(p=prompt):
         if args.replay:
             return Path(args.replay).read_text(encoding="utf-8")
         from llm import KeyPool, LLMClient
         pool = KeyPool(get_api_keys(), models=["gemma-4-31b-it"])
         with pool.checkout() as key:
-            return LLMClient(api_key=key).generate("critic", prompt)
+            return LLMClient(api_key=key).generate("critic", p)
 
+    import build_graded as bg
+    feedback = ""  # 1패스율↑: 직전 시도 실패 사유를 다음 프롬프트에 피드백해 골렘이 자가수정
     for attempt in range(1, args.cap + 1):
-        print(f"[CARD-DELTA {args.level}] 시도 {attempt}/{args.cap} — 골렘 base-델타 생성{' (replay)' if args.replay else ' (★키)'}")
-        raw = gen()
+        print(f"[CARD-DELTA {args.level}] 시도 {attempt}/{args.cap} — 골렘 base-델타 생성{' (replay)' if args.replay else ' (★키)'}"
+              + (" [피드백 동봉]" if feedback else ""))
+        cur_prompt = prompt + (("\n\n=== 직전 시도 피드백(반드시 고칠 것) ===\n" + feedback) if feedback else "")
+        raw = gen(cur_prompt) if not args.replay else gen()
         (HERE / f"_carddelta_{args.level}_raw.txt").write_text(raw, encoding="utf-8")
         try:
             d = _extract_json(raw)
         except Exception as e:  # noqa: BLE001
+            feedback = f"이전 응답이 JSON 파싱 실패({e}). 마크다운/산문 없이 JSON 오브젝트 하나만 출력하라."
             print(f"  파싱 실패: {e} (raw=_carddelta_{args.level}_raw.txt)")
             continue
 
@@ -150,14 +155,28 @@ def main(argv=None):
                                        game_logic, prev_ref, write=False)
         # 교차검산: 골렘 expected(이해) vs 참조 실행(코드)
         ref_exp = {s["id"]: s["expected"] for s in specqa}
-        import build_graded as bg
-        cross = [wid for wid, ce in claimed.items()
-                 if ce is None or any(bg._canon(ce.get(k)) != bg._canon(ref_exp[wid].get(k))
-                                      for k in G.OUTPUT_KEYS if k in ref_exp[wid])]
+        cross = {}
+        for wid, ce in claimed.items():
+            if wid not in ref_exp:
+                continue
+            if ce is None:
+                cross[wid] = "expected 누락"
+                continue
+            diff = {k: (ce.get(k), ref_exp[wid].get(k)) for k in G.OUTPUT_KEYS
+                    if k in ref_exp[wid] and bg._canon(ce.get(k)) != bg._canon(ref_exp[wid].get(k))}
+            if diff:
+                cross[wid] = diff
         if cross:
-            print(f"  교차검산 불일치(골렘 코드↔이해 어긋남): {cross} — 채택 안 함")
+            detail = "; ".join(f"{w}: " + ", ".join(f"{k} 너={v[0]} 실제={v[1]}" for k, v in (d.items() if isinstance(d, dict) else []))
+                               for w, d in cross.items())
+            feedback = ("교차검산 불일치 — 다음 세계서 너의 expected가 너의 game_logic 실행 결과와 다르다(game_logic을 "
+                        "신뢰하고 expected를 다시 계산하라; 미종료 status는 FINISHED, turn은 실행한 액션 수): " + detail)
+            print(f"  교차검산 불일치(골렘 코드↔이해 어긋남): {list(cross)} — 채택 안 함")
             continue
         if not ok:
+            feedback = ("graft 키0 검증 실패: game_logic이 가산적이지 않거나(새 필드 없을 때 직전 세계가 바이트동일이어야 "
+                        "함) 새 세계 중 카드를 실제 발동시키는 게 없음. 직전 동작을 그대로 두고 새 카드만 더하라. 새 세계는 "
+                        "카드 없을 때와 결과가 달라지게 짜라(대상이 평타엔 살고 카드로만 죽는 식).")
             print("  graft 키0 검증 실패 — 채택 안 함")
             continue
 

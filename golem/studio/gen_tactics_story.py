@@ -18,8 +18,13 @@ PROMPT = """You are the story lead (StoryForge) for a deterministic tactical-gri
 rules are FIXED and you MUST NOT change them — you only author narrative TEXT (a display-only layer).
 
 The campaign is a fixed sequence of {n} battles (a "route"). Each battle below lists its foes (id, hp, and any
-unit trait) and terrain — write a scene for EACH battle, in order, that fits those foes. Stay consistent across
-scenes (one world, one hero's journey). Write all prose in Korean; end Korean sentences with a period, not a colon.
+unit trait) and terrain — write a scene for EACH battle, in order, that fits those foes.
+
+CRAFT (continuity over flavor): give the hero a NAME and use it; carry one through-line (a goal/stake set in the
+prologue) and let tension ESCALATE battle by battle toward the finale; let later scenes call back to earlier ones
+so it reads as one journey, not 6 separate blurbs. Reflect each battle's actual foe trait in its scene (an armored
+foe feels impenetrable, a glass one brittle, etc.). Evocative but concise (intro 1-2 sentences). Write all prose in
+Korean; end Korean sentences with a period, not a colon.
 
 SETTING IDEA: {idea}
 
