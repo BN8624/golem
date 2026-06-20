@@ -36,3 +36,6 @@ golem/studio/station_base_v2/
 golem/studio/_station_ref2b_tmp/
 golem/studio/_station_ref3_tmp/
 golem/studio/_combat_ref_tmp/
+
+# card_delta.py 디버그 raw 응답 덤프(추적 안 함)
+golem/studio/_carddelta_*_raw.txt
