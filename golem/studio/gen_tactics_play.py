@@ -148,7 +148,12 @@ def main():
         t["id"] = s["id"]
         t["label"] = LABELS.get(s["id"], s["id"])
         if s.get("scenes"):  # 스토리 캠페인 — 서사 데이터(B겹) 부착(엔진과 분리)
-            t["story"] = {k: s[k] for k in ("title", "prologue", "epilogue", "scenes")}
+            # 골렘 산출(gen_tactics_story.py)이 있으면 그걸, 없으면 인라인 초안 폴백
+            cs = OUT / "campaign_story.json"
+            if cs.exists():
+                t["story"] = json.loads(cs.read_text(encoding="utf-8"))
+            else:
+                t["story"] = {k: s[k] for k in ("title", "prologue", "epilogue", "scenes")}
         traces.append(t)
 
     shutil.rmtree(ws)
