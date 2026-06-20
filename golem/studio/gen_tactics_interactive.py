@@ -17,7 +17,7 @@ OUT = HERE / "tactics_play"
 
 # 플레이 레벨 — 초기상태(엔진이 spread). 검증 엔진이 그대로 굴리므로 메커니즘 정합 보장.
 LEVELS = [
-    {"name": "1. 훈련장 (이동·근접)", "desc": "방향 버튼으로 붙어서 적을 클릭해 베라.",
+    {"name": "1. 튜토리얼 (이동·근접)", "desc": "쉬운 연습판. 방향으로 붙어서 적을 클릭해 베라.",
      "initialState": {"hero": {"hp": 100, "atk": 30, "pos": [0, 0]},
                       "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [2, 0]},
                                   {"id": "E2", "hp": 40, "atk": 10, "pos": [0, 2]}]}},
@@ -30,10 +30,11 @@ LEVELS = [
                       "enemies": [{"id": "E1", "hp": 50, "atk": 10, "pos": [1, 0]},
                                   {"id": "E2", "hp": 50, "atk": 8, "pos": [0, 1]},
                                   {"id": "E3", "hp": 50, "atk": 8, "pos": [2, 1]}]}},
-    {"name": "4. 전도체·유리·처형", "desc": "Conductive 위 파열=ANOMALY×2, Glass=받는 피해×2. 처형: 약해진 적은 근접 한 방에 즉사.",
-     "initialState": {"hero": {"hp": 90, "atk": 25, "pos": [1, 1], "mana": 8, "anomaly_dmg": 30, "execute": 20},
-                      "enemies": [{"id": "유리", "hp": 60, "atk": 10, "pos": [1, 0], "unit_type": "Glass"},
-                                  {"id": "강철", "hp": 70, "atk": 12, "pos": [0, 1], "unit_type": "Hardened"}],
+    {"name": "4. 전도체·유리·처형 (위치 퍼즐)", "desc": "적이 흩어져 한 방엔 못 쓸어. [1,1] 전도체로 가 파열(ANOMALY×2)·Glass×2·처형(약한 적 즉사)을 엮어 풀어라.",
+     "initialState": {"hero": {"hp": 90, "atk": 20, "pos": [0, 0], "mana": 6, "anomaly_dmg": 25, "execute": 15},
+                      "enemies": [{"id": "강철", "hp": 60, "atk": 8, "pos": [1, 0], "unit_type": "Hardened"},
+                                  {"id": "유리", "hp": 80, "atk": 6, "pos": [2, 1], "unit_type": "Glass"},
+                                  {"id": "잔재", "hp": 25, "atk": 4, "pos": [1, 2], "unit_type": "Resonant"}],
                       "terrain": {"1,1": "Conductive"}}},
     {"name": "5. 캠페인 (루트 3전투)", "desc": "한 전투를 끝내면 다음 전투로. 영웅 체력은 이어진다.",
      "initialState": {"hero": {"hp": 150, "atk": 35, "pos": [0, 0], "mana": 10, "anomaly_dmg": 30,
