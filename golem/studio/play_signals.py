@@ -119,6 +119,20 @@ def verdict(s):
     return "OK · " + "; ".join(flags) if flags else "OK"
 
 
+def compute_signals(levels, gl_src):
+    """레벨 리스트 + 엔진 소스 → 신호 dict 리스트(재사용 가능·키0). propose_levels가 검증 게이트로 씀."""
+    js = SEARCH_JS.replace("__GAME_LOGIC__", gl_src).replace("__LEVEL_JSON__", json.dumps(levels, ensure_ascii=False))
+    tmp = HERE / "_play_signals_tmp.js"
+    tmp.write_text(js, encoding="utf-8")
+    try:
+        r = subprocess.run(["node", str(tmp)], capture_output=True, text=True, encoding="utf-8", timeout=300)
+    finally:
+        tmp.unlink(missing_ok=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"node 실패: {r.stderr[:400]}")
+    return json.loads(r.stdout)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", default="l9", help="embed할 검증 엔진(기본 l9)")
@@ -131,15 +145,7 @@ def main(argv=None):
         pass
     gl = import_module(f"gen_tactics_{args.level}_golden").REF_GAME_LOGIC
     levels = import_module("gen_tactics_interactive").LEVELS
-
-    js = SEARCH_JS.replace("__GAME_LOGIC__", gl).replace("__LEVEL_JSON__", json.dumps(levels, ensure_ascii=False))
-    tmp = HERE / "_play_signals_tmp.js"
-    tmp.write_text(js, encoding="utf-8")
-    r = subprocess.run(["node", str(tmp)], capture_output=True, text=True, encoding="utf-8", timeout=300)
-    tmp.unlink(missing_ok=True)
-    if r.returncode != 0:
-        print("node 실패:", r.stderr[:400]); return 1
-    sig = json.loads(r.stdout)
+    sig = compute_signals(levels, gl)
     print(f"== 실노출 신호(결정적, {args.level} 엔진) — 판정은 사람 ==")
     for s in sig:
         mt = s["min_turns"] if s["solvable"] else "-"

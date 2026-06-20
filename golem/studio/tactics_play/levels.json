@@ -1,0 +1,156 @@
+[
+  {
+    "name": "1. 첫 번째 교전",
+    "desc": "근접 공격의 상호 피해 메커니즘을 익힙니다.",
+    "teaches": "REQ-003 (Mutual Damage)",
+    "initialState": {
+      "hero": {
+        "hp": 10,
+        "atk": 3,
+        "pos": [
+          0,
+          0
+        ]
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 7,
+          "atk": 2,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "min_turns": 3,
+      "greedy_melee": "VICTORY",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [],
+      "min_turns_no_card": null
+    }
+  },
+  {
+    "name": "2. 원거리 저격",
+    "desc": "벽을 우회하거나 원거리 공격으로 강인한 적을 처리하세요.",
+    "teaches": "REQ-014 (Ranged Attack), REQ-017 (Hardened), REQ-015 (Wall)",
+    "initialState": {
+      "hero": {
+        "hp": 10,
+        "atk": 3,
+        "pos": [
+          0,
+          0
+        ]
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 7,
+          "atk": 2,
+          "pos": [
+            2,
+            0
+          ],
+          "unit_type": "Hardened"
+        }
+      ],
+      "terrain": {
+        "1,0": "Wall"
+      }
+    },
+    "_signals": {
+      "min_turns": 3,
+      "greedy_melee": "FINISHED",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [],
+      "min_turns_no_card": null
+    }
+  },
+  {
+    "name": "4. 전술적 조화",
+    "desc": "강인한 적을 상대로 생명력 흡수와 변칙 피해를 조합해 생존하세요.",
+    "teaches": "Combination of Rupture, Lifesteal, and Hardened",
+    "initialState": {
+      "hero": {
+        "hp": 10,
+        "atk": 2,
+        "pos": [
+          0,
+          0
+        ],
+        "mana": 1,
+        "anomaly_dmg": 4,
+        "lifesteal": 0.5
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 3,
+          "pos": [
+            1,
+            0
+          ],
+          "unit_type": "Hardened"
+        }
+      ],
+      "terrain": {
+        "0,0": "Conductive"
+      }
+    },
+    "_signals": {
+      "min_turns": 4,
+      "greedy_melee": "DEFEAT",
+      "greedy_ranged": "DEFEAT",
+      "card_fields": [
+        "mana",
+        "anomaly_dmg"
+      ],
+      "min_turns_no_card": 7
+    }
+  },
+  {
+    "name": "3. 과부하 방출",
+    "desc": "마나 쉴드가 깨질 때 발생하는 변칙 피해와 전도성 지형을 활용하세요.",
+    "teaches": "REQ-012 (Mana Shield), REQ-013 (Anomaly Rupture), REQ-015/016 (Conductive)",
+    "initialState": {
+      "hero": {
+        "hp": 15,
+        "atk": 1,
+        "pos": [
+          0,
+          0
+        ],
+        "mana": 2,
+        "anomaly_dmg": 5
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 3,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ],
+      "terrain": {
+        "0,0": "Conductive"
+      }
+    },
+    "_signals": {
+      "min_turns": 5,
+      "greedy_melee": "VICTORY",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [
+        "mana",
+        "anomaly_dmg"
+      ],
+      "min_turns_no_card": null
+    }
+  }
+]

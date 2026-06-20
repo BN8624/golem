@@ -16,7 +16,8 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "tactics_play"
 
 # 플레이 레벨 — 초기상태(엔진이 spread). 검증 엔진이 그대로 굴리므로 메커니즘 정합 보장.
-LEVELS = [
+# 골렘 생성·검증 팩(tactics_play/levels.json, propose_levels.py 산출)이 있으면 그걸 우선 로드, 없으면 아래 빌트인.
+_BUILTIN_LEVELS = [
     {"name": "1. 튜토리얼 (이동·근접)", "desc": "쉬운 연습판. 방향으로 붙어서 적을 클릭해 베라.",
      "initialState": {"hero": {"hp": 100, "atk": 30, "pos": [0, 0]},
                       "enemies": [{"id": "E1", "hp": 40, "atk": 10, "pos": [2, 0]},
@@ -44,6 +45,22 @@ LEVELS = [
                                 {"enemies": [{"id": "유리우상", "hp": 90, "atk": 8, "pos": [1, 0], "unit_type": "Glass"},
                                              {"id": "잔재", "hp": 40, "atk": 6, "pos": [0, 1], "unit_type": "Resonant"}]}]}},
 ]
+
+
+def _load_levels():
+    """골렘 생성·검증 팩(tactics_play/levels.json)이 있으면 로드, 없으면 빌트인. 손편집 없이 노브 재실행으로 교체."""
+    pack = HERE / "tactics_play" / "levels.json"
+    if pack.exists():
+        try:
+            lv = json.loads(pack.read_text(encoding="utf-8"))
+            if lv:
+                return lv
+        except Exception:  # noqa: BLE001
+            pass
+    return _BUILTIN_LEVELS
+
+
+LEVELS = _load_levels()
 
 
 def main(argv=None):
