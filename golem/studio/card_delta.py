@@ -53,8 +53,9 @@ with EXACTLY these keys:
   ],
   "game_logic": "<the COMPLETE updated src/game_logic.js as one string — current reference PLUS your additive change>"
 }}
-Provide 3 new worlds that exercise the card (each with the EXACT 5-field expected you compute by hand). The new
-worlds must use the card; without the card's new field they would behave as before. Keep enemy ids like 'E1'.
+Provide 3 new worlds that exercise the card (each with the EXACT 5-field expected you compute by hand). Each new world MUST actually TRIGGER the card — its 5-field result must differ from what the SAME world would
+produce without the card (e.g. for an execute/threshold card, the target must be one that SURVIVES the plain
+attack but dies to the card; do not pick a target that already dies from the normal hit). Keep enemy ids like 'E1'.
 The PRINTED status is one of VICTORY | DEFEAT | FINISHED — NEVER 'READY' (READY is internal pre-run only). A world
 whose actions run out without reaching VICTORY/DEFEAT prints status 'FINISHED'. Compute each expected.turn as the
 number of actions actually executed. Double-check your expected against your own game_logic before answering.

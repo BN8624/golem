@@ -1,0 +1,1359 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "turn": "integer",
+      "status": "string (READY|VICTORY|DEFEAT|FINISHED)",
+      "hero": {
+        "hp": "integer",
+        "atk": "integer",
+        "pos": "integer[2]",
+        "mana": "integer (optional)",
+        "anomaly_dmg": "integer (optional)",
+        "corrosion": "object (optional) {dmg,duration}"
+      },
+      "enemies": [
+        {
+          "id": "string",
+          "hp": "integer",
+          "atk": "integer",
+          "pos": "integer[2]",
+          "unit_type": "string (optional)",
+          "status": "object (internal)"
+        }
+      ],
+      "terrain": "object (optional): 'x,y'->'Wall'|'Conductive'.",
+      "route": "array (optional): following battles.",
+      "route_index": "integer (internal; default 0)",
+      "config": "object (optional, in initialState): {atkMult, recMult, anomMult} difficulty multipliers, default 1 each, persists across route.",
+      "hero.lifesteal": "Optional number (e.g., 0.5 for 50% heal). If absent, no healing occurs.",
+      "hero.execute": "optional integer; threshold for executing an enemy after a melee attack"
+    },
+    "rules": [
+      "REQ-001: CLI argument --scenario N selects the world from src/scenarios.js (getScenario(N), 1-based).",
+      "REQ-002: turn = turn + 1 after every action attempt. Battle advancement (REQ-018) and Corrosion ticks (REQ-019) consume no extra turn.",
+      "REQ-003: A melee attack deals simultaneous mutual damage: hero damages the target (REQ-017, scaled by REQ-020 atkMult) AND that enemy subtracts its atk (scaled by REQ-020 recMult, mediated by Mana Shield REQ-012) from the hero. Enemies never act on their own; no enemy turn/movement/AI.",
+      "REQ-004: HP can be negative.",
+      "REQ-005: Win/Lose checks occur strictly post-action (after Corrosion ticks and battle advancement).",
+      "REQ-006: If, post-action, both hero.hp <= 0 and all current-battle enemies <= 0, status = DEFEAT (before VICTORY).",
+      "REQ-007: A scenario whose INITIAL enemy count is 0 results in FINISHED, not VICTORY.",
+      "REQ-008: Print these lines, in order, nothing else: status, turn, hero_hp, hero_pos, enemies. Each enemy is EXACTLY {id, hp, pos}. mana, anomaly_dmg, corrosion, terrain, unit_type, status, route, route_index, config are INTERNAL and NEVER printed.",
+      "REQ-009: Actions exhausted with neither VICTORY nor DEFEAT -> FINISHED.",
+      "REQ-010: A move is blocked (pos unchanged) when destination is off-grid (negative), occupied by a living enemy, or a 'Wall' cell. turn still increments.",
+      "REQ-011: An action is {type:'attack', target} (melee), {type:'move', dir:[dx,dy]}, or {type:'ranged_attack', target}. Melee needs orthogonal adjacency (dist==1) else no-op.",
+      "REQ-012: Mana Shield. hero.mana (default 0) absorbs incoming melee damage first: absorbed=min(incoming,mana); mana-=absorbed; overflow hits hp. (incoming is post-recMult per REQ-020.)",
+      "REQ-013: Anomaly rupture. If within a single MELEE attack hero.mana goes >0 -> <=0, then after damage and before post-action checks, every orthogonally-adjacent living enemy takes the rupture's anomaly damage (REQ-016/017/020), once per action, melee only.",
+      "REQ-014: Ranged attack. {type:'ranged_attack', target} hits only if the target is alive and 2<=Manhattan dist<=3: hero damages it (REQ-017/020), takes nothing back (mana unaffected, never ruptures), and inflicts Corrosion if hero.corrosion set (REQ-019). Adjacent/out-of-range/missing/dead = no-op. Terrain does not block ranged. turn still increments.",
+      "REQ-015: Terrain. 'Wall' blocks the hero's move only. 'Conductive' under the hero at rupture time doubles the base anomaly amount (REQ-016). Static.",
+      "REQ-016: Conductive doubles the base anomaly amount before per-enemy REQ-017 multipliers. (Base anomaly is also scaled by REQ-020 anomMult.)",
+      "REQ-017: Enemy unit_type (optional, one). 'Hardened' melee to it -1 (min 0); ranged/anomaly/corrosion unaffected. 'Glass' all incoming to it doubled (melee/ranged/anomaly/corrosion). 'Resonant' hero takes recMult-scaled 1 hp each time it is hit by an anomaly. Base damage to a targeted enemy (before unit_type): melee = max(0, floor(hero.atk*atkMult) - (Hardened?1:0)) then *(Glass?2:1); ranged = floor(hero.atk*atkMult)*(Glass?2:1); anomaly = baseAnomaly*(Glass?2:1).",
+      "REQ-018: Route map. initialState may include 'route' (following battles). After an action (and after Corrosion ticks), if the current battle's enemies are all dead AND the hero is alive AND further battles remain, load the next battle: enemies = fresh copies, terrain replaced, hero.pos reset to [0,0], hero hp/atk/mana/anomaly_dmg/corrosion/config persist, route_index += 1. VICTORY only when current battle cleared AND no further battles. DEFEAT (hp<=0) any time. Printed enemies are the current battle's.",
+      "REQ-019: Corrosion DoT. Optional hero.corrosion={dmg,duration}; if absent ranged inflicts no status (unchanged). If present, a successful ranged_attack sets the target's status={type:'Corrosion',duration:hero.corrosion.duration,dmg:hero.corrosion.dmg} (re-apply refreshes). At the END of every action (after combat, before route advance and win/loss), each living enemy with a Corrosion status (duration>0) takes floor(status.dmg*atkMult) damage *(Glass?2:1), then duration-=1, removed at 0. A tick can kill and clear a battle. status is INTERNAL.",
+      "REQ-020: Balance config (optional difficulty tuning). initialState may include config = {atkMult, recMult, anomMult} (numbers; each missing one defaults to 1; config persists across a route). If config is absent, every multiplier is 1 and all prior behavior is byte-for-byte unchanged. Multipliers apply within the hero's action resolution using Math.floor for integers: (a) atkMult scales the hero's base output BEFORE enemy unit_type modifiers — melee base = floor(hero.atk*atkMult), ranged base = floor(hero.atk*atkMult), each Corrosion tick = floor(status.dmg*atkMult); (b) anomMult scales the anomaly base = floor(hero.anomaly_dmg*anomMult) before Conductive doubling (REQ-016) and per-enemy Glass; (c) recMult scales damage the hero RECEIVES — the melee counter becomes floor(enemy.atk*recMult) before the Mana Shield, and Resonant self-damage becomes floor(1*recMult). Multipliers never change scenario/battle loading, the output format, or add enemy turns.",
+      "REQ-021: Lifesteal. If hero.lifesteal (a numeric multiplier) is present, a melee attack ('attack') restores the hero's HP by floor(actual_damage_dealt_to_enemy * hero.lifesteal). This recovery is applied during the melee action resolution, after damage is subtracted from the target and the hero receives counter-damage. Ranged attacks, anomaly rupture, and corrosion do not trigger lifesteal.",
+      "REQ-022: If hero.execute (integer) is present, after the resolution of a melee attack ('attack'), if the targeted enemy is still alive (hp > 0) and its current hp is less than or equal to hero.execute, that enemy's hp is immediately set to 0. This effect applies only to the primary target of the melee attack and does not apply to ranged attacks, anomaly ruptures, or corrosion ticks."
+    ],
+    "output_contract": {
+      "fields": [
+        "status",
+        "turn",
+        "hero_hp",
+        "hero_pos",
+        "enemies"
+      ],
+      "lines": [
+        "status: <one of READY|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "hero_hp: <integer, may be negative>",
+        "hero_pos: <a JSON array [x, y] of integers>",
+        "enemies: <a JSON array; each enemy is EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — DO NOT include atk>"
+      ]
+    },
+    "scenario_data": [
+      {
+        "id": "SCN-001",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-002",
+        "initialState": {
+          "hero": {
+            "hp": 20,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 100,
+              "atk": 30,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-003",
+        "initialState": {
+          "hero": {
+            "hp": 1,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 100,
+              "atk": 50,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-004",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": []
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              -1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-005",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 10,
+              "atk": 20,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-006",
+        "initialState": {
+          "hero": {
+            "hp": 20,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 20,
+              "atk": 20,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-007",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ],
+            "mana": 50,
+            "anomaly_dmg": 30
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-008",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ],
+            "mana": 5,
+            "anomaly_dmg": 30
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 100,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-009",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              1,
+              1
+            ],
+            "mana": 5,
+            "anomaly_dmg": 60
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": "E2",
+              "hp": 40,
+              "atk": 0,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-010",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                2,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-011",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                4,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          },
+          {
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          },
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-012",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 50,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 40,
+              "atk": 10,
+              "pos": [
+                3,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-013",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 10,
+              "atk": 0,
+              "pos": [
+                5,
+                5
+              ]
+            }
+          ],
+          "terrain": {
+            "1,0": "Wall"
+          }
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-014",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              1,
+              1
+            ],
+            "mana": 5,
+            "anomaly_dmg": 30
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": "E2",
+              "hp": 40,
+              "atk": 0,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "terrain": {
+            "1,1": "Conductive"
+          }
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-015",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 0,
+              "pos": [
+                2,
+                0
+              ]
+            }
+          ],
+          "terrain": {
+            "1,0": "Wall"
+          }
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-016",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 0,
+              "pos": [
+                1,
+                0
+              ],
+              "unit_type": "Hardened"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-017",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 0,
+              "pos": [
+                2,
+                0
+              ],
+              "unit_type": "Glass"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-018",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              1,
+              1
+            ],
+            "mana": 5,
+            "anomaly_dmg": 30
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": "E2",
+              "hp": 40,
+              "atk": 0,
+              "pos": [
+                0,
+                1
+              ],
+              "unit_type": "Glass"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-019",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              1,
+              1
+            ],
+            "mana": 5,
+            "anomaly_dmg": 30
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ],
+              "unit_type": "Resonant"
+            },
+            {
+              "id": "E2",
+              "hp": 40,
+              "atk": 0,
+              "pos": [
+                0,
+                1
+              ],
+              "unit_type": "Resonant"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-020",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 50,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 40,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "route": [
+            {
+              "enemies": [
+                {
+                  "id": "E2",
+                  "hp": 40,
+                  "atk": 10,
+                  "pos": [
+                    1,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-021",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 50,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 40,
+              "atk": 0,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "route": [
+            {
+              "enemies": [
+                {
+                  "id": "E2",
+                  "hp": 40,
+                  "atk": 0,
+                  "pos": [
+                    1,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-022",
+        "initialState": {
+          "hero": {
+            "hp": 30,
+            "atk": 50,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 40,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "route": [
+            {
+              "enemies": [
+                {
+                  "id": "E2",
+                  "hp": 200,
+                  "atk": 25,
+                  "pos": [
+                    1,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-023",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ],
+            "corrosion": {
+              "dmg": 5,
+              "duration": 3
+            }
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 35,
+              "atk": 0,
+              "pos": [
+                2,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-024",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ],
+            "corrosion": {
+              "dmg": 5,
+              "duration": 2
+            }
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 100,
+              "atk": 0,
+              "pos": [
+                2,
+                0
+              ],
+              "unit_type": "Glass"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-025",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 40,
+            "pos": [
+              0,
+              0
+            ],
+            "corrosion": {
+              "dmg": 10,
+              "duration": 2
+            }
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 0,
+              "pos": [
+                2,
+                0
+              ]
+            }
+          ],
+          "route": [
+            {
+              "enemies": [
+                {
+                  "id": "E2",
+                  "hp": 40,
+                  "atk": 0,
+                  "pos": [
+                    1,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "ranged_attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-026",
+        "initialState": {
+          "hero": {
+            "hp": 20,
+            "atk": 20,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 20,
+              "atk": 15,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "config": {
+            "recMult": 2
+          }
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-027",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 30,
+              "atk": 0,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "config": {
+            "atkMult": 3
+          }
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-028",
+        "initialState": {
+          "hero": {
+            "hp": 100,
+            "atk": 20,
+            "pos": [
+              1,
+              1
+            ],
+            "mana": 5,
+            "anomaly_dmg": 10
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 50,
+              "atk": 10,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": "E2",
+              "hp": 25,
+              "atk": 0,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "config": {
+            "anomMult": 3
+          }
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-029",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ],
+            "lifesteal": 0.5
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 20,
+              "pos": [
+                1,
+                0
+              ],
+              "atk": 5
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-030",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ],
+            "lifesteal": 0.5
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 10,
+              "pos": [
+                1,
+                0
+              ],
+              "atk": 5,
+              "unit_type": "Glass"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-031",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 10,
+            "pos": [
+              0,
+              0
+            ],
+            "lifesteal": 0.5
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 10,
+              "pos": [
+                1,
+                0
+              ],
+              "atk": 10,
+              "unit_type": "Hardened"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-032",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 5,
+            "pos": [
+              0,
+              0
+            ],
+            "execute": 3
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 7,
+              "pos": [
+                0,
+                1
+              ],
+              "atk": 2
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-033",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 6,
+            "pos": [
+              0,
+              0
+            ],
+            "execute": 5,
+            "lifesteal": 0.5
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 10,
+              "pos": [
+                1,
+                0
+              ],
+              "atk": 2,
+              "unit_type": "Hardened"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      },
+      {
+        "id": "SCN-034",
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 5,
+            "pos": [
+              0,
+              0
+            ],
+            "execute": 2
+          },
+          "enemies": [
+            {
+              "id": "E1",
+              "hp": 12,
+              "pos": [
+                0,
+                1
+              ],
+              "atk": 2
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack",
+            "target": "E1"
+          },
+          {
+            "type": "attack",
+            "target": "E1"
+          }
+        ]
+      }
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js",
+          "src/scenarios.js"
+        ]
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "runScenario"
+        ],
+        "imports": [
+          "src/game_logic.js"
+        ]
+      },
+      {
+        "path": "src/game_logic.js",
+        "exports": [
+          "applyAction",
+          "checkGameState",
+          "updateState"
+        ],
+        "imports": []
+      },
+      {
+        "path": "src/scenarios.js",
+        "exports": [
+          "getScenario"
+        ],
+        "imports": []
+      }
+    ]
+  }
+}

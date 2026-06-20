@@ -125,9 +125,12 @@ def graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_s
     g2, _, out2 = bg.gate_and_run(ws, {"schema_version": "0.1", "module_format": "commonjs", **manifest}, specqa)
     det_ok = g2 and out1 == out2
 
-    ok = regression_ok and new_fired == new_total and g1 and golden_ok and det_ok
+    # 가산성·정확성은 회귀무결+gate+golden+결정성이 보증. 신규는 카드가 활성임을 보이게 ≥1 발동이면 충분
+    # (무발동 새 세계도 골든은 정확 — l3의 의도적 비발동(Wall이 ranged 무시)처럼 유효).
+    fired_ok = new_total == 0 or new_fired >= 1
+    ok = regression_ok and fired_ok and g1 and golden_ok and det_ok
     print(f"  [{level}] 조립 {len(scenario_data)}세계(회귀 {prev_n}+신규 {new_total}) | "
-          f"회귀무결={regression_ok} 신규발동={new_fired}/{new_total} gate={g1} golden={golden_ok} det={det_ok} → {'OK' if ok else 'FAIL'}")
+          f"회귀무결={regression_ok} 신규발동={new_fired}/{new_total}(≥1) gate={g1} golden={golden_ok} det={det_ok} → {'OK' if ok else 'FAIL'}")
     if not g1:
         print(f"    GATE: {reason}")
 

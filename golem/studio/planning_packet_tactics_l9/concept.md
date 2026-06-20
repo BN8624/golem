@@ -1,0 +1,1 @@
+전술 커널 l8 위 가산 카드(l9) — 골렘 base-델타 자율 설계: 처형(execute): opt-in 정수 hero.execute. 근접(attack)으로 적을 때린 직후, 그 적의 hp가 0보다 크고 hero.execute 이하이면 즉사시켜 hp를 0으로 만든다. 사거리/anomaly/corrosion엔 적용 안 됨, 근접만. 없으면 기존과 동일.

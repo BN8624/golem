@@ -1,0 +1,1155 @@
+[
+  {
+    "id": "SCN-001",
+    "input": {
+      "args": [
+        "--scenario",
+        "1"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 3,
+      "hero_hp": 70,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-002",
+    "input": {
+      "args": [
+        "--scenario",
+        "2"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "DEFEAT",
+      "turn": 1,
+      "hero_hp": -10,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 90,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-003",
+    "input": {
+      "args": [
+        "--scenario",
+        "3"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 1,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 100,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-004",
+    "input": {
+      "args": [
+        "--scenario",
+        "4"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": []
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-005",
+    "input": {
+      "args": [
+        "--scenario",
+        "5"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "DEFEAT",
+      "turn": 1,
+      "hero_hp": -10,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-006",
+    "input": {
+      "args": [
+        "--scenario",
+        "6"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "DEFEAT",
+      "turn": 1,
+      "hero_hp": 0,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-007",
+    "input": {
+      "args": [
+        "--scenario",
+        "7"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 30,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-008",
+    "input": {
+      "args": [
+        "--scenario",
+        "8"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 95,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 50,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-009",
+    "input": {
+      "args": [
+        "--scenario",
+        "9"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 95,
+      "hero_pos": [
+        1,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -30,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "E2",
+          "hp": -20,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-010",
+    "input": {
+      "args": [
+        "--scenario",
+        "10"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 30,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-011",
+    "input": {
+      "args": [
+        "--scenario",
+        "11"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 3,
+      "hero_hp": 100,
+      "hero_pos": [
+        1,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 30,
+          "pos": [
+            4,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-012",
+    "input": {
+      "args": [
+        "--scenario",
+        "12"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            3,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-013",
+    "input": {
+      "args": [
+        "--scenario",
+        "13"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 2,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 10,
+          "pos": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-014",
+    "input": {
+      "args": [
+        "--scenario",
+        "14"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 95,
+      "hero_pos": [
+        1,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -30,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "E2",
+          "hp": -20,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-015",
+    "input": {
+      "args": [
+        "--scenario",
+        "15"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 30,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-016",
+    "input": {
+      "args": [
+        "--scenario",
+        "16"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 31,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-017",
+    "input": {
+      "args": [
+        "--scenario",
+        "17"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 10,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-018",
+    "input": {
+      "args": [
+        "--scenario",
+        "18"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 95,
+      "hero_pos": [
+        1,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "E2",
+          "hp": -20,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-019",
+    "input": {
+      "args": [
+        "--scenario",
+        "19"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 93,
+      "hero_pos": [
+        1,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "E2",
+          "hp": 10,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-020",
+    "input": {
+      "args": [
+        "--scenario",
+        "20"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 2,
+      "hero_hp": 80,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E2",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-021",
+    "input": {
+      "args": [
+        "--scenario",
+        "21"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E2",
+          "hp": 40,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-022",
+    "input": {
+      "args": [
+        "--scenario",
+        "22"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "DEFEAT",
+      "turn": 2,
+      "hero_hp": -5,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E2",
+          "hp": 150,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-023",
+    "input": {
+      "args": [
+        "--scenario",
+        "23"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 3,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        2
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-024",
+    "input": {
+      "args": [
+        "--scenario",
+        "24"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 2,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 40,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-025",
+    "input": {
+      "args": [
+        "--scenario",
+        "25"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 2,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E2",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-026",
+    "input": {
+      "args": [
+        "--scenario",
+        "26"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "DEFEAT",
+      "turn": 1,
+      "hero_hp": -10,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-027",
+    "input": {
+      "args": [
+        "--scenario",
+        "27"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 100,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-028",
+    "input": {
+      "args": [
+        "--scenario",
+        "28"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 95,
+      "hero_pos": [
+        1,
+        1
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "E2",
+          "hp": -5,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-029",
+    "input": {
+      "args": [
+        "--scenario",
+        "29"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 10,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-030",
+    "input": {
+      "args": [
+        "--scenario",
+        "30"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 15,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": -10,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-031",
+    "input": {
+      "args": [
+        "--scenario",
+        "31"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "FINISHED",
+      "turn": 1,
+      "hero_hp": 4,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 1,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-032",
+    "input": {
+      "args": [
+        "--scenario",
+        "32"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 8,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-033",
+    "input": {
+      "args": [
+        "--scenario",
+        "33"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 1,
+      "hero_hp": 10,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  },
+  {
+    "id": "SCN-034",
+    "input": {
+      "args": [
+        "--scenario",
+        "34"
+      ]
+    },
+    "covers_reqs": [],
+    "expected": {
+      "status": "VICTORY",
+      "turn": 2,
+      "hero_hp": 6,
+      "hero_pos": [
+        0,
+        0
+      ],
+      "enemies": [
+        {
+          "id": "E1",
+          "hp": 0,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "oracle_risk": {
+      "risk": false,
+      "reason": ""
+    }
+  }
+]
