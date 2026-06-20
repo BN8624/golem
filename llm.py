@@ -8,6 +8,7 @@
 - 회차당 콜 수 상한 (가드레일)
 """
 
+import os
 import re
 import socket
 import threading
@@ -55,7 +56,11 @@ BACKOFF_RPM_SEC = 20.0   # RPM 초과 지수백오프: 20→40→80→160s
 BACKOFF_500_SEC = 5.0    # 서버 5xx 지수백오프: 5→10→20→40s
 # 지수백오프 MAX_RETRIES회 뒤에도 429/5xx면 콜을 죽이지 않고 2분마다 무한 재시도한다.
 # (키당 1콜/2분 = 720/일 < RPD 1500이라 쿼터 안전. 서버 폭풍·일시 RPM은 시간이 약.)
-SLOW_RETRY_SEC = 120.0   # 백오프 소진 후 무한 재시도 간격
+SLOW_RETRY_SEC = 120.0   # 백오프 소진 후 느린 재시도 간격
+# 느린 재시도 상한(운영 안전): 영구 장애·키/모델 오설정에 무한 대기(관측 불가) 빠지지 않게 cap.
+# 초과하면 RuntimeError(infra 소진)로 관측가능 종료 → 풀이 다른 키로 넘기거나 런이 깨끗이 실패한다.
+# 기본 12회×120s ≈ 24분(백오프 ~5분 위), REQUEST_TIMEOUT_MS(30분)와 정합. env로 조정.
+SLOW_RETRY_MAX = int(os.environ.get("LLM_SLOW_RETRY_MAX", "12"))
 EMPTY_RETRIES = 2        # 빈 응답 재시도 상한
 # per-request 타임아웃(ms). 응답 없는 좀비 소켓을 끊어 transient 재시도로 빠지게 하는 안전망.
 # 정상 콜 최대 실측 ~24분(대형카드 verbatim 재출력)이라 30분 위로 잡아 정상 콜은 안 끊는다.
@@ -311,7 +316,8 @@ class LLMClient:
         """
         last_err: Exception | None = None
         empty_count = 0
-        attempt = 0          # 429/5xx 지수백오프 지수(소진 후 2분 무한 재시도)
+        attempt = 0          # 429/5xx 지수백오프 지수
+        slow_count = 0       # 백오프 소진 후 느린 재시도 횟수(SLOW_RETRY_MAX서 관측가능 종료)
         while True:
             self._wait_interval()
             try:
@@ -381,7 +387,12 @@ class LLMClient:
                     print(f"[WAIT] {label}, retrying in {wait:.0f}s "
                           f"(attempt {attempt}/{MAX_RETRIES})")
                 else:
+                    slow_count += 1
+                    if slow_count > SLOW_RETRY_MAX:
+                        raise RuntimeError(
+                            f"infra stalled: {label}, {SLOW_RETRY_MAX} slow retries "
+                            f"exhausted for {model} — 관측가능 종료(무한대기 방지)") from err
                     wait = SLOW_RETRY_SEC
                     print(f"[WAIT] {label}, slow retry in {wait:.0f}s "
-                          f"(never gives up)")
+                          f"(slow {slow_count}/{SLOW_RETRY_MAX})")
                 time.sleep(wait)
