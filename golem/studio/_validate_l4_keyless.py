@@ -7,7 +7,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import build_graded as bg
-from driver import parse_files
+from parse_write import parse_files
 
 BASE = HERE / "rocket_base"
 contract, concept, manifest, sysd, scenarios, risk = bg.load_all(
@@ -58,7 +58,7 @@ ws = HERE / "build_runs" / "_l4_validate" / "workspace"
 if ws.parent.exists():
     shutil.rmtree(ws.parent)
 ws.mkdir(parents=True)
-from driver import write_candidate
+from parse_write import write_candidate
 write_candidate(ws, files)
 (ws / "scenarios.json").write_text(json.dumps(scen_inputs, ensure_ascii=False), encoding="utf-8")
 manifest_v = {"schema_version": "0.1", "module_format": "commonjs", **manifest}

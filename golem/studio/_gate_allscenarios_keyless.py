@@ -7,7 +7,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import build_graded as bg
-from driver import write_candidate
+from parse_write import write_candidate
 
 try:
     from config import force_utf8_stdout

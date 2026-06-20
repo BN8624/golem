@@ -30,7 +30,7 @@ sys.path.insert(0, str(HERE.parent.parent))
 import contract_validator                       # noqa: E402
 import static_gate                              # noqa: E402
 import patch_apply                              # noqa: E402
-from driver import parse_files, write_candidate  # noqa: E402
+from parse_write import parse_files, write_candidate  # noqa: E402
 
 MODEL_31 = "gemma-4-31b-it"
 
