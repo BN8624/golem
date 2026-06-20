@@ -20,6 +20,12 @@ INVARIANTS = (
     "출력은 status/turn/hero_hp/hero_pos/enemies(각 {id,hp,pos}) 고정, RNG 없음. 새 카드는 순수 가산"
     "(새 opt-in 필드 없으면 기존 바이트동일)이고 game_logic.js 한 모듈 안에서 결정적으로 구현 가능해야 한다.")
 
+# 장르 레퍼런스 — 검증된 디자인의 '패턴'을 우리 제약에 맞게 차용(특정 게임 클론 금지). 시드 품질 레버.
+DEFAULT_REFS = (
+    "Into the Breach (위치·존 제어, 밀치기), Fire Emblem/영걸전 (사거리·지형·유닛 상성), "
+    "Final Fantasy Tactics (높이·직업 특성), Slay the Spire (카드 시너지·콤보), "
+    "로그라이트 유물 (빌드를 규정하는 패시브 변형)")
+
 PROMPT = """You are a GAME DESIGNER proposing the NEXT cards for a deterministic, hero-only tactical-grid SRPG.
 The engine is FIXED; cards are additive opt-in mechanics. Below are the cards already in the game (do NOT repeat
 them) and the hard invariants any new card must respect.
@@ -29,10 +35,15 @@ EXISTING CARDS (rules already in the contract):
 
 INVARIANTS: {invariants}
 
+GENRE REFERENCES — adapt the PATTERNS from these proven tactics/roguelite designs to our hero-only deterministic
+grid (borrow the IDEA, do NOT clone any specific game): {refs}
+
 Propose {n} DISTINCT, fresh next-card ideas that are deterministic, purely additive (gated by a new optional
 field so absence = unchanged), implementable within game_logic.js, and observable in the fixed 5-field output.
-Favor variety (offense / defense / positioning / tempo / risk). Avoid anything needing enemy turns, RNG, or
-output-format changes. Write the prose in Korean.
+Ground each idea in a recognizable genre pattern (positioning/zone-control, synergy/combo with EXISTING cards,
+risk-reward, resource/tempo) adapted to our constraints. Favor variety (offense / defense / positioning / tempo /
+risk) and synergy with the existing cards above. Avoid anything needing enemy turns, RNG, or output-format
+changes. Write the prose in Korean.
 
 Output ONE JSON object EXACTLY, no prose, no markdown fences:
 {{ "ideas": [ {{ "name": "<카드 이름>", "mechanic": "<한 줄: 무엇을 어떻게(가산·opt-in 필드 명시)>", "why": "<왜 변별력 있나, 한 줄>", "observable": "<5필드 출력에서 어떻게 관측되나>" }} ] }}
@@ -54,6 +65,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", default="l9", help="현 누적 레벨(이 계약을 읽어 제안)")
     ap.add_argument("--n", type=int, default=5, help="제안 개수")
+    ap.add_argument("--ref", default=DEFAULT_REFS, help="장르 레퍼런스(패턴 차용 시드). 기본=SRPG/로그라이트 표본")
     ap.add_argument("--replay", default=None, help="응답 파일로 키 없이 재생(디버그)")
     args = ap.parse_args(argv)
 
@@ -67,7 +79,7 @@ def main(argv=None):
     force_utf8_stdout()
     from planning import _extract_json
 
-    prompt = PROMPT.format(cards=card_summary(args.prev), invariants=INVARIANTS, n=args.n)
+    prompt = PROMPT.format(cards=card_summary(args.prev), invariants=INVARIANTS, n=args.n, refs=args.ref)
 
     if args.replay:
         d = _extract_json(Path(args.replay).read_text(encoding="utf-8"))
