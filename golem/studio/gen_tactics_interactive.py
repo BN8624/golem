@@ -76,10 +76,12 @@ def main(argv=None):
     except Exception:  # noqa: BLE001
         pass
     game_logic = import_module(f"gen_tactics_{args.level}_golden").REF_GAME_LOGIC
+    from sprites import SPRITES
 
     OUT.mkdir(parents=True, exist_ok=True)
     html = (HTML.replace("__GAME_LOGIC__", game_logic)
                 .replace("__LEVELS__", json.dumps(LEVELS, ensure_ascii=False))
+                .replace("__SPRITES__", json.dumps(SPRITES, ensure_ascii=False))
                 .replace("__LEVEL__", args.level))
     (OUT / "play.html").write_text(html, encoding="utf-8")
     print(f"  [{args.level}] 플레이 {len(LEVELS)}레벨 → {OUT / 'play.html'}")
@@ -131,6 +133,10 @@ const GL=(function(){const module={exports:{}};const exports=module.exports;
 __GAME_LOGIC__
 return module.exports;})();
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const SPRITES=__SPRITES__, IMG={};  // 클로드 저작 SVG 에셋팩(코드). data URI 이미지로 프리로드
+for(const k in SPRITES){const im=new Image();im.onload=()=>{IMG[k]=im;if(state)draw();};
+  im.src='data:image/svg+xml;charset=utf8,'+encodeURIComponent(SPRITES[k]);}
+function spr(k,px,py,alpha){const im=IMG[k];if(!im)return false;ctx.save();ctx.globalAlpha=alpha||1;ctx.drawImage(im,px+1,py+1,cs-2,cs-2);ctx.restore();return true;}
 let lvl=0,state=null,initCount=0,hist=[],over=null;
 
 function clone(s){return JSON.parse(JSON.stringify(s));}
@@ -160,17 +166,22 @@ let cs=40,ox=8,oy=8,gb={w:5,h:5};
 function draw(){
   gb=bounds();const pad=8,size=cv.width-pad*2;cs=Math.floor(size/Math.max(gb.w,gb.h));ox=pad;oy=pad;
   ctx.clearRect(0,0,cv.width,cv.height);
-  for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;let fill=css('--cell');
-    if(state.terrain){const t=state.terrain[x+','+y];if(t==='Wall')fill=css('--wall');else if(t==='Conductive')fill=css('--cond');}
-    ctx.fillStyle=fill;ctx.fillRect(px+1,py+1,cs-2,cs-2);ctx.strokeStyle=css('--grid');ctx.strokeRect(px+1,py+1,cs-2,cs-2);}
+  for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;
+    ctx.fillStyle=css('--cell');ctx.fillRect(px+1,py+1,cs-2,cs-2);
+    const t=state.terrain&&state.terrain[x+','+y];
+    if(t==='Wall'&&!spr('wall',px,py)){ctx.fillStyle=css('--wall');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
+    else if(t==='Conductive'&&!spr('conductive',px,py)){ctx.fillStyle=css('--cond');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
+    ctx.strokeStyle=css('--grid');ctx.strokeRect(px+1,py+1,cs-2,cs-2);}
   const hp=state.hero.pos;
+  ctx.textAlign='center';ctx.textBaseline='middle';
   for(const e of state.enemies){const al=e.hp>0,px=ox+e.pos[0]*cs,py=oy+e.pos[1]*cs;
     if(al){const d=dist(hp,e.pos);if(d===1||(d>=2&&d<=3)){ctx.strokeStyle=css('--rng');ctx.lineWidth=3;ctx.strokeRect(px+3,py+3,cs-6,cs-6);ctx.lineWidth=1;}}
-    ctx.fillStyle=al?css('--enemy'):'rgba(255,93,108,.25)';ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.32,0,7);ctx.fill();
-    ctx.fillStyle=al?'#fff':css('--dim');ctx.font='bold '+Math.floor(cs*0.22)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(e.hp,px+cs/2,py+cs/2);if(e.unit_type){ctx.fillStyle='#ffd866';ctx.font='bold '+Math.floor(cs*0.2)+'px system-ui';ctx.fillText(e.unit_type[0],px+cs*0.78,py+cs*0.22);}}
-  const px=ox+hp[0]*cs,py=oy+hp[1]*cs;ctx.fillStyle=css('--hero');ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.34,0,7);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='bold '+Math.floor(cs*0.24)+'px system-ui';ctx.fillText('英',px+cs/2,py+cs/2);
+    const sk=(e.unit_type&&SPRITES[e.unit_type])?e.unit_type:'enemy';
+    if(!spr(sk,px,py,al?1:0.3)){ctx.fillStyle=al?css('--enemy'):'rgba(255,93,108,.25)';ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.32,0,7);ctx.fill();}
+    ctx.fillStyle=al?'#fff':css('--dim');ctx.font='bold '+Math.floor(cs*0.2)+'px system-ui';
+    ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.strokeText(e.hp,px+cs/2,py+cs*0.84);ctx.fillText(e.hp,px+cs/2,py+cs*0.84);}
+  const px=ox+hp[0]*cs,py=oy+hp[1]*cs;
+  if(!spr('hero',px,py)){ctx.fillStyle=css('--hero');ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.34,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold '+Math.floor(cs*0.24)+'px system-ui';ctx.fillText('英',px+cs/2,py+cs/2);}
   side();
 }
 function side(){

@@ -158,6 +158,10 @@ exports.checkGameState = (state, initialEnemyCount) => {
 
 return module.exports;})();
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const SPRITES={"hero": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<defs><radialGradient id='hg' cx='50%' cy='40%'><stop offset='0%' stop-color='#7fd4ff'/><stop offset='100%' stop-color='#2b6fb0'/></radialGradient></defs>\n<circle cx='50' cy='52' r='34' fill='url(#hg)' stroke='#0d2a44' stroke-width='3'/>\n<path d='M50 22 L58 50 L50 60 L42 50 Z' fill='#0d2a44'/>\n<rect x='66' y='18' width='6' height='52' rx='3' fill='#bfefff' transform='rotate(20 69 44)'/>\n<rect x='64' y='60' width='12' height='8' rx='2' fill='#0d2a44' transform='rotate(20 70 64)'/>\n<circle cx='50' cy='46' r='6' fill='#eaffff'/></svg>", "enemy": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<circle cx='50' cy='52' r='32' fill='#d63b48' stroke='#5a0f16' stroke-width='3'/>\n<path d='M30 40 L42 46 M70 40 L58 46' stroke='#5a0f16' stroke-width='4' stroke-linecap='round'/>\n<path d='M40 64 Q50 58 60 64' stroke='#5a0f16' stroke-width='4' fill='none' stroke-linecap='round'/></svg>", "Hardened": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<path d='M50 18 L80 30 V56 Q80 78 50 88 Q20 78 20 56 V30 Z' fill='#8893a3' stroke='#3a414d' stroke-width='4'/>\n<path d='M50 30 V78 M32 38 H68' stroke='#3a414d' stroke-width='3'/>\n<circle cx='32' cy='34' r='3' fill='#3a414d'/><circle cx='68' cy='34' r='3' fill='#3a414d'/></svg>", "Glass": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<polygon points='50,16 78,40 66,82 34,82 22,40' fill='#7fe9e0' fill-opacity='0.55' stroke='#1aa79b' stroke-width='3'/>\n<path d='M50 16 L50 82 M22 40 L78 40 M34 82 L50 40 L66 82' stroke='#d8fffb' stroke-width='2' fill='none'/></svg>", "Resonant": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<circle cx='50' cy='52' r='32' fill='none' stroke='#b06bff' stroke-width='2' stroke-opacity='0.5'/>\n<circle cx='50' cy='52' r='25' fill='#6b2fb0' stroke='#d8b0ff' stroke-width='3'/>\n<circle cx='50' cy='52' r='14' fill='none' stroke='#e5d8ff' stroke-width='2'/>\n<circle cx='50' cy='48' r='4' fill='#eaccff'/></svg>", "wall": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<rect x='6' y='6' width='88' height='88' rx='6' fill='#4a4f5e' stroke='#2a2e38' stroke-width='4'/>\n<path d='M6 50 H94 M50 6 V50 M30 50 V94 M70 50 V94' stroke='#2a2e38' stroke-width='3'/></svg>", "conductive": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>\n<rect x='6' y='6' width='88' height='88' rx='6' fill='#0c3b3a' stroke='#21d3c8' stroke-width='4'/>\n<path d='M50 20 L40 52 H56 L46 80' stroke='#7ffff4' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/>\n<circle cx='50' cy='50' r='40' fill='none' stroke='#21d3c8' stroke-width='1.5' stroke-opacity='0.5'/></svg>"}, IMG={};  // 클로드 저작 SVG 에셋팩(코드). data URI 이미지로 프리로드
+for(const k in SPRITES){const im=new Image();im.onload=()=>{IMG[k]=im;if(state)draw();};
+  im.src='data:image/svg+xml;charset=utf8,'+encodeURIComponent(SPRITES[k]);}
+function spr(k,px,py,alpha){const im=IMG[k];if(!im)return false;ctx.save();ctx.globalAlpha=alpha||1;ctx.drawImage(im,px+1,py+1,cs-2,cs-2);ctx.restore();return true;}
 let lvl=0,state=null,initCount=0,hist=[],over=null;
 
 function clone(s){return JSON.parse(JSON.stringify(s));}
@@ -187,17 +191,22 @@ let cs=40,ox=8,oy=8,gb={w:5,h:5};
 function draw(){
   gb=bounds();const pad=8,size=cv.width-pad*2;cs=Math.floor(size/Math.max(gb.w,gb.h));ox=pad;oy=pad;
   ctx.clearRect(0,0,cv.width,cv.height);
-  for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;let fill=css('--cell');
-    if(state.terrain){const t=state.terrain[x+','+y];if(t==='Wall')fill=css('--wall');else if(t==='Conductive')fill=css('--cond');}
-    ctx.fillStyle=fill;ctx.fillRect(px+1,py+1,cs-2,cs-2);ctx.strokeStyle=css('--grid');ctx.strokeRect(px+1,py+1,cs-2,cs-2);}
+  for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;
+    ctx.fillStyle=css('--cell');ctx.fillRect(px+1,py+1,cs-2,cs-2);
+    const t=state.terrain&&state.terrain[x+','+y];
+    if(t==='Wall'&&!spr('wall',px,py)){ctx.fillStyle=css('--wall');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
+    else if(t==='Conductive'&&!spr('conductive',px,py)){ctx.fillStyle=css('--cond');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
+    ctx.strokeStyle=css('--grid');ctx.strokeRect(px+1,py+1,cs-2,cs-2);}
   const hp=state.hero.pos;
+  ctx.textAlign='center';ctx.textBaseline='middle';
   for(const e of state.enemies){const al=e.hp>0,px=ox+e.pos[0]*cs,py=oy+e.pos[1]*cs;
     if(al){const d=dist(hp,e.pos);if(d===1||(d>=2&&d<=3)){ctx.strokeStyle=css('--rng');ctx.lineWidth=3;ctx.strokeRect(px+3,py+3,cs-6,cs-6);ctx.lineWidth=1;}}
-    ctx.fillStyle=al?css('--enemy'):'rgba(255,93,108,.25)';ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.32,0,7);ctx.fill();
-    ctx.fillStyle=al?'#fff':css('--dim');ctx.font='bold '+Math.floor(cs*0.22)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(e.hp,px+cs/2,py+cs/2);if(e.unit_type){ctx.fillStyle='#ffd866';ctx.font='bold '+Math.floor(cs*0.2)+'px system-ui';ctx.fillText(e.unit_type[0],px+cs*0.78,py+cs*0.22);}}
-  const px=ox+hp[0]*cs,py=oy+hp[1]*cs;ctx.fillStyle=css('--hero');ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.34,0,7);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='bold '+Math.floor(cs*0.24)+'px system-ui';ctx.fillText('英',px+cs/2,py+cs/2);
+    const sk=(e.unit_type&&SPRITES[e.unit_type])?e.unit_type:'enemy';
+    if(!spr(sk,px,py,al?1:0.3)){ctx.fillStyle=al?css('--enemy'):'rgba(255,93,108,.25)';ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.32,0,7);ctx.fill();}
+    ctx.fillStyle=al?'#fff':css('--dim');ctx.font='bold '+Math.floor(cs*0.2)+'px system-ui';
+    ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.strokeText(e.hp,px+cs/2,py+cs*0.84);ctx.fillText(e.hp,px+cs/2,py+cs*0.84);}
+  const px=ox+hp[0]*cs,py=oy+hp[1]*cs;
+  if(!spr('hero',px,py)){ctx.fillStyle=css('--hero');ctx.beginPath();ctx.arc(px+cs/2,py+cs/2,cs*0.34,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold '+Math.floor(cs*0.24)+'px system-ui';ctx.fillText('英',px+cs/2,py+cs/2);}
   side();
 }
 function side(){
