@@ -1,8 +1,8 @@
-# 전술 7카드 게임을 정사각 탑다운으로 보여주는 독립 HTML 렌더러 생성기 — 검증된 l7 엔진 그대로 재사용(키0·읽기전용)
-"""쇼케이스 외형. tactics_kernel_base + 검증된 l7 참조 game_logic(마나방패·사거리·지형·유닛·루트맵·상태이상·밸런스)을
-node로 require해 28세계+캠페인 1편 전부 턴별 상태를 추출 → 단일 index.html에 트레이스 임베드.
-엔진은 골렘이 게이트·golden_diff 0으로 검증한 바로 그 로직. 렌더러는 표시 전용(로직 안 건드림).
-브라우저로 index.html 열면 시나리오 고르고 턴 재생.
+# 전술 카드게임(임의 레벨)을 정사각 탑다운으로 보여주는 독립 HTML 렌더러 생성기 — 검증된 lN 엔진 그대로 재사용(키0·읽기전용)
+"""쇼케이스 외형(일반화). --level lN으로 planning_packet_tactics_lN + gen_tactics_lN_golden 참조를 자동 로드,
+tactics_kernel_base에 얹어 node로 require해 전 세계+캠페인 1편 턴별 상태를 추출 → 단일 index.html에 임베드.
+캠페인 서사(B겹)는 골렘 산출 campaign_story.json이 있으면 그걸, 없으면 인라인 초안. 엔진은 골렘이 골든 0으로
+검증한 로직 그대로, 렌더러는 표시 전용. 사용: python gen_tactics_play.py [--level l8]. 브라우저로 index.html 열기.
 """
 
 import json
@@ -67,14 +67,15 @@ LABELS = {
     "SCN-023": "상태이상 Corrosion DoT 처치", "SCN-024": "Corrosion ×2(Glass)",
     "SCN-025": "Corrosion 처치→루트 전환",
     "SCN-026": "밸런스 recMult→DEFEAT", "SCN-027": "밸런스 atkMult→원샷", "SCN-028": "밸런스 anomMult→일소",
+    "SCN-029": "흡혈 — 근접 피해 회복", "SCN-030": "흡혈 — 치명타 직전 생존", "SCN-031": "흡혈 — 소량 회복",
     "CAMPAIGN": "★ 캠페인 — 변칙검술 연대기(6전투·스토리)",
 }
 
-# 검증된 l7 참조 game_logic을 가져온다(gen_tactics_l7_golden 단일 출처 — 6카드 전부 포함).
-def l7_game_logic():
+# 검증된 lN 참조 game_logic을 가져온다(gen_tactics_lN_golden 단일 출처 — 일반화: 아무 카드 레벨이든).
+def level_game_logic(level):
     sys.path.insert(0, str(HERE))
-    from gen_tactics_l7_golden import REF_GAME_LOGIC
-    return REF_GAME_LOGIC
+    from importlib import import_module
+    return import_module(f"gen_tactics_{level}_golden").REF_GAME_LOGIC
 
 # 턴별 상태를 뽑는 node 트레이서(engine 초기화 재현 + updateState/checkGameState 스텝마다 스냅샷).
 TRACER_JS = """
@@ -114,7 +115,12 @@ process.stdout.write(JSON.stringify({ n, frames }));
 """
 
 
-def main():
+def main(argv=None):
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--level", default="l8", help="렌더할 카드 레벨(패킷·참조 자동 로드, 기본 최신 l8)")
+    args = ap.parse_args(argv)
+
     sys.path.insert(0, str(HERE.parent))
     sys.path.insert(0, str(HERE))
     try:
@@ -124,17 +130,19 @@ def main():
         pass
     import build_graded as bg
 
-    contract = json.loads((PACKET / "contract.json").read_text(encoding="utf-8"))
-    scenario_data = list(contract["data_contract"]["scenario_data"]) + [CAMPAIGN]  # 25세계 + 캠페인 1편
+    packet = HERE / f"planning_packet_tactics_{args.level}"
+    contract = json.loads((packet / "contract.json").read_text(encoding="utf-8"))
+    scenario_data = list(contract["data_contract"]["scenario_data"]) + [CAMPAIGN]  # 전 세계 + 캠페인 1편
     scenarios_js = bg._gen_scenarios_module(scenario_data)
+    ncards = {"l1": 1, "l2": 2, "l3": 3, "l4": 4, "l5": 5, "l6": 6, "l7": 7, "l8": 8}.get(args.level, "?")
 
-    # 검증된 l7 엔진 워크스페이스(읽기전용 재사용).
+    # 검증된 lN 엔진 워크스페이스(읽기전용 재사용).
     ws = HERE / "_tactics_play_engine_tmp"
     if ws.exists():
         shutil.rmtree(ws)
     shutil.copytree(BASE, ws)
     (ws / "module_manifest.json").unlink(missing_ok=True)
-    (ws / "src" / "game_logic.js").write_text(l7_game_logic(), encoding="utf-8")
+    (ws / "src" / "game_logic.js").write_text(level_game_logic(args.level), encoding="utf-8")
     (ws / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
     (ws / "trace.js").write_text(TRACER_JS, encoding="utf-8")
 
@@ -166,11 +174,12 @@ def main():
         return 1
 
     OUT.mkdir(parents=True, exist_ok=True)
-    html = HTML_TEMPLATE.replace("__TRACES__", json.dumps(traces, ensure_ascii=False))
+    html = (HTML_TEMPLATE.replace("__TRACES__", json.dumps(traces, ensure_ascii=False))
+            .replace("__NCARDS__", str(ncards)).replace("__LEVEL__", args.level))
     (OUT / "index.html").write_text(html, encoding="utf-8")
-    print(f"  트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
+    print(f"  [{args.level}] 트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
     print(f"  캠페인 {camp_final['battles']}전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
-    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 l7 엔진).")
+    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 "+args.level+" 엔진).")
     return 0
 
 
@@ -213,8 +222,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <h1>전술 SRPG — 7카드 쇼케이스</h1>
-  <div class="sub">마나방패·ANOMALY · 사거리 · 지형 · 유닛 · 루트맵 · 상태이상 · 밸런스 — 골렘이 설계·검증한 l7 엔진(읽기전용 렌더)</div>
+  <h1>전술 SRPG — __NCARDS__카드 쇼케이스</h1>
+  <div class="sub">골렘이 설계·검증한 __LEVEL__ 엔진(읽기전용 렌더) — 마나방패·ANOMALY · 사거리 · 지형 · 유닛 · 루트맵 · 상태이상 · 밸런스 · 흡혈</div>
   <div class="bar">
     <select id="pick"></select>
     <button id="prev">◀ 이전</button>
