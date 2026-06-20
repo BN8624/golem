@@ -114,7 +114,8 @@ name/signature of the touched modules intact so the frozen modules keep working.
 OUTPUT RULE: do NOT re-output whole files. Output ONLY the minimal CHANGES to the touched files as
 search/replace patch blocks. For each change, copy an EXACT snippet from the touched source as FIND (long
 enough to occur EXACTLY ONCE in that file — include surrounding lines if needed), then give the new text as
-REPLACE. Use this EXACT format, one or more blocks per file:
+REPLACE. Copy the FIND snippet's indentation and whitespace EXACTLY as in the source. Prefer several small,
+clearly-unique FIND blocks over one large block. Use this EXACT format, one or more blocks per file:
 
 === PATCH: <path> ===
 <<<<<<< FIND

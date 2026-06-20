@@ -45,20 +45,47 @@ def parse_patches(text):
     return patches
 
 
+def _locate(cur, find):
+    """cur에서 find의 유일 위치 (start, end)를 찾는다. exact 우선, 실패하면 줄끝 공백 무시 폴백.
+    유일하지 않으면 PatchError. 앞 들여쓰기는 폴백서도 정확히 비교한다(오적용 방지)."""
+    cnt = cur.count(find)
+    if cnt == 1:
+        i = cur.index(find)
+        return i, i + len(find)
+    if cnt > 1:
+        raise PatchError(f"FIND 토막이 {cnt}회 — 모호함\n--FIND--\n{find[:200]}")
+    # 폴백: 줄끝 공백만 무시한 전체-줄 블록 유일매치(흔한 LLM 차이). 앞 들여쓰기는 그대로 본다.
+    f = find.strip("\n")
+    if not f.strip():
+        raise PatchError("FIND가 비었음")
+    flines = [ln.rstrip() for ln in f.split("\n")]
+    blines = cur.split("\n")
+    n = len(flines)
+    starts = [s for s in range(len(blines) - n + 1)
+              if all(blines[s + k].rstrip() == flines[k] for k in range(n))]
+    if len(starts) > 1:
+        raise PatchError(f"FIND 토막이 {len(starts)}회(공백무시) — 모호함\n--FIND--\n{find[:200]}")
+    if not starts:
+        raise PatchError(f"FIND 토막이 base에 없음\n--FIND--\n{find[:200]}")
+    s = starts[0]
+    start = sum(len(blines[k]) + 1 for k in range(s))
+    end = start + sum(len(blines[s + k]) + 1 for k in range(n)) - 1  # 블록 끝 \n 제외
+    return start, end
+
+
 def apply_patches(base_sources, patches):
     """base_sources {경로: 원본본문}에 patches를 적용해 {경로: 수정본} 반환.
-    patches에 있는 파일만 결과에 담는다(touched). FIND는 base에 정확히 1회여야 한다."""
+    patches에 있는 파일만 결과에 담는다(touched). FIND는 base에 유일해야 한다(exact 우선·줄끝공백 폴백)."""
     out = {}
     for name, pairs in patches.items():
         if name not in base_sources:
             raise PatchError(f"{name}: base에 없는 파일에 패치")
         cur = _lf(base_sources[name])
         for find, repl in pairs:
-            cnt = cur.count(find)
-            if cnt == 0:
-                raise PatchError(f"{name}: FIND 토막이 base에 없음\n--FIND--\n{find[:200]}")
-            if cnt > 1:
-                raise PatchError(f"{name}: FIND 토막이 {cnt}회 — 모호함\n--FIND--\n{find[:200]}")
-            cur = cur.replace(find, repl, 1)
+            try:
+                start, end = _locate(cur, _lf(find))
+            except PatchError as e:
+                raise PatchError(f"{name}: {e}")
+            cur = cur[:start] + repl + cur[end:]
         out[name] = cur
     return out
