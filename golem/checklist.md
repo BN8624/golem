@@ -290,4 +290,14 @@ P1 (다음 실험 전):
 - [x] **종착점 `driver_autocard.py`** — idea→설계→base동결→patch빌드(그린)→스토리→렌더 한 바퀴 무인. 시연 l9 처형: gate 11/11·합의1.0·golden0(34세계)·손번역 0·5.7분. REPORT.json.
 - [x] **견고화** — graft 신규세계 "≥1 발동"으로 완화(l3식 비발동 유효) / patch_apply 줄끝공백 폴백(`_locate`, l8 3/11 CARD 흡수). 단위테스트+run_keyless 그린.
 - [x] **외형 호평·아이폰 서버** — 서사 한 겹에 사용자 "느낌이 확 달라"(메모리 golem-story-layer-matters). 테일스케일 서버 확인 후 내림.
-- [ ] **(다음, 사용자 결정)** 카드 여러 장 PLAN 밤샘 누적 / card_delta·patch 1패스율↑ / 인터랙티브 플레이(사용자 "그 다음") / 선별 퍼널(card_proposer 결합) / 콘텐츠·문장 다듬기.
+- [x] **(3·4·5)** (4)선별 퍼널 `propose_cards.py`(골렘 카드 제안)→driver_autocard `--ideas-file` / (3)card_delta 피드백 루프(자가수정 1패스율↑) / (5)StoryForge 보강("변칙의 잔향" 카엘).
+
+## 외부리뷰 대응 + 정본화·운영안전·분해 (G82, 이유 context-notes G82 (10~12))
+- [x] **정본 선언** — 루트 `README.md` 신설(본선 전술 9카드·stable=`tactics_base_l8`·실험 l9·tactics_play 생성산출물 수정금지·디렉토리 경계·live vs legacy), `golem/README` 포인터.
+- [x] **검증 정본 `verify_tactics.py`** — 9카드 골든회귀(l1~l9)+l8 strict 승격+run_keyless 한 명령. 정본: `python golem/studio/verify_tactics.py`.
+- [x] **promotion gate** — 후보 strict False / base 승격 strict True(l8 구조부패 차단).
+- [x] **llm 재시도 상한** — `SLOW_RETRY_MAX=12`(무한대기→관측가능 종료, env override).
+- [x] **디커플 + legacy 이동** — `parse_write.py` 분리·importer 재지정 → 21개 `golem/legacy/`로(driver/bank flow/probe류). 루트 live=parse_write·static_gate·oracle·grade.
+- [x] **build_graded 분해** — gate_runner·grading(키0)·build_prompt(프롬프트 바이트동일로 검증) 분리, 596→294줄, re-export로 호출부 무변경.
+- [x] **전체 코드 점검** — compileall(legacy 포함) exit0·live 17모듈 import·verify_tactics ALL PASS·고아참조 0·워킹트리 클린.
+- [ ] **(다음, 사용자 결정)** 카드 밤샘 누적(propose_cards→driver_autocard) / 인터랙티브 플레이 / 선별 퍼널 실노출 신호.
