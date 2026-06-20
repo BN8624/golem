@@ -166,14 +166,24 @@ function side(){
     return '<div class="'+(e.hp<=0?'dead':'')+'">'+e.id+t+' — HP '+e.hp+' @['+e.pos+'] 거리 '+dist(state.hero.pos,e.pos)+'</div>';}).join('')||'<div class="sub">적 없음</div>';
   document.getElementById('undo').disabled=!hist.length||!!over;
 }
-cv.addEventListener('click',ev=>{
-  if(over)return;const r=cv.getBoundingClientRect();const x=Math.floor((ev.clientX-r.left-ox)/cs),y=Math.floor((ev.clientY-r.top-oy)/cs);
-  const e=state.enemies.find(en=>en.hp>0&&en.pos[0]===x&&en.pos[1]===y);if(!e)return;
-  const d=dist(state.hero.pos,e.pos);
-  if(d===1)act({type:'attack',target:e.id});
-  else if(d>=2&&d<=3)act({type:'ranged_attack',target:e.id});
-  else flash('사거리 밖 (거리 '+d+')');
-});
+function tap(x,y){
+  if(over)return;
+  if(x<0||y<0||x>=gb.w||y>=gb.h)return;
+  const e=state.enemies.find(en=>en.hp>0&&en.pos[0]===x&&en.pos[1]===y);
+  if(e){const d=dist(state.hero.pos,e.pos);
+    if(d===1)act({type:'attack',target:e.id});
+    else if(d>=2&&d<=3)act({type:'ranged_attack',target:e.id});
+    else flash('사거리 밖 (거리 '+d+')');
+    return;}
+  // 빈 칸: 인접(거리1)이면 그 방향으로 이동(엔진이 벽/경계는 막음)
+  const hp=state.hero.pos, d=dist(hp,[x,y]);
+  if(d===1)act({type:'move',dir:[x-hp[0],y-hp[1]]});
+  else if(d>1)flash('한 칸씩만 이동 (인접 칸 탭)');
+}
+function cellFromEvent(ev){const r=cv.getBoundingClientRect();
+  const sx=cv.width/r.width, sy=cv.height/r.height;  // CSS 스케일 보정(폰에서 캔버스가 축소됨)
+  return [Math.floor(((ev.clientX-r.left)*sx-ox)/cs), Math.floor(((ev.clientY-r.top)*sy-oy)/cs)];}
+cv.addEventListener('click',ev=>{const[x,y]=cellFromEvent(ev);tap(x,y);});
 function flash(m){document.getElementById('log').textContent=m;}
 document.querySelectorAll('.pad button[data-dx]').forEach(b=>b.onclick=()=>act({type:'move',dir:[+b.dataset.dx,+b.dataset.dy]}));
 document.getElementById('undo').onclick=()=>{if(hist.length&&!over){state=hist.pop();over=null;draw();}};
