@@ -11,9 +11,17 @@
 
 import argparse
 import json
+import re
 import sys
 from importlib import import_module
 from pathlib import Path
+
+# 채택 레벨 이름의 batch-로컬 번호(1~6 중복)를 최종 순서 1..N으로 재넘버링.
+def _renumber(levels):
+    for i, lv in enumerate(levels, 1):
+        base = re.sub(r"^\s*\d+\s*[.．]\s*", "", lv.get("name", "")).strip()
+        lv["name"] = f"{i}. {base}"
+    return levels
 
 HERE = Path(__file__).resolve().parent
 MODEL_31 = "gemma-4-31b-it"
@@ -143,6 +151,7 @@ def main(argv=None):
     if len(accepted) > args.n:
         idx = sorted({round(i * (len(accepted) - 1) / (args.n - 1)) for i in range(args.n)}) if args.n > 1 else [0]
         accepted = [accepted[i] for i in idx]
+    _renumber(accepted)  # 난이도순 1..N 순번(batch-로컬 중복번호 제거)
     out = HERE / "build_runs" / "proposals" / "tactics_levels.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(accepted, ensure_ascii=False, indent=2), encoding="utf-8")
