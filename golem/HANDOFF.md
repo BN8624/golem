@@ -2,6 +2,13 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-21, G83) — 골렘이 "1시간 분량"을 무인으로 키움: 18레벨(분량) + 서사 한 겹(B겹)을 손번역 0으로 자동 생성.** 플레이테스트는 1시간 분량 나오면 한다는 사용자 기준에 맞춰 볼륨을 골렘이 직접 불리게 한 세션. 핵심:
+- **레벨 생성 변별 누적(`propose_levels.py`).** 단일-attempt 채택을 (메커니즘×최소턴) 중복제거 + 난이도 구간 cap 누적으로 교체 → 임의 N까지 변별 커브 유지하며 채움. batch 생성 + 커버리지 피드백으로 보완 유도. 과거 "쉬운 레벨 쏠림"은 구간 cap으로 차단. 노브=`--n`(목표 총수)·`--batch`. 최종 채택분은 난이도순 1..N 재넘버링(`_renumber`, batch-로컬 중복번호 제거). 커밋 b3469ca·72d9b3e.
+- **레벨팩 서사 자동화(`gen_tactics_levelstory.py` 신규).** 스토리 자동화가 캠페인 뷰어(index.html)만 덮고 플레이 레벨팩(play.html)은 `desc` 한 줄뿐이던 빈 칸을 닫음. 골렘이 `levels.json`을 난이도 순서로 받아 레벨별 적·지형·메커니즘·영웅카드 반영 서사(제목·프롤로그·intro/clear·에필로그) 저작, 구조 검증(장면 수=레벨 수·키 채움, 키0). `gen_tactics_interactive`가 `levelstory.json` 있으면 play.html에 스토리 패널 렌더(진입 intro·승리 clear·마지막 에필로그, 없으면 숨김). 커밋 7c647cf.
+- **★키 실연(이 세션).** `propose_levels --n 18 --batch 6 --cap 14` → **18/18 승격**(난이도 커브 min_turns 3→9, 근접·사거리·마나방패·파열·전도체·강철·처형·부식·흡혈+복합). `gen_tactics_levelstory` → **18/18 장면 검증**, 제목 "변칙의 검: 제국 성채의 잔향"(주인공 카엘). `gen_tactics_interactive` → play.html 18레벨+서사. 라이브 콘텐츠 커밋 97b298a. **레벨(분량)과 스토리(서사)를 골렘이 같이 키움.**
+- **다음(사용자 결정).** 1시간 분량 나왔으니 **플레이테스트→밸런스 개입**(취향·재미=사람, play_signals FLAG 참고) / 더 키우려면 `--n`↑ 재실행 / 카드 깊이는 `driver_autocard.py` 별도 축 / 뷰어 index.html도 픽셀·스프라이트 다듬기. 운영원칙=다 자동화·노브 몇 개([[golem-automate-all-few-knobs]]).
+- **재생성 명령**: `propose_levels.py --n N`(★키 레벨) → `gen_tactics_levelstory.py --idea "..."`(★키 서사) → `gen_tactics_interactive.py --level l9`(키0 렌더). 플레이=`node golem/studio/tactics_play/server.js` → `/play`(테일스케일 8770).
+
 **현재 상태 (2026-06-21, G82 종료) — 전술 SRPG: 카드 9장(l1~l9, 골든0)·base 동결 + 자율 완결-후보 파이프라인 + 정본화 + 선별 퍼널 + 레벨 시스템 + 인터랙티브 픽셀 플레이까지 닫힘.** 한 세션 대량 진척. 핵심:
 - **엔진/카드**: 커널 1.0·`tactics_base_l8`(stable)·l9(실험), 카드 l1~l9 전부 게이트 11/11·golden_diff 0.
 - **자율 파이프라인(무인)**: `propose_cards`(장르시드 --ref) → `card_delta`+`graft`(설계·키0검증·교차검산) → `build_graded --patch`(델타 빌드) → `gen_tactics_story`(서사) → `gen_tactics_play`(렌더). `driver_autocard`=한 바퀴 무인.
