@@ -34,25 +34,26 @@ checking):
 
 GENRE REFERENCES — adapt PATTERNS (do NOT clone): {refs}
 
-Design {n} levels forming an ESCALATING curve: early ones teach ONE mechanic, later ones COMBINE mechanics
+Design {batch} levels forming an ESCALATING curve: early ones teach ONE mechanic, later ones COMBINE mechanics
 (introduce-then-combine). Each level must be SOLVABLE and take roughly {tmin}..{tmax} hero actions to win (not a
 1-action auto-win, not unwinnable). Make the taught mechanic MATTER (the level should be much harder/unsolvable
-without it). Give the hero enough stats to win with the right play.
+without it). Give the hero enough stats to win with the right play. Vary mechanics AND difficulty across the batch.
 {feedback}
 Output ONE JSON object EXACTLY, no prose, no markdown fences:
 {{ "levels": [ {{ "name": "<번호. 이름>", "desc": "<한 줄 한국어 안내>", "teaches": "<이 레벨이 가르치는 메커니즘>",
   "initialState": {{ "hero": {{...}}, "enemies": [...], "terrain": {{...}} }} }} ] }}
-"levels" must have EXACTLY {n} entries. Return only the JSON."""
+"levels" must have EXACTLY {batch} entries. Return only the JSON."""
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", default="l9", help="엔진/카드 레벨(이 계약·참조 사용)")
-    ap.add_argument("--n", type=int, default=5, help="레벨 개수(노브)")
+    ap.add_argument("--n", type=int, default=5, help="목표 레벨 총수(볼륨 노브 — 1시간 분량이면 ~18)")
+    ap.add_argument("--batch", type=int, default=6, help="한 ★키 생성당 요청 레벨 수(모델 친화적 작게)")
     ap.add_argument("--min-turns", type=int, default=3, help="목표 최소턴 하한(노브)")
     ap.add_argument("--max-turns", type=int, default=9, help="목표 최소턴 상한(노브)")
     ap.add_argument("--ref", default=None, help="장르 레퍼런스 시드(기본=propose_cards 표본)")
-    ap.add_argument("--cap", type=int, default=4, help="생성 재시도 수")
+    ap.add_argument("--cap", type=int, default=4, help="생성 재시도 수(목표 못 채우면 늘리기)")
     ap.add_argument("--replay", default=None, help="응답 파일 재생(키0 디버그)")
     args = ap.parse_args(argv)
 
@@ -87,40 +88,61 @@ def main(argv=None):
             return False, f"min_turns {mt} 범위밖[{args.min_turns},{args.max_turns}]"
         return True, f"OK min_turns={mt}"
 
-    # 누적·sort[:n] 오름차순은 쉬운 레벨만 남기고 한 attempt의 변별 커브를 깸 → "최고 단일 attempt" 채택.
-    best, feedback = [], ""
+    # 변별 누적: attempt마다 batch개 생성 → 게이트 통과분을 (메커니즘×최소턴) 중복제거 + 난이도 구간 cap로 누적.
+    # 단순 누적이 쉬운 레벨만 남기던 과거 문제는 구간별 cap + 커버리지 피드백(보완 생성 유도)으로 차단한다.
+    span = max(1, args.max_turns - args.min_turns + 1)
+    per_turn_cap = max(2, -(-args.n // span))  # ceil(n/span): 한 난이도에 쏠림 방지
+
+    def _sig(lv):
+        return ((lv.get("teaches", "") or "").strip().lower(), lv["_signals"]["min_turns"])
+
+    accepted, feedback = [], ""
     for attempt in range(1, args.cap + 1):
-        if len(best) >= args.n:
+        if len(accepted) >= args.n:
             break
-        print(f"[LEVELS] 시도 {attempt}/{args.cap} — 골렘 레벨 {args.n} 생성{' (replay)' if args.replay else ' (★키)'}"
+        print(f"[LEVELS] 시도 {attempt}/{args.cap} — 골렘 {args.batch}개 생성"
+              f"{' (replay)' if args.replay else ' (★키)'} | 누적 {len(accepted)}/{args.n}"
               + (" [피드백]" if feedback else ""))
-        prompt = PROMPT.format(cards=cards, invariants=pc.INVARIANTS, refs=refs, n=args.n,
+        prompt = PROMPT.format(cards=cards, invariants=pc.INVARIANTS, refs=refs, batch=args.batch,
                                tmin=args.min_turns, tmax=args.max_turns,
-                               feedback=("\n직전 시도 실패(고칠 것): " + feedback + "\n") if feedback else "")
+                               feedback=("\n" + feedback + "\n") if feedback else "")
         try:
             d = _extract_json(gen(prompt))
             levels = d["levels"]
         except Exception as e:  # noqa: BLE001
-            feedback = f"JSON 파싱 실패({e}). JSON 오브젝트만."
+            feedback = f"직전 시도 JSON 파싱 실패({e}). JSON 오브젝트만 출력."
             print(f"  파싱 실패: {e}"); continue
         sigs = compute_signals(levels, gl)
-        cur, misses = [], []
+        misses = []
         for lv, s in zip(levels, sigs):
             ok, why = gate(lv, s)
-            print(f"  {'✓' if ok else '✗'} {lv.get('name','?')[:30]} [{lv.get('teaches','')[:18]}] — {why}"
-                  + (f" greedy(멜레{s['greedy_melee'][:3]}/사거리{s['greedy_ranged'][:3]})" if ok else ""))
-            if ok and lv.get("name") not in {a["name"] for a in cur}:
-                lv["_signals"] = {"min_turns": s["min_turns"], "greedy_melee": s["greedy_melee"],
-                                  "greedy_ranged": s["greedy_ranged"], "card_fields": s["card_fields"],
-                                  "min_turns_no_card": s["min_turns_no_card"]}
-                cur.append(lv)
-            elif not ok:
-                misses.append(f"{lv.get('name','?')[:20]}={why}")
-        if len(cur) > len(best):   # 이 attempt가 만든 일관 세트가 더 크면 통째 채택(누적 안 함)
-            best = cur
-        feedback = "; ".join(misses[:4])
+            if not ok:
+                misses.append(f"{lv.get('name','?')[:18]}={why}")
+                print(f"  ✗ {lv.get('name','?')[:30]} — {why}"); continue
+            lv["_signals"] = {"min_turns": s["min_turns"], "greedy_melee": s["greedy_melee"],
+                              "greedy_ranged": s["greedy_ranged"], "card_fields": s["card_fields"],
+                              "min_turns_no_card": s["min_turns_no_card"]}
+            if _sig(lv) in {_sig(a) for a in accepted}:
+                print(f"  ~ {lv.get('name','?')[:30]} — 중복(메커니즘×난이도 {_sig(lv)})"); continue
+            if sum(1 for a in accepted if a["_signals"]["min_turns"] == s["min_turns"]) >= per_turn_cap:
+                print(f"  ~ {lv.get('name','?')[:30]} — {s['min_turns']}수 정원초과(cap {per_turn_cap})"); continue
+            accepted.append(lv)
+            print(f"  ✓ {lv.get('name','?')[:30]} [{lv.get('teaches','')[:16]}] min_turns={s['min_turns']} "
+                  f"greedy(멜레{s['greedy_melee'][:3]}/사거리{s['greedy_ranged'][:3]}) | 누적 {len(accepted)}/{args.n}")
+            if len(accepted) >= args.n:
+                break
+        # 커버리지 피드백: 이미 채운 (메커니즘,최소턴)과 아직 빈 난이도 구간을 알려 보완 생성을 유도(중복 줄임).
+        covered = sorted({_sig(a) for a in accepted})
+        thin = [mt for mt in range(args.min_turns, args.max_turns + 1)
+                if sum(1 for a in accepted if a["_signals"]["min_turns"] == mt) < per_turn_cap]
+        feedback = (f"이미 채운 (메커니즘,최소턴)={covered}. 다른 메커니즘 조합이나 최소턴 {thin}수 레벨로 보완하라(중복 금지)."
+                    + (" 직전 탈락: " + "; ".join(misses[:3]) if misses else ""))
 
-    accepted = sorted(best, key=lambda l: l["_signals"]["min_turns"])[:args.n]
+    # 난이도 커브: 최소턴 오름차순 정렬. n 초과시 구간 고르게 솎아 커브 유지(쉬운 쪽 쏠림 방지).
+    accepted.sort(key=lambda l: l["_signals"]["min_turns"])
+    if len(accepted) > args.n:
+        idx = sorted({round(i * (len(accepted) - 1) / (args.n - 1)) for i in range(args.n)}) if args.n > 1 else [0]
+        accepted = [accepted[i] for i in idx]
     out = HERE / "build_runs" / "proposals" / "tactics_levels.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(accepted, ensure_ascii=False, indent=2), encoding="utf-8")
