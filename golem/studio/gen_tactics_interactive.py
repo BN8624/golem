@@ -15,6 +15,42 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "tactics_play"
 
+# 격자 뒤 전체 장면 배경(클로드 저작 SVG·벡터=코드, 키0). 무너진 제국 성채 홀 — 석벽·중앙 아치·횃불·바닥·비네트.
+BACKDROP = r"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1400" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="air" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0a0c16"/><stop offset="0.45" stop-color="#141832"/><stop offset="1" stop-color="#080a12"/></linearGradient>
+  <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#262c47"/><stop offset="1" stop-color="#171b30"/></linearGradient>
+  <radialGradient id="torch" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#ffb15a" stop-opacity="0.55"/><stop offset="0.5" stop-color="#ff8a3c" stop-opacity="0.18"/><stop offset="1" stop-color="#ff8a3c" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.42" r="0.75">
+    <stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="0.7" stop-color="#000000" stop-opacity="0.18"/><stop offset="1" stop-color="#000000" stop-opacity="0.72"/></radialGradient>
+  <pattern id="brick" width="160" height="90" patternUnits="userSpaceOnUse">
+    <rect width="160" height="90" fill="url(#stone)"/>
+    <g stroke="#0d1020" stroke-width="3">
+      <line x1="0" y1="45" x2="160" y2="45"/><line x1="0" y1="90" x2="160" y2="90"/>
+      <line x1="80" y1="0" x2="80" y2="45"/><line x1="0" y1="45" x2="0" y2="90"/><line x1="160" y1="45" x2="160" y2="90"/></g>
+    <g stroke="#313858" stroke-width="1" opacity="0.5"><line x1="0" y1="47" x2="160" y2="47"/><line x1="82" y1="2" x2="82" y2="43"/></g>
+  </pattern>
+</defs>
+<rect width="1000" height="1400" fill="url(#air)"/>
+<rect width="1000" height="1400" fill="url(#brick)" opacity="0.85"/>
+<path d="M340 1400 V520 Q500 300 660 520 V1400 Z" fill="#06080f"/>
+<path d="M360 1400 V528 Q500 332 640 528 V1400 Z" fill="none" stroke="#414a72" stroke-width="6" opacity="0.7"/>
+<rect x="150" y="300" width="70" height="1100" fill="url(#stone)" stroke="#0d1020" stroke-width="4"/>
+<rect x="780" y="300" width="70" height="1100" fill="url(#stone)" stroke="#0d1020" stroke-width="4"/>
+<rect x="0" y="1180" width="1000" height="220" fill="#10131f"/>
+<g stroke="#2a3150" stroke-width="2" opacity="0.6"><line x1="0" y1="1180" x2="1000" y2="1180"/><line x1="500" y1="1180" x2="500" y2="1400"/><line x1="250" y1="1190" x2="120" y2="1400"/><line x1="750" y1="1190" x2="880" y2="1400"/></g>
+<g>
+  <rect x="232" y="560" width="16" height="70" fill="#3a2a1c"/><ellipse cx="240" cy="548" rx="22" ry="34" fill="#ffd36a"/><ellipse cx="240" cy="556" rx="12" ry="20" fill="#fff3c4"/>
+  <circle cx="240" cy="560" r="220" fill="url(#torch)"/>
+  <rect x="752" y="560" width="16" height="70" fill="#3a2a1c"/><ellipse cx="760" cy="548" rx="22" ry="34" fill="#ffd36a"/><ellipse cx="760" cy="556" rx="12" ry="20" fill="#fff3c4"/>
+  <circle cx="760" cy="560" r="220" fill="url(#torch)"/>
+</g>
+<rect width="1000" height="1400" fill="url(#vig)"/>
+</svg>"""
+
 # 플레이 레벨 — 초기상태(엔진이 spread). 검증 엔진이 그대로 굴리므로 메커니즘 정합 보장.
 # 골렘 생성·검증 팩(tactics_play/levels.json, propose_levels.py 산출)이 있으면 그걸 우선 로드, 없으면 아래 빌트인.
 _BUILTIN_LEVELS = [
@@ -91,6 +127,7 @@ def main(argv=None):
                 .replace("__LEVELS__", json.dumps(LEVELS, ensure_ascii=False))
                 .replace("__SPRITES__", json.dumps(SPRITES, ensure_ascii=False))
                 .replace("__STORY__", json.dumps(STORY, ensure_ascii=False))
+                .replace("__BACKDROP__", BACKDROP)
                 .replace("__LEVEL__", args.level))
     (OUT / "play.html").write_text(html, encoding="utf-8")
     print(f"  [{args.level}] 플레이 {len(LEVELS)}레벨 → {OUT / 'play.html'}")
@@ -120,7 +157,9 @@ HTML = r"""<!DOCTYPE html>
   .banner{font-size:15px;font-weight:700;padding:6px 0}
   .storybox{background:var(--panel);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55;white-space:pre-wrap}
   .storybox .t{color:var(--hero);font-weight:700;margin-bottom:3px}.storybox .clr{color:var(--ok);margin-top:7px}.storybox:empty{display:none}
-</style></head><body><div class="wrap">
+  .scene{position:fixed;inset:0;z-index:-1;overflow:hidden}.scene svg{width:100%;height:100%;display:block}
+  h1,.sub{text-shadow:0 1px 3px rgba(0,0,0,.85)}
+</style></head><body><div class="scene">__BACKDROP__</div><div class="wrap">
 <h1>전술 SRPG — 직접 플레이</h1>
 <div class="sub">골렘이 골든0으로 검증한 __LEVEL__ 엔진을 그대로 구동(룰 복제 없음). 이동=방향 버튼, 공격=적 클릭(거리1 근접·거리2~3 사거리 자동).</div>
 <div class="bar"><select id="pick"></select><button id="undo">↩ 무르기</button><button id="reset">⟲ 리셋</button><span id="ld" class="sub" style="margin:0"></span></div>
