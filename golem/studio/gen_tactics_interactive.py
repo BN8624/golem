@@ -19,34 +19,34 @@ OUT = HERE / "tactics_play"
 BACKDROP = r"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1400" preserveAspectRatio="xMidYMid slice">
 <defs>
   <linearGradient id="air" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#0a0c16"/><stop offset="0.45" stop-color="#141832"/><stop offset="1" stop-color="#080a12"/></linearGradient>
+    <stop offset="0" stop-color="#1b2142"/><stop offset="0.45" stop-color="#2c3563"/><stop offset="1" stop-color="#141a32"/></linearGradient>
   <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#262c47"/><stop offset="1" stop-color="#171b30"/></linearGradient>
+    <stop offset="0" stop-color="#4a5488"/><stop offset="1" stop-color="#2e3656"/></linearGradient>
   <radialGradient id="torch" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="#ffb15a" stop-opacity="0.55"/><stop offset="0.5" stop-color="#ff8a3c" stop-opacity="0.18"/><stop offset="1" stop-color="#ff8a3c" stop-opacity="0"/></radialGradient>
-  <radialGradient id="vig" cx="0.5" cy="0.42" r="0.75">
-    <stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="0.7" stop-color="#000000" stop-opacity="0.18"/><stop offset="1" stop-color="#000000" stop-opacity="0.72"/></radialGradient>
+    <stop offset="0" stop-color="#ffc46a" stop-opacity="0.85"/><stop offset="0.5" stop-color="#ff9a3c" stop-opacity="0.32"/><stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.4" r="0.8">
+    <stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="0.75" stop-color="#000000" stop-opacity="0.12"/><stop offset="1" stop-color="#000000" stop-opacity="0.5"/></radialGradient>
   <pattern id="brick" width="160" height="90" patternUnits="userSpaceOnUse">
     <rect width="160" height="90" fill="url(#stone)"/>
-    <g stroke="#0d1020" stroke-width="3">
+    <g stroke="#1a2038" stroke-width="4">
       <line x1="0" y1="45" x2="160" y2="45"/><line x1="0" y1="90" x2="160" y2="90"/>
       <line x1="80" y1="0" x2="80" y2="45"/><line x1="0" y1="45" x2="0" y2="90"/><line x1="160" y1="45" x2="160" y2="90"/></g>
-    <g stroke="#313858" stroke-width="1" opacity="0.5"><line x1="0" y1="47" x2="160" y2="47"/><line x1="82" y1="2" x2="82" y2="43"/></g>
+    <g stroke="#67719e" stroke-width="2" opacity="0.6"><line x1="2" y1="47" x2="158" y2="47"/><line x1="82" y1="3" x2="82" y2="42"/></g>
   </pattern>
 </defs>
 <rect width="1000" height="1400" fill="url(#air)"/>
-<rect width="1000" height="1400" fill="url(#brick)" opacity="0.85"/>
-<path d="M340 1400 V520 Q500 300 660 520 V1400 Z" fill="#06080f"/>
-<path d="M360 1400 V528 Q500 332 640 528 V1400 Z" fill="none" stroke="#414a72" stroke-width="6" opacity="0.7"/>
-<rect x="150" y="300" width="70" height="1100" fill="url(#stone)" stroke="#0d1020" stroke-width="4"/>
-<rect x="780" y="300" width="70" height="1100" fill="url(#stone)" stroke="#0d1020" stroke-width="4"/>
-<rect x="0" y="1180" width="1000" height="220" fill="#10131f"/>
-<g stroke="#2a3150" stroke-width="2" opacity="0.6"><line x1="0" y1="1180" x2="1000" y2="1180"/><line x1="500" y1="1180" x2="500" y2="1400"/><line x1="250" y1="1190" x2="120" y2="1400"/><line x1="750" y1="1190" x2="880" y2="1400"/></g>
+<rect width="1000" height="1400" fill="url(#brick)" opacity="0.92"/>
+<path d="M330 1400 V520 Q500 290 670 520 V1400 Z" fill="#0c1124"/>
+<path d="M330 1400 V520 Q500 290 670 520 V1400 Z" fill="none" stroke="#5a66a0" stroke-width="8" opacity="0.85"/>
+<rect x="140" y="280" width="74" height="1120" fill="url(#stone)" stroke="#1a2038" stroke-width="5"/>
+<rect x="786" y="280" width="74" height="1120" fill="url(#stone)" stroke="#1a2038" stroke-width="5"/>
+<rect x="0" y="1180" width="1000" height="220" fill="#222a48"/>
+<g stroke="#46507e" stroke-width="3" opacity="0.7"><line x1="0" y1="1182" x2="1000" y2="1182"/><line x1="500" y1="1182" x2="500" y2="1400"/><line x1="250" y1="1192" x2="110" y2="1400"/><line x1="750" y1="1192" x2="890" y2="1400"/></g>
 <g>
-  <rect x="232" y="560" width="16" height="70" fill="#3a2a1c"/><ellipse cx="240" cy="548" rx="22" ry="34" fill="#ffd36a"/><ellipse cx="240" cy="556" rx="12" ry="20" fill="#fff3c4"/>
-  <circle cx="240" cy="560" r="220" fill="url(#torch)"/>
-  <rect x="752" y="560" width="16" height="70" fill="#3a2a1c"/><ellipse cx="760" cy="548" rx="22" ry="34" fill="#ffd36a"/><ellipse cx="760" cy="556" rx="12" ry="20" fill="#fff3c4"/>
-  <circle cx="760" cy="560" r="220" fill="url(#torch)"/>
+  <rect x="230" y="560" width="18" height="78" fill="#4a3422"/><ellipse cx="239" cy="546" rx="26" ry="40" fill="#ffd884"/><ellipse cx="239" cy="556" rx="14" ry="24" fill="#fff6cf"/>
+  <circle cx="239" cy="560" r="260" fill="url(#torch)"/>
+  <rect x="752" y="560" width="18" height="78" fill="#4a3422"/><ellipse cx="761" cy="546" rx="26" ry="40" fill="#ffd884"/><ellipse cx="761" cy="556" rx="14" ry="24" fill="#fff6cf"/>
+  <circle cx="761" cy="560" r="260" fill="url(#torch)"/>
 </g>
 <rect width="1000" height="1400" fill="url(#vig)"/>
 </svg>"""
@@ -142,11 +142,11 @@ HTML = r"""<!DOCTYPE html>
 <style>
   :root{--bg:#0f1220;--panel:#1a1f33;--grid:#2a3150;--cell:#161b2e;--hero:#4ea1ff;--enemy:#ff5d6c;--wall:#3a3f52;--cond:#21d3c8;--txt:#e6e9f5;--dim:#8b93b5;--ok:#43d17a;--bad:#ff6b7a;--rng:#ffd866}
   *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,'Segoe UI',sans-serif}
-  .wrap{max-width:760px;margin:0 auto;padding:14px}h1{font-size:17px;margin:0 0 2px}.sub{color:var(--dim);font-size:12px;margin-bottom:10px}
+  .wrap{max-width:760px;margin:0 auto;padding:14px;position:relative;z-index:1}h1{font-size:17px;margin:0 0 2px}.sub{color:var(--dim);font-size:12px;margin-bottom:10px}
   select,button{background:var(--panel);color:var(--txt);border:1px solid var(--grid);border-radius:8px;padding:7px 11px;font:inherit;cursor:pointer}
   button:hover{border-color:var(--hero)}button:disabled{opacity:.4;cursor:default}
   .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .stage{display:flex;gap:14px;flex-wrap:wrap}canvas{background:var(--panel);border-radius:12px;touch-action:manipulation}
+  .stage{display:flex;gap:14px;flex-wrap:wrap}canvas{background:rgba(16,20,38,0.5);border-radius:12px;touch-action:manipulation}
   .side{flex:1;min-width:230px}.stat{background:var(--panel);border-radius:10px;padding:9px 11px;margin-bottom:7px}.stat b{color:var(--hero)}
   .status{font-size:16px;font-weight:700}.status.VICTORY{color:var(--ok)}.status.DEFEAT{color:var(--bad)}
   .pad{display:grid;grid-template-columns:repeat(3,40px);grid-gap:5px;justify-content:center;margin:6px 0}
@@ -157,7 +157,7 @@ HTML = r"""<!DOCTYPE html>
   .banner{font-size:15px;font-weight:700;padding:6px 0}
   .storybox{background:var(--panel);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55;white-space:pre-wrap}
   .storybox .t{color:var(--hero);font-weight:700;margin-bottom:3px}.storybox .clr{color:var(--ok);margin-top:7px}.storybox:empty{display:none}
-  .scene{position:fixed;inset:0;z-index:-1;overflow:hidden}.scene svg{width:100%;height:100%;display:block}
+  .scene{position:fixed;inset:0;z-index:0;overflow:hidden}.scene svg{width:100%;height:100%;display:block}
   h1,.sub{text-shadow:0 1px 3px rgba(0,0,0,.85)}
 </style></head><body><div class="scene">__BACKDROP__</div><div class="wrap">
 <h1>전술 SRPG — 직접 플레이</h1>
