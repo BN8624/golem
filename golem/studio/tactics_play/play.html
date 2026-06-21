@@ -9,7 +9,7 @@
   select,button{background:var(--panel);color:var(--txt);border:1px solid var(--grid);border-radius:8px;padding:7px 11px;font:inherit;cursor:pointer}
   button:hover{border-color:var(--hero)}button:disabled{opacity:.4;cursor:default}
   .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .stage{display:flex;gap:14px;flex-wrap:wrap}canvas{background:rgba(16,20,38,0.5);border-radius:12px;touch-action:manipulation}
+  .stage{display:flex;gap:14px;flex-wrap:wrap}canvas{background:rgba(44,52,86,0.82);border-radius:12px;touch-action:manipulation}
   .side{flex:1;min-width:230px}.stat{background:var(--panel);border-radius:10px;padding:9px 11px;margin-bottom:7px}.stat b{color:var(--hero)}
   .status{font-size:16px;font-weight:700}.status.VICTORY{color:var(--ok)}.status.DEFEAT{color:var(--bad)}
   .pad{display:grid;grid-template-columns:repeat(3,40px);grid-gap:5px;justify-content:center;margin:6px 0}
@@ -244,7 +244,7 @@ function draw(){
   gb=bounds();const pad=8,size=cv.width-pad*2;cs=Math.floor(size/Math.max(gb.w,gb.h));ox=pad;oy=pad;
   ctx.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;
-    ctx.fillStyle='rgba(10,14,28,0.28)';ctx.fillRect(px+1,py+1,cs-2,cs-2);  // 옅은 보드 틴트(성채 배경 비침)
+    ctx.fillStyle='rgba(255,255,255,0.035)';ctx.fillRect(px+1,py+1,cs-2,cs-2);  // 옅은 격자 텍스처(돌바닥은 캔버스가 깖)
     const t=state.terrain&&state.terrain[x+','+y];
     if(t==='Wall'&&!spr('wall',px,py)){ctx.fillStyle=css('--wall');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
     else if(t==='Conductive'&&!spr('conductive',px,py)){ctx.fillStyle=css('--cond');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
