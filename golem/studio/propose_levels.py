@@ -87,9 +87,10 @@ def main(argv=None):
             return False, f"min_turns {mt} 범위밖[{args.min_turns},{args.max_turns}]"
         return True, f"OK min_turns={mt}"
 
-    accepted, feedback = [], ""
+    # 누적·sort[:n] 오름차순은 쉬운 레벨만 남기고 한 attempt의 변별 커브를 깸 → "최고 단일 attempt" 채택.
+    best, feedback = [], ""
     for attempt in range(1, args.cap + 1):
-        if len(accepted) >= args.n:
+        if len(best) >= args.n:
             break
         print(f"[LEVELS] 시도 {attempt}/{args.cap} — 골렘 레벨 {args.n} 생성{' (replay)' if args.replay else ' (★키)'}"
               + (" [피드백]" if feedback else ""))
@@ -103,22 +104,23 @@ def main(argv=None):
             feedback = f"JSON 파싱 실패({e}). JSON 오브젝트만."
             print(f"  파싱 실패: {e}"); continue
         sigs = compute_signals(levels, gl)
-        misses = []
+        cur, misses = [], []
         for lv, s in zip(levels, sigs):
             ok, why = gate(lv, s)
-            tag = "✓" if ok else "✗"
-            print(f"  {tag} {lv.get('name','?')[:30]} [{lv.get('teaches','')[:18]}] — {why}"
+            print(f"  {'✓' if ok else '✗'} {lv.get('name','?')[:30]} [{lv.get('teaches','')[:18]}] — {why}"
                   + (f" greedy(멜레{s['greedy_melee'][:3]}/사거리{s['greedy_ranged'][:3]})" if ok else ""))
-            if ok and lv.get("name") not in {a["name"] for a in accepted}:
+            if ok and lv.get("name") not in {a["name"] for a in cur}:
                 lv["_signals"] = {"min_turns": s["min_turns"], "greedy_melee": s["greedy_melee"],
                                   "greedy_ranged": s["greedy_ranged"], "card_fields": s["card_fields"],
                                   "min_turns_no_card": s["min_turns_no_card"]}
-                accepted.append(lv)
+                cur.append(lv)
             elif not ok:
                 misses.append(f"{lv.get('name','?')[:20]}={why}")
+        if len(cur) > len(best):   # 이 attempt가 만든 일관 세트가 더 크면 통째 채택(누적 안 함)
+            best = cur
         feedback = "; ".join(misses[:4])
 
-    accepted = sorted(accepted, key=lambda l: l["_signals"]["min_turns"])[:args.n]
+    accepted = sorted(best, key=lambda l: l["_signals"]["min_turns"])[:args.n]
     out = HERE / "build_runs" / "proposals" / "tactics_levels.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(accepted, ensure_ascii=False, indent=2), encoding="utf-8")

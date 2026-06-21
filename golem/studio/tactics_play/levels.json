@@ -1,8 +1,8 @@
 [
   {
     "name": "1. 첫 번째 교전",
-    "desc": "근접 공격의 상호 피해 메커니즘을 익힙니다.",
-    "teaches": "REQ-003 (Mutual Damage)",
+    "desc": "기본적인 근접 공격으로 적을 처치하세요.",
+    "teaches": "Melee Attack",
     "initialState": {
       "hero": {
         "hp": 10,
@@ -15,8 +15,8 @@
       "enemies": [
         {
           "id": 1,
-          "hp": 7,
-          "atk": 2,
+          "hp": 8,
+          "atk": 1,
           "pos": [
             1,
             0
@@ -33,9 +33,48 @@
     }
   },
   {
-    "name": "2. 원거리 저격",
-    "desc": "벽을 우회하거나 원거리 공격으로 강인한 적을 처리하세요.",
-    "teaches": "REQ-014 (Ranged Attack), REQ-017 (Hardened), REQ-015 (Wall)",
+    "name": "5. 부식의 늪",
+    "desc": "원거리 공격으로 부식 상태를 부여해 지속 피해를 입히세요.",
+    "teaches": "Corrosion DoT",
+    "initialState": {
+      "hero": {
+        "hp": 15,
+        "atk": 3,
+        "pos": [
+          0,
+          0
+        ],
+        "corrosion": {
+          "dmg": 2,
+          "duration": 3
+        }
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 5,
+          "pos": [
+            3,
+            0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "min_turns": 3,
+      "greedy_melee": "DEFEAT",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [
+        "corrosion"
+      ],
+      "min_turns_no_card": 4
+    }
+  },
+  {
+    "name": "2. 거리 조절",
+    "desc": "적의 강력한 공격을 피해 원거리 공격을 사용하세요.",
+    "teaches": "Ranged Attack",
     "initialState": {
       "hero": {
         "hp": 10,
@@ -48,78 +87,31 @@
       "enemies": [
         {
           "id": 1,
-          "hp": 7,
-          "atk": 2,
+          "hp": 10,
+          "atk": 8,
           "pos": [
-            2,
+            3,
             0
-          ],
-          "unit_type": "Hardened"
+          ]
         }
-      ],
-      "terrain": {
-        "1,0": "Wall"
-      }
+      ]
     },
     "_signals": {
-      "min_turns": 3,
-      "greedy_melee": "FINISHED",
+      "min_turns": 4,
+      "greedy_melee": "DEFEAT",
       "greedy_ranged": "VICTORY",
       "card_fields": [],
       "min_turns_no_card": null
     }
   },
   {
-    "name": "4. 전술적 조화",
-    "desc": "강인한 적을 상대로 생명력 흡수와 변칙 피해를 조합해 생존하세요.",
-    "teaches": "Combination of Rupture, Lifesteal, and Hardened",
+    "name": "3. 마나 붕괴",
+    "desc": "마나 쉴드를 소모시켜 광역 아노말리 피해를 입히세요.",
+    "teaches": "Mana Shield & Anomaly Rupture",
     "initialState": {
       "hero": {
         "hp": 10,
-        "atk": 2,
-        "pos": [
-          0,
-          0
-        ],
-        "mana": 1,
-        "anomaly_dmg": 4,
-        "lifesteal": 0.5
-      },
-      "enemies": [
-        {
-          "id": 1,
-          "hp": 12,
-          "atk": 3,
-          "pos": [
-            1,
-            0
-          ],
-          "unit_type": "Hardened"
-        }
-      ],
-      "terrain": {
-        "0,0": "Conductive"
-      }
-    },
-    "_signals": {
-      "min_turns": 4,
-      "greedy_melee": "DEFEAT",
-      "greedy_ranged": "DEFEAT",
-      "card_fields": [
-        "mana",
-        "anomaly_dmg"
-      ],
-      "min_turns_no_card": 7
-    }
-  },
-  {
-    "name": "3. 과부하 방출",
-    "desc": "마나 쉴드가 깨질 때 발생하는 변칙 피해와 전도성 지형을 활용하세요.",
-    "teaches": "REQ-012 (Mana Shield), REQ-013 (Anomaly Rupture), REQ-015/016 (Conductive)",
-    "initialState": {
-      "hero": {
-        "hp": 15,
-        "atk": 1,
+        "atk": 3,
         "pos": [
           0,
           0
@@ -131,10 +123,57 @@
         {
           "id": 1,
           "hp": 15,
-          "atk": 3,
+          "atk": 2,
           "pos": [
             1,
             0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "min_turns": 4,
+      "greedy_melee": "VICTORY",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [
+        "mana",
+        "anomaly_dmg"
+      ],
+      "min_turns_no_card": 6
+    }
+  },
+  {
+    "name": "4. 전도성 지형",
+    "desc": "전도성 타일 위에서 붕괴를 일으켜 피해를 극대화하세요.",
+    "teaches": "Conductive Terrain",
+    "initialState": {
+      "hero": {
+        "hp": 10,
+        "atk": 2,
+        "pos": [
+          0,
+          0
+        ],
+        "mana": 2,
+        "anomaly_dmg": 3
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 1,
+          "pos": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 1,
+          "pos": [
+            0,
+            1
           ]
         }
       ],
@@ -143,14 +182,141 @@
       }
     },
     "_signals": {
-      "min_turns": 5,
+      "min_turns": 4,
       "greedy_melee": "VICTORY",
       "greedy_ranged": "VICTORY",
       "card_fields": [
         "mana",
         "anomaly_dmg"
       ],
+      "min_turns_no_card": 11
+    }
+  },
+  {
+    "name": "6. 강철의 피부",
+    "desc": "강화된 적의 방어력을 생명력 흡수로 버텨내세요.",
+    "teaches": "Hardened Enemy & Lifesteal",
+    "initialState": {
+      "hero": {
+        "hp": 10,
+        "atk": 4,
+        "pos": [
+          0,
+          0
+        ],
+        "lifesteal": 0.5
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 3,
+          "pos": [
+            1,
+            0
+          ],
+          "unit_type": "Hardened"
+        }
+      ]
+    },
+    "_signals": {
+      "min_turns": 5,
+      "greedy_melee": "DEFEAT",
+      "greedy_ranged": "DEFEAT",
+      "card_fields": [],
       "min_turns_no_card": null
+    }
+  },
+  {
+    "name": "8. 최종 시험",
+    "desc": "지금까지 배운 모든 전술을 동원해 적들을 섬멸하세요.",
+    "teaches": "Combined Mechanics",
+    "initialState": {
+      "hero": {
+        "hp": 20,
+        "atk": 3,
+        "pos": [
+          0,
+          0
+        ],
+        "mana": 2,
+        "anomaly_dmg": 4,
+        "execute": 6
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 25,
+          "atk": 3,
+          "pos": [
+            1,
+            0
+          ],
+          "unit_type": "Hardened"
+        },
+        {
+          "id": 2,
+          "hp": 15,
+          "atk": 2,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ],
+      "terrain": {
+        "0,0": "Conductive"
+      }
+    },
+    "_signals": {
+      "min_turns": 7,
+      "greedy_melee": "VICTORY",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [
+        "mana",
+        "anomaly_dmg",
+        "execute"
+      ],
+      "min_turns_no_card": null
+    }
+  },
+  {
+    "name": "7. 처형의 길",
+    "desc": "벽을 우회하여 적의 체력을 깎고 처형시키세요.",
+    "teaches": "Walls & Execute",
+    "initialState": {
+      "hero": {
+        "hp": 20,
+        "atk": 2,
+        "pos": [
+          0,
+          0
+        ],
+        "execute": 5
+      },
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 2,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ],
+      "terrain": {
+        "1,0": "Wall"
+      }
+    },
+    "_signals": {
+      "min_turns": 8,
+      "greedy_melee": "FINISHED",
+      "greedy_ranged": "VICTORY",
+      "card_fields": [
+        "execute"
+      ],
+      "min_turns_no_card": 8
     }
   }
 ]
