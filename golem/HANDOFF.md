@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-21, G85) — 과거게임 cruft 청소 완료 + rocket CI를 tactics로 이식. 저장소가 본선(전술 9카드)만 남게 슬림화.**
+- **329 파일 삭제(-23k줄), 커밋 bf3155b.** live 파이프라인 의존 클로저를 추적해 안전 확인 후 삭제. 삭제 대상=과거 base(combat/detective/eterno/sokoban/station×3)·과거 골든생성기·검증기·죽은 측정도구(driver_showcase/card_proposer/cardgen/self_suggest/adversarial/sweep/integration/storyforge/multiseed)·슈퍼시드된 `_validate_tactics_l*`(verify_tactics가 흡수)·과거 패킷 100+·잡파일.
+- **rocket CI 이식(★ G84가 경고한 지점 해소).** rocket은 과거게임이나 `run_keyless`(CI)가 레버4 selective/patch·게이트 전시나리오 회귀의 픽스처로 물고 있었음. 동등 회귀를 본선 tactics 픽스처(`tactics_kernel_base` + l1 참조 `REF_GAME_LOGIC`)로 재작성한 `_validate_harness_keyless.py`로 통합 → rocket_base·rocket 패킷·l4 검증기 4종(`_validate_l4*`·`_derive_l4_goldens`·`_gate_allscenarios`) 삭제. `run_keyless.py`도 갱신.
+- **검증: 새 검증기 24/24 + `verify_tactics` ALL PASS**(키0 — l1~l9 골든 회귀 + l8 strict 승격 + run_keyless). 남은 studio 디렉토리=전부 tactics+인프라(fixtures/schemas)+도구 기본 스크래치 3개(planning/design/specqa_packet, 무해). studio .py 37개.
+- **★ 다음 액션은 그대로 깊이 카드 3종 무인 빌드**(아래 G84 ★ 참조): `python golem/studio/driver_autocard.py --start l9 --ideas-file golem/studio/build_runs/proposals/depth_ideas.json --max-cards 3`. depth_ideas.json은 build_runs(gitignore 스크래치)에 보존됨.
+
 **현재 상태 (2026-06-21, G84) — 핵심 교정 2건: ①"1시간 분량"은 과장이었다(실 플레이 ~5분). ②외형 퀄리티는 에셋 천장이라 Kenney급에서 보류. 결정=골렘이 엔진을 깊게(B). 다음=깊이 카드 무인 빌드.**
 
 - **냉정한 현실: 18레벨은 1시간이 아니라 몇 분이다.** 5×5·3~9턴 레벨은 한 판 20~40초컷, 게다가 다수가 그리디로 거저 풀림(생성 신호에 `greedy(멜레VIC/사거리VIC)` 줄줄이 = 진짜 선택 없음). 볼륨(레벨 수)이 아니라 **깊이**가 문제. 클로드가 레벨 수만 보고 "1시간"이라 한 건 오판(사용자 교정).
