@@ -76,7 +76,12 @@ def main(argv=None):
     except Exception:  # noqa: BLE001
         pass
     game_logic = import_module(f"gen_tactics_{args.level}_golden").REF_GAME_LOGIC
-    from sprites import SPRITES
+    # 비전 선택 픽셀팩(tile_sprites.json)이 있으면 우선, 없으면 SVG 폴백(sprites.py).
+    _pack = HERE / "tactics_play" / "assets" / "tile_sprites.json"
+    if _pack.exists():
+        SPRITES = json.loads(_pack.read_text(encoding="utf-8"))
+    else:
+        from sprites import SPRITES
 
     OUT.mkdir(parents=True, exist_ok=True)
     html = (HTML.replace("__GAME_LOGIC__", game_logic)
@@ -136,7 +141,7 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const SPRITES=__SPRITES__, IMG={};  // 클로드 저작 SVG 에셋팩(코드). data URI 이미지로 프리로드
 for(const k in SPRITES){const im=new Image();im.onload=()=>{IMG[k]=im;if(state)draw();};
   im.src='data:image/svg+xml;charset=utf8,'+encodeURIComponent(SPRITES[k]);}
-function spr(k,px,py,alpha){const im=IMG[k];if(!im)return false;ctx.save();ctx.globalAlpha=alpha||1;ctx.drawImage(im,px+1,py+1,cs-2,cs-2);ctx.restore();return true;}
+function spr(k,px,py,alpha){const im=IMG[k];if(!im)return false;ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha=alpha||1;ctx.drawImage(im,px+1,py+1,cs-2,cs-2);ctx.restore();return true;}
 let lvl=0,state=null,initCount=0,hist=[],over=null;
 
 function clone(s){return JSON.parse(JSON.stringify(s));}

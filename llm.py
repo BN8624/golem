@@ -282,11 +282,13 @@ class LLMClient:
                     now = time.monotonic()
             win.append(now)
 
-    def generate(self, role: str, prompt: str, temperature: float | None = None) -> str:
+    def generate(self, role: str, prompt: str, temperature: float | None = None,
+                 images: list | None = None) -> str:
         """role('generator'|'critic')의 모델로 1콜. 텍스트를 반환한다.
 
         가용성 폴백(결정16): generator(손) 콜이 429/5xx 재시도 소진으로 죽으면 critic
         모델로 1회 강등 재시도한다. 폴백 대상이 generator와 같으면(31단독·26단독) no-op.
+        images: PNG 바이트 리스트(멀티모달). 주면 멀티모달 콜, 없으면 텍스트 전용(기존과 동일).
         """
         if self.max_calls is not None and self.call_count >= self.max_calls:
             raise CallBudgetExceeded(
@@ -297,17 +299,17 @@ class LLMClient:
             config["temperature"] = temperature
         model = get_model(role)
         try:
-            return self._generate_with(role, model, prompt, config)
+            return self._generate_with(role, model, prompt, config, images)
         except RuntimeError as err:  # 429/5xx 재시도 소진 (다른 에러는 그대로 전파)
             fallback = get_model("critic")
             if role != "generator" or fallback == model:
                 raise  # 손 콜이 아니거나 강등 대상이 같음(31단독/26단독) → no-op
             print(f"[FALLBACK] {model} infra-exhausted -> demoting to "
                   f"{fallback} (1 try): {err}")
-            return self._generate_with(role, fallback, prompt, config)
+            return self._generate_with(role, fallback, prompt, config, images)
 
     def _generate_with(self, role: str, model: str, prompt: str,
-                       config: dict) -> str:
+                       config: dict, images: list | None = None) -> str:
         """주어진 model로 콜 1건을 재시도 루프로 돈다.
 
         429(RPM)·5xx는 지수백오프 MAX_RETRIES회 → 그 뒤 2분마다 무한 재시도(안 죽임).
@@ -321,9 +323,14 @@ class LLMClient:
         while True:
             self._wait_interval()
             try:
+                if images:  # 멀티모달: 텍스트 + PNG 파트들
+                    from google.genai import types as _t
+                    contents = [prompt] + [_t.Part.from_bytes(data=b, mime_type="image/png") for b in images]
+                else:
+                    contents = prompt
                 resp = self._client.models.generate_content(
                     model=model,
-                    contents=prompt,
+                    contents=contents,
                     config=config or None,
                 )
                 self.call_count += 1

@@ -39,3 +39,10 @@ golem/studio/_combat_ref_tmp/
 
 # card_delta.py 디버그 raw 응답 덤프(추적 안 함)
 golem/studio/_carddelta_*_raw.txt
+
+# 픽셀 에셋 원본 팩(CC0, 재생성 가능) — 게임엔 tile_sprites.json(base64)만 필요
+golem/studio/tactics_play/assets/tiny_dungeon/
+golem/studio/tactics_play/assets/*.zip
+golem/studio/tactics_play/assets/contact_sheet.png
+golem/studio/tactics_play/assets/tiles_index.json
+golem/studio/tactics_play/assets/tile_preview.png

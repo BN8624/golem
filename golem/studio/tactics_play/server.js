@@ -6,7 +6,7 @@ const path = require('path');
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8770;
 const PAGES = {
   '/': path.join(__dirname, 'index.html'),       // 턴 재생 뷰어(gen_tactics_play.py)
-  '/play': path.join(__dirname, 'play.html'),    // 직접 플레이(gen_tactics_interactive.py)
+  '/play': path.join(__dirname, 'play.html'),    // 직접 플레이(gen_tactics_interactive.py, 픽셀팩)
 };
 
 const server = http.createServer((req, res) => {
