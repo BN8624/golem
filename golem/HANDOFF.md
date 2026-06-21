@@ -2,6 +2,13 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G87) — 능동적 적 AI 커널 빌드·동결 완료. "허수아비 적" 끝남.**
+- **트랙 전환(사용자 진단)**: 게임성이 30년 전 게임만도 못한 근본 원인 = 영웅1·적 정지·그리디. 다중유닛보다 **적이 안 움직이는 게 먼저**(사용자). 영웅 카드 누적 보류 → 적 AI base 신규 트랙.
+- **골렘 설계(★키 planning)**: 적 AI 룰 — 매 영웅 액션 직후 적 턴, id오름차순, 인접시 공격·아니면 거리최소화 이동(타이브레이크 X축→작은x→작은y)·다 막히면 정지. 핵심 통찰 = **적 AI가 결정적이면 골든으로 검증된다.**
+- **키0 REF 증명**: `gen_multiunit_kernel_golden.py`가 골렘 룰을 인코딩한 완결 REF base로 9세계 골든 역산 — 적이 추격·공격(SCN-004 DEFEAT)·수렴(SCN-005)·점유차단(SCN-007) 전부 결정적 확인.
+- **★키 build → 동결**: `build_graded`(scratch, 9시도) gate 9/9·합의 0.951. 유일 불일치=즉시 종료시 turn 오프바이원 → attempt07이 oracle와 완전일치(golden_diff 0). **`tactics/bases/multiunit_base`로 동결**(검증 PASS·결정적). turn 규칙(즉시승리도 turn++) 계약에 핀.
+- **★ 다음 액션**: ① 이 base를 키0 검증에 편입(`verify_tactics`에 multiunit 회귀 추가 or 전용 validator) → ② **다중 아군**(적 AI를 "가장 가까운 적-side로"로 일반화 — 거의 데이터) → ③ 카드 재축적(방패·사거리·지형을 이 base 위에) → ④ 에테르노 서사 B겹. 산출=`planning/design/specqa_packet_multiunit_kernel` + `bases/multiunit_base` + `gen_multiunit_kernel_golden.py`.
+
 **현재 상태 (2026-06-21, G86) — 폴더 재설계(풀 패키지화) 완료. studio/ 평면 → core/tools/tactics/validators 4서브패키지.**
 - **레이아웃**: `golem/{core,tools,tactics,validators}/` + 데이터 `tactics/{bases,packets,play}`·`validators/{fixtures,schemas}` + 경로 정본 `golem/paths.py`. studio/ 해체. 코드 42개 .py + 데이터 디렉토리 전부 `git mv`로 이동(히스토리 보존).
 - **경로 모델**: 각 .py 상단 균일 부트스트랩이 4개 코드 디렉토리+repo root를 sys.path에 올림 → bare import·동적 import·직접 실행(`python golem/<sub>/x.py`)·subprocess 스폰 전부 무손상(평면 네임스페이스). 데이터 경로는 `paths.py` 상수(BASES/PACKETS/PLAY/BUILD_RUNS 등). 마이그레이션은 1회용 스크립트로 결정적 처리(미라우트 0).

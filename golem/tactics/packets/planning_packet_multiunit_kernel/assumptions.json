@@ -1,0 +1,7 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "Scenario data (initial state and command sequence) is provided to main.js as a JS object.",
+    "The output for each step is printed to stdout in JSON format."
+  ]
+}

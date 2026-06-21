@@ -1,0 +1,1 @@
+A deterministic tactical grid game where a single hero fights N active enemies. The game processes a pre-defined sequence of hero actions (move or attack), after which every surviving enemy performs one deterministic action (attack if adjacent, otherwise move closer). The goal is to eliminate all enemies before the hero's HP reaches zero or the action sequence ends.

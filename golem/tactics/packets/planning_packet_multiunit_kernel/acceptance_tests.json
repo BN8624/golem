@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "Hero (100hp, 10atk) at {0,0}. Enemy 1 (10hp, 5atk) at {1,0}. Grid 5.",
+    "input": "ATTACK",
+    "expect": "status: VICTORY, hero_hp: 100, enemies: [{id: 1, hp: 0, ...}]"
+  },
+  {
+    "id": "SCN-002",
+    "setup": "Hero (100hp, 10atk) at {0,0}. Enemy 1 (50hp, 10atk) at {1,1}. Grid 5.",
+    "input": "MOVE RIGHT",
+    "expect": "hero_pos: {1,0}, enemy_1_pos: {1,1}, hero_hp: 90 (Enemy 1 attacked hero after move)"
+  },
+  {
+    "id": "SCN-003",
+    "setup": "Hero (100hp, 10atk) at {2,2}. Enemy 1 (50hp, 10atk) at {4,4}. Grid 5.",
+    "input": "MOVE UP",
+    "expect": "Enemy 1 moves to {3,4} (minimizes distance, X-axis priority over Y-axis)"
+  }
+]

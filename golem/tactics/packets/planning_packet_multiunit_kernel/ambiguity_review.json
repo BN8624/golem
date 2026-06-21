@@ -1,0 +1,277 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "favoring the smaller coordinate value"
+      ],
+      "missing_rules": [
+        "Enemy activation order (e.g., by ID)"
+      ],
+      "conflicting_rules": [
+        "Tie-break priority: X-axis/Y-axis priority vs. smaller coordinate value preference"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Enemy movement behavior when the primary distance-minimizing move is blocked by a collision",
+        "Damage calculation formula (assumed to be target_hp -= attacker_atk)"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "In what order do enemies execute their actions (e.g., ascending ID)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'favoring the smaller coordinate value' override the 'X-axis then Y-axis' priority, or is it a secondary tie-breaker?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If the move that minimizes distance according to axis priority is blocked by a collision, should the enemy attempt other moves that also minimize distance, or simply fail to move?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Is the reduction of HP explicitly calculated as the attacker's 'atk' value subtracted from the target's 'hp'?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Outcome of failed MOVE or ATTACK actions regarding turn progression and enemy AI triggers",
+        "Enemy behavior when all cells that minimize Manhattan distance are occupied or out of bounds",
+        "Execution order of enemies during the AI phase (determines who is blocked by whom during movement)"
+      ],
+      "conflicting_rules": [
+        "Enemy AI trigger timing: Concept states AI runs after the sequence of actions; GDD states AI runs after every single hero action"
+      ],
+      "underspecified_outputs": [
+        "Log output for failed player actions (MOVE or ATTACK)"
+      ],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Does a failed player action (e.g., moving into a wall) still consume a turn and trigger the enemy AI phase?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In what order do enemies act? (e.g., by ID, by array index?)",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If an enemy's distance-minimizing moves are all blocked, does it attempt a non-optimal move or simply remain stationary?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "The 'FINISHED' condition assumes the total length of the action sequence is tracked externally to the state object.",
+        "Hero attack power is assumed to be a constant since 'hero_atk' is missing from the state."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "The 'FINISHED' win/lose condition requires knowing when the action sequence is exhausted, but the state object lacks the sequence or its total length. Where should this data reside?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "The GDD defines the Hero as having 'atk', but 'hero_atk' is missing from the state object. Should this be added to the state to allow for deterministic damage calculation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "favoring the smaller coordinate value"
+      ],
+      "missing_rules": [
+        "Order of enemy execution (crucial for collision resolution)",
+        "Enemy behavior when all Manhattan-distance-minimizing moves are blocked"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "REQ-001 (non-determinism) is testable via state output alone"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "What is the specific order of enemy actions (e.g., by ID, by position)?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If all moves that minimize distance to the hero are blocked by other enemies or the hero, does the enemy remain stationary or try a non-minimizing move?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Regarding tie-breaks, does 'favoring the smaller coordinate value' mean prioritizing the move that results in the lower coordinate value (e.g., preferring a move to x=1 over x=3)?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming the GDD and REQUIREMENTS sections will remain synchronized despite redundant definitions of core mechanics (REQ-001 through REQ-006)."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "REQ-001 through REQ-006 are direct duplicates of rules already defined in the CONCEPT and GDD sections; can these be removed to maintain a single source of truth?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "action"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The term 'action' is used to refer to three different things: a specific hero command (MOVE/ATTACK), an enemy AI response, and the total sequence of commands. Should these be distinguished (e.g., 'Command' vs 'AI Response' vs 'Sequence') to avoid confusion during implementation?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "favoring the smaller coordinate value"
+      ],
+      "missing_rules": [
+        "Enemy turn execution order (e.g., sorted by ID)",
+        "Enemy movement fallback behavior when the move that minimizes Manhattan distance is blocked"
+      ],
+      "conflicting_rules": [
+        "Concept states enemies act after the action sequence is processed, but AI Rules state they act after every hero action",
+        "State definition includes 'gridSize' and 'log', but REQ-007 mandates the output contain exactly five specific fields"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "Do enemies act after each individual hero action or once after the entire sequence of actions is completed?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In what order do enemies execute their actions?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If the move that minimizes Manhattan distance is blocked, should the enemy attempt the next best move or skip movement entirely?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does 'favoring the smaller coordinate value' mean the axis priority (X then Y) is the primary filter, or does the resulting coordinate value override the axis priority?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "favoring the smaller coordinate value (unclear if this refers to the resulting coordinate of the move or the axis of movement)"
+      ],
+      "missing_rules": [
+        "Enemy execution order (e.g., do enemies act in order of ID, or reverse ID?)"
+      ],
+      "conflicting_rules": [
+        "REQ-007 limits output to five specific fields, contradicting the STATE definition which includes 'gridSize' and 'log'"
+      ],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Enemy movement fallback: it is assumed enemies stand still if the single 'best' move according to the tie-break is blocked, rather than attempting an alternative move that also reduces Manhattan distance"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "In what order do enemies execute their actions after the hero's turn?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "If the primary move (per tie-break) is blocked, should the enemy attempt the next best distance-reducing move or end their turn?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "favoring the smaller coordinate value",
+      "favoring the smaller coordinate value",
+      "action",
+      "favoring the smaller coordinate value",
+      "favoring the smaller coordinate value (unclear if this refers to the resulting coordinate of the move or the axis of movement)"
+    ],
+    "missing_rules": [
+      "Enemy activation order (e.g., by ID)",
+      "Outcome of failed MOVE or ATTACK actions regarding turn progression and enemy AI triggers",
+      "Enemy behavior when all cells that minimize Manhattan distance are occupied or out of bounds",
+      "Execution order of enemies during the AI phase (determines who is blocked by whom during movement)",
+      "Order of enemy execution (crucial for collision resolution)",
+      "Enemy behavior when all Manhattan-distance-minimizing moves are blocked",
+      "Enemy turn execution order (e.g., sorted by ID)",
+      "Enemy movement fallback behavior when the move that minimizes Manhattan distance is blocked",
+      "Enemy execution order (e.g., do enemies act in order of ID, or reverse ID?)"
+    ],
+    "conflicting_rules": [
+      "Tie-break priority: X-axis/Y-axis priority vs. smaller coordinate value preference",
+      "Enemy AI trigger timing: Concept states AI runs after the sequence of actions; GDD states AI runs after every single hero action",
+      "Concept states enemies act after the action sequence is processed, but AI Rules state they act after every hero action",
+      "State definition includes 'gridSize' and 'log', but REQ-007 mandates the output contain exactly five specific fields",
+      "REQ-007 limits output to five specific fields, contradicting the STATE definition which includes 'gridSize' and 'log'"
+    ],
+    "underspecified_outputs": [
+      "Log output for failed player actions (MOVE or ATTACK)"
+    ],
+    "risky_assumptions": [
+      "Enemy movement behavior when the primary distance-minimizing move is blocked by a collision",
+      "Damage calculation formula (assumed to be target_hp -= attacker_atk)",
+      "The 'FINISHED' condition assumes the total length of the action sequence is tracked externally to the state object.",
+      "Hero attack power is assumed to be a constant since 'hero_atk' is missing from the state.",
+      "REQ-001 (non-determinism) is testable via state output alone",
+      "Assuming the GDD and REQUIREMENTS sections will remain synchronized despite redundant definitions of core mechanics (REQ-001 through REQ-006).",
+      "Enemy movement fallback: it is assumed enemies stand still if the single 'best' move according to the tie-break is blocked, rather than attempting an alternative move that also reduces Manhattan distance"
+    ],
+    "BLOCKING_questions": [
+      "In what order do enemies execute their actions (e.g., ascending ID)?",
+      "Does 'favoring the smaller coordinate value' override the 'X-axis then Y-axis' priority, or is it a secondary tie-breaker?",
+      "If the move that minimizes distance according to axis priority is blocked by a collision, should the enemy attempt other moves that also minimize distance, or simply fail to move?",
+      "Does a failed player action (e.g., moving into a wall) still consume a turn and trigger the enemy AI phase?",
+      "In what order do enemies act? (e.g., by ID, by array index?)",
+      "If an enemy's distance-minimizing moves are all blocked, does it attempt a non-optimal move or simply remain stationary?",
+      "The 'FINISHED' win/lose condition requires knowing when the action sequence is exhausted, but the state object lacks the sequence or its total length. Where should this data reside?",
+      "The GDD defines the Hero as having 'atk', but 'hero_atk' is missing from the state object. Should this be added to the state to allow for deterministic damage calculation?",
+      "What is the specific order of enemy actions (e.g., by ID, by position)?",
+      "If all moves that minimize distance to the hero are blocked by other enemies or the hero, does the enemy remain stationary or try a non-minimizing move?",
+      "REQ-001 through REQ-006 are direct duplicates of rules already defined in the CONCEPT and GDD sections; can these be removed to maintain a single source of truth?",
+      "The term 'action' is used to refer to three different things: a specific hero command (MOVE/ATTACK), an enemy AI response, and the total sequence of commands. Should these be distinguished (e.g., 'Command' vs 'AI Response' vs 'Sequence') to avoid confusion during implementation?",
+      "Do enemies act after each individual hero action or once after the entire sequence of actions is completed?",
+      "In what order do enemies execute their actions?",
+      "If the move that minimizes Manhattan distance is blocked, should the enemy attempt the next best move or skip movement entirely?",
+      "In what order do enemies execute their actions after the hero's turn?",
+      "If the primary move (per tie-break) is blocked, should the enemy attempt the next best distance-reducing move or end their turn?"
+    ]
+  }
+}

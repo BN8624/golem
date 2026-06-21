@@ -319,3 +319,13 @@ P1 (다음 실험 전):
 - [x] **비주얼**: SVG 에셋팩(sprites.py) → CC0 픽셀팩(Kenney Tiny Dungeon, 다운로드·검증)+llm 이미지 입력+Gemma 비전 선택(gen_assets.py)→픽셀 스프라이트(play.html). 자족(tile_sprites.json).
 - [x] **볼륨↑** 레벨 8 + 운영원칙(다 자동화·노브 몇 개, 메모리).
 - [ ] **(다음 세션)** 볼륨 더(레벨↑/카드 누적 driver_autocard/캠페인↑) · 뷰어 index.html도 픽셀 · 스프라이트 슬롯/이펙트.
+
+## 다중유닛 base 트랙 (G87~)
+- [x] 최소 다중유닛 커널 스코프 확정(적 AI 먼저로 재정렬)
+- [x] planning --synthesize (★키) → 적 AI 룰 설계(OPEN, 하네스가 출력계약·세계 핀)
+- [x] design 패킷(4모듈 manifest+system_design, 하네스)
+- [x] REF base 작성 + 9세계 골든 역산(키0, 적 이동·공격 증명)
+- [x] build_graded (★키) → gate 9/9·attempt07 golden_diff 0·결정적
+- [x] base 동결 → tactics/bases/multiunit_base (검증 PASS)
+- [ ] 에테르노 서사 B겹(gen_tactics_story --idea "에테르노…")
+- [ ] 렌더(gen_tactics_play/interactive)

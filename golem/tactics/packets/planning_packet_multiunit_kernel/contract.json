@@ -1,0 +1,462 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "status": "string (PLAYING | VICTORY | DEFEAT | FINISHED)",
+      "turn": "number",
+      "hero_hp": "number",
+      "hero_atk": "number",
+      "hero_pos": {
+        "x": "number",
+        "y": "number"
+      },
+      "enemies": [
+        {
+          "id": "number",
+          "hp": "number",
+          "atk": "number",
+          "pos": {
+            "x": "number",
+            "y": "number"
+          }
+        }
+      ],
+      "gridSize": "number",
+      "log": "string[]"
+    },
+    "rules": [
+      "Hero MOVE: Blocked by grid boundaries (0 to gridSize-1) and cells occupied by any enemy.",
+      "Hero ATTACK: Targets enemy at Manhattan distance 1. If multiple, targets the one with the lowest ID.",
+      "Enemy AI: 1. If Manhattan distance == 1, attack hero. 2. Else, move to minimize distance using tie-breaks. 3. If all distance-minimizing moves blocked, stay put.",
+      "Victory: Triggered immediately when all enemy hp <= 0.",
+      "Defeat: Triggered immediately when hero hp <= 0.",
+      "Finished: Triggered when the Command Sequence is empty and status is still PLAYING.",
+      "Turn counter: increment turn by exactly 1 for every hero action applied, INCLUDING the action that triggers VICTORY or DEFEAT (an immediate win on the first action yields turn=1)."
+    ],
+    "output_contract": {
+      "fields": [
+        "status",
+        "turn",
+        "hero_hp",
+        "hero_pos",
+        "enemies"
+      ],
+      "lines": [
+        "status: <one of PLAYING|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "hero_hp: <integer, may be negative>",
+        "hero_pos: <a JSON array [x, y] of integers>",
+        "enemies: <a JSON array; each living-or-dead enemy EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — include all enemies in ascending id, DO NOT include atk>"
+      ]
+    },
+    "scenario_data": [
+      {
+        "id": "SCN-001",
+        "covers_reqs": [
+          "AI-MOVE"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 3,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                4,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-002",
+        "covers_reqs": [
+          "AI-ATTACK"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 3,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                2,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-003",
+        "covers_reqs": [
+          "WIN"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 5,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack"
+          }
+        ]
+      },
+      {
+        "id": "SCN-004",
+        "covers_reqs": [
+          "LOSE"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 3,
+            "atk": 1,
+            "pos": [
+              1,
+              1
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack"
+          }
+        ]
+      },
+      {
+        "id": "SCN-005",
+        "covers_reqs": [
+          "AI-MOVE",
+          "MULTI"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 20,
+            "atk": 3,
+            "pos": [
+              2,
+              2
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 1,
+              "pos": [
+                0,
+                2
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 1,
+              "pos": [
+                4,
+                2
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-006",
+        "covers_reqs": [
+          "AI-TIEBREAK"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 3,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 1,
+              "pos": [
+                2,
+                2
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-007",
+        "covers_reqs": [
+          "AI-BLOCK"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 3,
+            "pos": [
+              2,
+              0
+            ]
+          },
+          "gridSize": 3,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-008",
+        "covers_reqs": [
+          "WIN",
+          "MULTI"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 15,
+            "atk": 5,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 5,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                4,
+                4
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "attack"
+          },
+          {
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-009",
+        "covers_reqs": [
+          "FINISHED"
+        ],
+        "initialState": {
+          "hero": {
+            "hp": 10,
+            "atk": 3,
+            "pos": [
+              0,
+              0
+            ]
+          },
+          "gridSize": 6,
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 1,
+              "pos": [
+                5,
+                5
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ],
+        "description": "Handles CLI arguments, scenario selection, and loops through the command sequence."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "processStep"
+        ],
+        "imports": [],
+        "description": "Contains the game logic and state transition functions."
+      }
+    ]
+  }
+}

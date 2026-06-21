@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "다중유닛 적 AI 커널 — 골든은 골렘 룰 인코딩 REF base 실Node 역산(모델 독립)."
+    }
+  ]
+}
