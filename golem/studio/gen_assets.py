@@ -75,31 +75,44 @@ def ensure_tiles(pack):
     print(f"  슬라이스 {n}타일({cols}×{rows} 격자) → {tiles_dir}")
 
 
-def build_sheet(pack, scale=3, label_h=14):
+def _coverage(im):
+    """타일의 불투명 픽셀 비율(alpha>200). 솔리드 바닥/벽=높음, 투명 장식=낮음."""
+    px = im.getchannel("A").tobytes()
+    return sum(1 for v in px if v > 200) / max(1, len(px))
+
+
+def build_sheet(pack, solid_min=None, label_h=14):
+    """컨택트시트 + 인덱스. solid_min 주면 불투명도 그 이상 타일만(투명 장식 제거 → 작고 또렷한 시트)."""
     from PIL import Image, ImageDraw
     p = PACKS[pack]
     ensure_tiles(pack)
     pp = paths(pack)
     cols = p["cols"]
     tiles = sorted((p["dir"] / "Tiles").glob("tile_*.png"))
-    ids = [int(t.stem.split("_")[1]) for t in tiles]
+    items = []  # (tid, PIL)
+    for t in tiles:
+        im = Image.open(t).convert("RGBA")
+        if solid_min is not None and _coverage(im) < solid_min:
+            continue
+        items.append((int(t.stem.split("_")[1]), im))
+    scale = 5 if len(items) <= 600 else 3  # 타일 적으면 크게(비전 가독성)
     ts = p["ts"] * scale
     cell_w, cell_h = ts + 6, ts + label_h + 4
-    rows = (len(tiles) + cols - 1) // cols
+    rows = (len(items) + cols - 1) // cols
     sheet = Image.new("RGBA", (cols * cell_w + 4, rows * cell_h + 4), (24, 26, 38, 255))
     d = ImageDraw.Draw(sheet)
-    for i, (t, tid) in enumerate(zip(tiles, ids)):
+    for i, (tid, im) in enumerate(items):
         cx, cy = 4 + (i % cols) * cell_w, 4 + (i // cols) * cell_h
-        im = Image.open(t).convert("RGBA").resize((ts, ts), Image.NEAREST)
-        sheet.alpha_composite(im, (cx + 3, cy + 2))
+        sheet.alpha_composite(im.resize((ts, ts), Image.NEAREST), (cx + 3, cy + 2))
         d.rectangle([cx + 2, cy + 1, cx + ts + 3, cy + ts + 2], outline=(60, 66, 90))
         d.text((cx + 3, cy + ts + 3), str(tid), fill=(220, 224, 240))
     pp["sheet"].parent.mkdir(parents=True, exist_ok=True)
     sheet.save(pp["sheet"])
-    pp["index"].write_text(json.dumps({tid: f"Tiles/tile_{tid:04d}.png" for tid in ids}, ensure_ascii=False),
+    pp["index"].write_text(json.dumps({tid: f"Tiles/tile_{tid:04d}.png" for tid, _ in items}, ensure_ascii=False),
                            encoding="utf-8")
-    print(f"  컨택트시트 {len(tiles)}타일({cols}×{rows}) → {pp['sheet']}  index → {pp['index']}")
-    return len(tiles)
+    note = f" (솔리드≥{solid_min})" if solid_min is not None else ""
+    print(f"  컨택트시트 {len(items)}타일{note}({cols}×{rows}, scale {scale}) → {pp['sheet']}  index → {pp['index']}")
+    return len(items)
 
 
 def main(argv=None):
@@ -108,6 +121,7 @@ def main(argv=None):
     ap.add_argument("--pack", default="tiny_dungeon", choices=list(PACKS), help="에셋 팩")
     ap.add_argument("--slots", default=None, help="선택할 슬롯 부분집합(쉼표). 생략=전체. 예: floor,wall,conductive")
     ap.add_argument("--scenario", default="변칙검술 성채 — 어두운 폐허 석조 던전, 마나 검사가 봉인의 핵으로", help="시나리오/테마(비전 선택 가이드)")
+    ap.add_argument("--solid", type=float, default=None, help="불투명도 하한(0~1). 주면 솔리드 타일만 시트에(투명 장식 제거). 바닥/벽 선택 권장 0.9")
     ap.add_argument("--cap", type=int, default=3)
     args = ap.parse_args(argv)
     sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE.parent.parent))
@@ -123,15 +137,15 @@ def main(argv=None):
         print(f"  알 수 없는 슬롯: {bad}"); return 1
 
     if args.cmd == "sheet":
-        build_sheet(args.pack); return 0
+        build_sheet(args.pack, solid_min=args.solid); return 0
     if args.cmd == "select":
-        return select(args.pack, slots, args.scenario, args.cap)
+        return select(args.pack, slots, args.scenario, args.cap, args.solid)
     if args.cmd == "sprites":
         return sprites(args.pack, None, slots)
     return 1
 
 
-def select(pack, slots, scenario, cap):
+def select(pack, slots, scenario, cap, solid_min=None):
     """Gemma 비전이 컨택트시트에서 슬롯별 tile_id를 고름 → 검증(id 유효·전 슬롯·hero≠enemy)·동결·병합."""
     import os
     os.environ["GENERATOR_MODEL"] = "gemma-4-31b-it"; os.environ["CRITIC_MODEL"] = "gemma-4-31b-it"
@@ -139,8 +153,7 @@ def select(pack, slots, scenario, cap):
     from llm import KeyPool, LLMClient
     from planning import _extract_json
     pp = paths(pack)
-    if not pp["sheet"].exists():
-        build_sheet(pack)
+    build_sheet(pack, solid_min=solid_min)  # 항상 재생성(솔리드 필터 일관)
     index = json.loads(pp["index"].read_text(encoding="utf-8"))
     valid = {int(k) for k in index}
     png = pp["sheet"].read_bytes()
