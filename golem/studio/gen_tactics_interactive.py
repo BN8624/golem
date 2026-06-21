@@ -232,7 +232,7 @@ function draw(){
   gb=bounds();const pad=8,size=cv.width-pad*2;cs=Math.floor(size/Math.max(gb.w,gb.h));ox=pad;oy=pad;
   ctx.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<gb.h;y++)for(let x=0;x<gb.w;x++){const px=ox+x*cs,py=oy+y*cs;
-    ctx.fillStyle='rgba(255,255,255,0.035)';ctx.fillRect(px+1,py+1,cs-2,cs-2);  // 옅은 격자 텍스처(돌바닥은 캔버스가 깖)
+    if(!spr('floor',px,py)){ctx.fillStyle=css('--cell');ctx.fillRect(px+1,py+1,cs-2,cs-2);}  // 골렘이 고른 바닥 타일
     const t=state.terrain&&state.terrain[x+','+y];
     if(t==='Wall'&&!spr('wall',px,py)){ctx.fillStyle=css('--wall');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
     else if(t==='Conductive'&&!spr('conductive',px,py)){ctx.fillStyle=css('--cond');ctx.fillRect(px+1,py+1,cs-2,cs-2);}
