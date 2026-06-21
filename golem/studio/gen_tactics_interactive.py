@@ -140,7 +140,7 @@ return module.exports;})();
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const SPRITES=__SPRITES__, IMG={};  // 클로드 저작 SVG 에셋팩(코드). data URI 이미지로 프리로드
 for(const k in SPRITES){const im=new Image();im.onload=()=>{IMG[k]=im;if(state)draw();};
-  im.src='data:image/svg+xml;charset=utf8,'+encodeURIComponent(SPRITES[k]);}
+  const v=SPRITES[k];im.src=v.slice(0,5)==='data:'?v:'data:image/svg+xml;charset=utf8,'+encodeURIComponent(v);}
 function spr(k,px,py,alpha){const im=IMG[k];if(!im)return false;ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha=alpha||1;ctx.drawImage(im,px+1,py+1,cs-2,cs-2);ctx.restore();return true;}
 let lvl=0,state=null,initCount=0,hist=[],over=null;
 
