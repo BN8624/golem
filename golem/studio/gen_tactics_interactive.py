@@ -82,11 +82,15 @@ def main(argv=None):
         SPRITES = json.loads(_pack.read_text(encoding="utf-8"))
     else:
         from sprites import SPRITES
+    # 골렘 저작 서사 팩(levelstory.json, gen_tactics_levelstory.py 산출)이 있으면 입힌다(없으면 빈 {}=패널 숨김).
+    _story = HERE / "tactics_play" / "levelstory.json"
+    STORY = json.loads(_story.read_text(encoding="utf-8")) if _story.exists() else {}
 
     OUT.mkdir(parents=True, exist_ok=True)
     html = (HTML.replace("__GAME_LOGIC__", game_logic)
                 .replace("__LEVELS__", json.dumps(LEVELS, ensure_ascii=False))
                 .replace("__SPRITES__", json.dumps(SPRITES, ensure_ascii=False))
+                .replace("__STORY__", json.dumps(STORY, ensure_ascii=False))
                 .replace("__LEVEL__", args.level))
     (OUT / "play.html").write_text(html, encoding="utf-8")
     print(f"  [{args.level}] 플레이 {len(LEVELS)}레벨 → {OUT / 'play.html'}")
@@ -114,10 +118,13 @@ HTML = r"""<!DOCTYPE html>
   .log{font-size:12px;color:var(--dim);margin-top:6px;min-height:32px}.hint{font-size:11px;color:var(--dim);margin-top:6px}
   .ebox div{font-size:12px}.dead{opacity:.4;text-decoration:line-through}
   .banner{font-size:15px;font-weight:700;padding:6px 0}
+  .storybox{background:var(--panel);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55;white-space:pre-wrap}
+  .storybox .t{color:var(--hero);font-weight:700;margin-bottom:3px}.storybox .clr{color:var(--ok);margin-top:7px}.storybox:empty{display:none}
 </style></head><body><div class="wrap">
 <h1>전술 SRPG — 직접 플레이</h1>
 <div class="sub">골렘이 골든0으로 검증한 __LEVEL__ 엔진을 그대로 구동(룰 복제 없음). 이동=방향 버튼, 공격=적 클릭(거리1 근접·거리2~3 사거리 자동).</div>
 <div class="bar"><select id="pick"></select><button id="undo">↩ 무르기</button><button id="reset">⟲ 리셋</button><span id="ld" class="sub" style="margin:0"></span></div>
+<div id="story" class="storybox"></div>
 <div class="stage">
   <canvas id="cv" width="420" height="420"></canvas>
   <div class="side">
@@ -134,6 +141,20 @@ HTML = r"""<!DOCTYPE html>
   </div></div></div>
 <script>
 const LEVELS=__LEVELS__;
+const STORY=__STORY__;  // 골렘 저작 서사(levelstory.json): title·prologue·scenes[레벨별 intro/clear]·epilogue
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function storyPanel(){
+  const box=document.getElementById('story');
+  const sc=STORY.scenes&&STORY.scenes[lvl];
+  if(!sc){box.innerHTML='';return;}
+  let h='';
+  if(lvl===0&&STORY.title)h+='<div class="t">'+esc(STORY.title)+'</div>';
+  if(lvl===0&&STORY.prologue)h+=esc(STORY.prologue)+'\n\n';
+  h+='<div class="t">'+esc(sc.name)+'</div>'+esc(sc.intro);
+  if(over==='VICTORY'){h+='<div class="clr">'+esc(sc.clear)+'</div>';
+    if(lvl===LEVELS.length-1&&STORY.epilogue)h+='<div class="clr">'+esc(STORY.epilogue)+'</div>';}
+  box.innerHTML=h;
+}
 const GL=(function(){const module={exports:{}};const exports=module.exports;
 __GAME_LOGIC__
 return module.exports;})();
@@ -199,6 +220,7 @@ function side(){
   document.getElementById('ebox').innerHTML=state.enemies.map(e=>{const t=e.unit_type?' <span style="color:#ffd866">['+e.unit_type+']</span>':'';
     return '<div class="'+(e.hp<=0?'dead':'')+'">'+e.id+t+' — HP '+e.hp+' @['+e.pos+'] 거리 '+dist(state.hero.pos,e.pos)+'</div>';}).join('')||'<div class="sub">적 없음</div>';
   document.getElementById('undo').disabled=!hist.length||!!over;
+  storyPanel();
 }
 function tap(x,y){
   if(over)return;
