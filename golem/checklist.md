@@ -1,5 +1,16 @@
 # golem 체크리스트
 
+## 현재 트랙 = 전술 SRPG 쇼케이스 (G74~, 상세 진행은 HANDOFF.md)
+아래 §13~G55는 측정 프로그램(완료). 본선은 전술 SRPG로 이동, 세부는 HANDOFF.md가 라이브 트래커.
+- [x] 전술 커널 1.0 + 카드 9장 누적(l1~l9, 게이트·골든0·base 동결)
+- [x] 자율 완결-후보 파이프라인(propose_cards→card_delta+graft→build_graded --patch→story→render, `driver_autocard` 무인)
+- [x] 레벨 시스템(`propose_levels` 변별 누적·`play_signals` 신호) + **18레벨** 생성·승격
+- [x] 서사 B겹: 캠페인 뷰어(`gen_tactics_story`) + **레벨팩(`gen_tactics_levelstory`→levelstory.json)**
+- [x] 외형 하네스: `gen_assets` 팩 무관(`--pack`/`--slots`/`--solid`) + **골렘 비전이 타일 선택**, 풀 타일링 렌더
+- [~] **외형 퀄리티 = Kenney급에서 보류**(G84) — 천장은 에셋(래스터 생성 불가). 좋은 에셋 떨구면 하네스가 통합
+- [ ] **(다음, ★키) 깊이 트랙 B** — `driver_autocard --ideas-file build_runs/proposals/depth_ideas.json`(objective/aggressive/waves) → 깊은 레벨 재생성. "1시간"은 깊이로(레벨 수 아님). 본진=부대(새 base)
+- [ ] (그 뒤, 키0) `propose_levels`·`play_signals` 스키마에 objective/aggressive/waves + 큰 맵·다수 적·높은 min_turns 반영
+
 ## Golem Studio 파이프라인 §13 (Step 1~7 완주, 2026-06-17)
 세부 측정·결정은 context-notes G25~G44, 현재상태·다음할일은 HANDOFF.md.
 - [x] Step1 Contract Microkernel Replay (`contract_validator.py`·`replay.py`, replay 5/5, 키0)
