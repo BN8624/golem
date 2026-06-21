@@ -15,6 +15,9 @@ build_runs/
 golem/runs/
 /runs/
 golem/studio/reconcile_report.json
+golem/studio/replay_result.json
+golem/studio/contract_validation_report.md
+golem/studio/planning_result.json
 
 # Game Bank 카드 DB (바이너리·재생성 가능. 카드#1=bank_init.py)
 golem/game_bank.sqlite

@@ -1,9 +1,0 @@
-{
-  "risky_scenarios": [],
-  "notes": [
-    {
-      "risk": false,
-      "reason": "All 6 acceptance scenarios (SCN-001~006) carry oracle_risk.risk=false; no scenario is excluded from grading. Probe packet — risk review synthesized from per-scenario oracle_risk flags."
-    }
-  ]
-}

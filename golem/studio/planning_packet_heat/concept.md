@@ -1,1 +1,0 @@
-A turn-based energy management puzzle where the player balances growth against thermal limits. The player spends energy to upgrade generators or activate cooling systems. Every turn, energy is produced and heat accumulates; exceeding the heat threshold throttles production, forcing the player to strategically cool the system to reach 1000 energy.

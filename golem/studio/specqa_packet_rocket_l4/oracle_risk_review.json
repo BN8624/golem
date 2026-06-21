@@ -1,9 +1,0 @@
-{
-  "risky_scenarios": [],
-  "notes": [
-    {
-      "risk": false,
-      "reason": "전 시나리오 oracle_risk.risk=false. 레버4 프로브 — 골든은 rocket_base+참조 engine 실Node 역산."
-    }
-  ]
-}

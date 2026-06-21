@@ -1,9 +1,0 @@
-{
-  "risky_scenarios": [],
-  "notes": [
-    {
-      "risk": false,
-      "reason": "UPGRADE card — all scenarios oracle_risk.risk=false; regression scenarios SCN-001~006 unchanged golden, new SCN-007~008 cover UPGRADE."
-    }
-  ]
-}

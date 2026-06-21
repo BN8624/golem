@@ -1,9 +1,0 @@
-{
-  "risky_scenarios": [],
-  "notes": [
-    {
-      "risk": false,
-      "reason": "전 시나리오 oracle_risk.risk=false. 에테르노 IF 카드1 — 골든은 eterno_base+참조 scenes.js(scenes만 touched) 실Node 역산(모델 독립). 회귀(SCN-001~005)는 base 골든과 바이트 동일 확인."
-    }
-  ]
-}

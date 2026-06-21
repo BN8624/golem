@@ -1,2 +1,0 @@
-{"id": "E-001", "game": "sokoban", "mechanic": "열쇠/문", "touched": ["src/move_logic.js"], "pattern": "기존 wall 체크 줄에 `|| doorClosed(...)` 가드만 덧붙이고, 칸 진입 시 enter()로 'K' 픽업 접미사(+key)만 추가. push 분기는 enter만 유지하고 텔레포트는 넣지 않음.", "note": "기존 분기를 보존하면서 최소 가드/접미사만 추가한 깨끗한 누적 — 회귀 바이트동일."}
-{"id": "E-002", "game": "detective", "mechanic": "FALSE_ALIBI 비트", "touched": ["src/scenes.js", "src/beats.js"], "pattern": "beats.fireBeats에 조건절 하나만 추가(기존 DEDUCTION 비트 보존), scenes에 새 장면·선택지만 추가. engine은 손대지 않음.", "note": "콘텐츠+비트만 누적, 엔진 frozen — 기존 경로 출력 불변."}

@@ -1,8 +1,0 @@
-turn: 2
-scene: end_caught
-fragments: []
-beats: []
-eclipse: 9
-ending: CAUGHT
-isGameOver: true
-logs: ["선택:infiltrate","선택:bluff"]

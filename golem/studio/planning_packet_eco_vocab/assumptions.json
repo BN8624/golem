@@ -1,7 +1,0 @@
-{
-  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
-  "assumed": [
-    "The simulation is executed in a single-threaded Node.js environment.",
-    "Input scenarios are provided as predefined state objects."
-  ]
-}

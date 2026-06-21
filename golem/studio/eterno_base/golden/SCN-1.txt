@@ -1,8 +1,0 @@
-turn: 7
-scene: end_dawn
-fragments: ["F1","F2","F3","F4","F5"]
-beats: ["AWAKENING","RESONANCE"]
-eclipse: 4
-ending: NEW_DAWN
-isGameOver: true
-logs: ["선택:enter","선택:altar_1","조각:F1","BEAT:AWAKENING","선택:altar_2","조각:F2","선택:altar_3","조각:F3","선택:altar_4","조각:F4","선택:altar_5","조각:F5","BEAT:RESONANCE","선택:march"]

@@ -1,7 +1,0 @@
-turn: 4
-scene: end_wrong
-clues: ["PRINT","WOUND"]
-beats: []
-ending: COLD_CASE
-isGameOver: true
-logs: ["선택:take_case","선택:inspect_body","단서:WOUND","선택:inspect_window","단서:PRINT","선택:accuse"]

@@ -1,8 +1,0 @@
-turn: 2
-scene: hub
-fragments: ["F1"]
-beats: ["AWAKENING"]
-eclipse: 8
-ending: null
-isGameOver: false
-logs: ["선택:enter","무시:nonsense","선택:altar_1","조각:F1","BEAT:AWAKENING"]

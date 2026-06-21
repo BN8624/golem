@@ -1,7 +1,0 @@
-moves: 1
-player: 1,1
-boxes: ["1,2"]
-on_target: 0
-isWon: false
-isGameOver: false
-logs: ["L:block"]

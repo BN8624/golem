@@ -1,8 +1,0 @@
-turn: 1
-scene: end_fled
-fragments: []
-beats: []
-eclipse: 10
-ending: FLED
-isGameOver: true
-logs: ["선택:turn_back"]

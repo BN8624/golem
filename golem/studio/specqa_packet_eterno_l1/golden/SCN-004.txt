@@ -1,8 +1,0 @@
-turn: 10
-scene: end_ritual
-fragments: ["F1"]
-beats: ["AWAKENING"]
-eclipse: 0
-ending: RITUAL_COMPLETE
-isGameOver: true
-logs: ["선택:enter","선택:altar_1","조각:F1","BEAT:AWAKENING","선택:altar_1","선택:altar_1","선택:altar_1","선택:altar_1","선택:altar_1","선택:altar_1","선택:altar_1","선택:altar_1"]

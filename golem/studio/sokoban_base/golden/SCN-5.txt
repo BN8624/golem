@@ -1,7 +1,0 @@
-moves: 2
-player: 1,3
-boxes: ["1,4"]
-on_target: 1
-isWon: true
-isGameOver: true
-logs: ["R:push","R:push"]

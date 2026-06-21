@@ -1,9 +1,0 @@
-{
-  "risky_scenarios": [],
-  "notes": [
-    {
-      "risk": false,
-      "reason": "전 시나리오 oracle_risk.risk=false. 레버3 누적카드3(서사 비트 A겹) — 골든은 station_base+참조 engine v3(EVACUATE+PING+BEAT) 실Node 역산(모델 독립)."
-    }
-  ]
-}

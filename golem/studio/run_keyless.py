@@ -8,13 +8,10 @@ HERE = Path(__file__).resolve().parent
 PKG = HERE.parent  # 내부 golem 패키지 디렉토리
 
 # (이름, 스크립트) — 전부 키0. 게이트/역산은 Node 필요.
-# _derive_l4_goldens는 _validate_l4_keyless가 읽는 참조 산출물(build_runs, gitignore)을 키0으로 재생성한다.
+# 하네스 회귀(레버4 selective·patch·gate 전시나리오)는 본선 tactics 픽스처로 한 파일에 통합(rocket 제거).
 TESTS = [
     ("contract replay", "replay.py"),
-    ("레버4 골든 역산(setup)", "_derive_l4_goldens.py"),
-    ("레버4 selective keyless", "_validate_l4_keyless.py"),
-    ("레버4 patch keyless", "_validate_l4_patch_keyless.py"),
-    ("게이트 전 시나리오 검사(외부리뷰 #2)", "_gate_allscenarios_keyless.py"),
+    ("하네스 selective·patch·gate (레버4, tactics 픽스처)", "_validate_harness_keyless.py"),
     ("FROZEN BLOCKING 흡수(외부리뷰 #1)", "_freeze_blocking_keyless.py"),
 ]
 
