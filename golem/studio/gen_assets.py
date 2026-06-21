@@ -22,8 +22,9 @@ INDEX = OUT / "tiles_index.json"
 MAPPING = OUT / "tile_mapping.json"
 
 # 렌더가 채울 엔티티 슬롯(엔진 엔티티/지형 → 픽셀 타일).
-SLOTS = ["hero", "enemy", "Hardened", "Glass", "Resonant", "wall", "conductive"]
+SLOTS = ["floor", "hero", "enemy", "Hardened", "Glass", "Resonant", "wall", "conductive"]
 SLOT_DESC = {
+    "floor": "a plain dungeon FLOOR/ground tile (the base tile under every cell — neutral, tileable)",
     "hero": "the player HERO — a brave knight/swordsman/adventurer (the protagonist)",
     "enemy": "a generic basic ENEMY monster (grunt)",
     "Hardened": "an ARMORED/heavily-defended enemy (knight in heavy armor, golem)",
