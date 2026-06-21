@@ -2,7 +2,15 @@
 
 ## ▶ 새 세션 여기부터
 
-**현재 상태 (2026-06-20, G82) — "다 하기" 4트랙 전부 완료. 전술 카드 7장 누적·외형 렌더러(캠페인 포함). 사용자="다 하면 안돼?"→외형·카드더·밸런스·캠페인 다 함. 다음=사용자 결정(플레이테스트·밸런스 취향·콘텐츠 확장).**
+**현재 상태 (2026-06-21, G82 종료) — 전술 SRPG: 카드 9장(l1~l9, 골든0)·base 동결 + 자율 완결-후보 파이프라인 + 정본화 + 선별 퍼널 + 레벨 시스템 + 인터랙티브 픽셀 플레이까지 닫힘.** 한 세션 대량 진척. 핵심:
+- **엔진/카드**: 커널 1.0·`tactics_base_l8`(stable)·l9(실험), 카드 l1~l9 전부 게이트 11/11·golden_diff 0.
+- **자율 파이프라인(무인)**: `propose_cards`(장르시드 --ref) → `card_delta`+`graft`(설계·키0검증·교차검산) → `build_graded --patch`(델타 빌드) → `gen_tactics_story`(서사) → `gen_tactics_play`(렌더). `driver_autocard`=한 바퀴 무인.
+- **선별 퍼널 완성**: `play_signals`(결정적 실노출 신호=풀이/최소턴/지배전략/카드영향) — 생성→싼사전필터(graft)→사람판단(+신호)→실노출신호→더블다운.
+- **레벨 시스템**: `propose_levels`(골렘 생성+play_signals 검증+변별 커브) → `levels.json` 8레벨(min 3~8) 라이브.
+- **인터랙티브 플레이**: `gen_tactics_interactive`→`tactics_play/play.html`(검증 l9 embed, 탭 이동/공격) + **CC0 픽셀팩(Kenney) Gemma 비전 선택**(`gen_assets.py`·`sprites.py` 폴백). server.js `/`(뷰어)·`/play`(플레이).
+- **정본화/운영안전**: 루트 `README.md` 정본 선언 · 검증 정본 `verify_tactics.py` · promotion gate(strict) · legacy 21개 `golem/legacy/`로 · build_graded 분해(gate_runner/grading/build_prompt) · llm 재시도 상한.
+- **운영원칙**: 다 자동화·사용자는 노브 몇 개([[golem-automate-all-few-knobs]]). 검증 정본 명령: `python golem/studio/verify_tactics.py`(ALL PASS).
+- **다음(사용자 결정)**: 볼륨 더(레벨↑ propose_levels --n / 카드 누적 driver_autocard / 캠페인↑) · 뷰어 index.html도 픽셀 · 스프라이트 슬롯·이펙트. 자동화·노브 다 있음, 사람은 선별·취향.
 - **트랙1 외형 ✓** — `gen_tactics_play.py` → `tactics_play/index.html`(키0·읽기전용 l7 엔진). 정사각 탑다운 canvas, 28세계+캠페인 턴 재생(영웅/적/Wall/Conductive·unit_type·hp/마나·루트 전투번호·▶재생·방향키). 전달 완료.
 - **트랙2 카드더 ✓ — l6 상태이상(Corrosion)·l7은 밸런스와 겸함.** l6: ranged가 hero.corrosion opt-in시 Corrosion DoT 부여(매 행동 끝 틱·Glass ×2·루트 전환 전). run=graded-20260620-015304, 게이트11/11·golden_diff []·overall 0.971(라우트+중독 복합서 합의 첫 1.0 미달이나 골든 클린). 첫 파생 OPEN(골렘이 적턴/AI 환각)→HERO-ONLY 불변 명시 재파생 FROZEN.
 - **트랙3 밸런스 ✓ — l7=밸런스 config.** config={atkMult,recMult,anomMult}(기본 1, floor) 영웅 행동 해석 안에서 적용(없으면 ×1=l6). run=graded-20260620-021030, 게이트11/11·golden_diff []·overall 0.987. 28세계(회귀25+config3: recMult→DEFEAT/atkMult→원샷/anomMult→일소).

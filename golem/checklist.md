@@ -300,4 +300,11 @@ P1 (다음 실험 전):
 - [x] **디커플 + legacy 이동** — `parse_write.py` 분리·importer 재지정 → 21개 `golem/legacy/`로(driver/bank flow/probe류). 루트 live=parse_write·static_gate·oracle·grade.
 - [x] **build_graded 분해** — gate_runner·grading(키0)·build_prompt(프롬프트 바이트동일로 검증) 분리, 596→294줄, re-export로 호출부 무변경.
 - [x] **전체 코드 점검** — compileall(legacy 포함) exit0·live 17모듈 import·verify_tactics ALL PASS·고아참조 0·워킹트리 클린.
-- [ ] **(다음, 사용자 결정)** 카드 밤샘 누적(propose_cards→driver_autocard) / 인터랙티브 플레이 / 선별 퍼널 실노출 신호.
+- [x] **실노출 신호 `play_signals.py`** — solvable/min_turns(BFS)·지배전략·카드영향. 퍼널 마지막 칸.
+- [x] **레벨 시스템 `propose_levels.py`** — 골렘 생성+play_signals 검증+커브, 단일-attempt 채택. 8레벨(min 3~8) 라이브.
+- [x] **인터랙티브 플레이 `gen_tactics_interactive.py`→play.html** — 검증 l9 embed, 탭 이동/공격, 모바일 좌표·탭이동 fix. server /play.
+- [x] **장르 시드(propose_cards --ref)·card_delta 피드백 루프·StoryForge 보강(카엘).**
+- [x] **외부리뷰 대응·정본화·legacy 분리·build_graded 분해** (context-notes G82 10~12).
+- [x] **비주얼**: SVG 에셋팩(sprites.py) → CC0 픽셀팩(Kenney Tiny Dungeon, 다운로드·검증)+llm 이미지 입력+Gemma 비전 선택(gen_assets.py)→픽셀 스프라이트(play.html). 자족(tile_sprites.json).
+- [x] **볼륨↑** 레벨 8 + 운영원칙(다 자동화·노브 몇 개, 메모리).
+- [ ] **(다음 세션)** 볼륨 더(레벨↑/카드 누적 driver_autocard/캠페인↑) · 뷰어 index.html도 픽셀 · 스프라이트 슬롯/이펙트.
