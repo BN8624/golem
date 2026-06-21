@@ -4,4 +4,4 @@
 
 작업 시작 순서: [`CLAUDE.md`](CLAUDE.md) → [`HANDOFF.md`](HANDOFF.md)(현재 위치·다음 액션) → [`GolemStudioMode.md`](GolemStudioMode.md)(설계).
 
-검증 정본(수정 후 필수): `python golem/studio/verify_tactics.py`.
+검증 정본(수정 후 필수): `python golem/validators/verify_tactics.py`.

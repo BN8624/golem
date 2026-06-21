@@ -1,0 +1,370 @@
+# 전술 카드게임(임의 레벨)을 정사각 탑다운으로 보여주는 독립 HTML 렌더러 생성기 — 검증된 lN 엔진 그대로 재사용(키0·읽기전용)
+"""쇼케이스 외형(일반화). --level lN으로 planning_packet_tactics_lN + gen_tactics_lN_golden 참조를 자동 로드,
+tactics_kernel_base에 얹어 node로 require해 전 세계+캠페인 1편 턴별 상태를 추출 → 단일 index.html에 임베드.
+캠페인 서사(B겹)는 골렘 산출 campaign_story.json이 있으면 그걸, 없으면 인라인 초안. 엔진은 골렘이 골든 0으로
+검증한 로직 그대로, 렌더러는 표시 전용. 사용: python gen_tactics_play.py [--level l8]. 브라우저로 index.html 열기.
+"""
+import sys as _sys
+from pathlib import Path as _Path
+_PKG = _Path(__file__).resolve().parents[1]
+for _p in (str(_PKG), str(_PKG / "core"), str(_PKG / "tools"), str(_PKG / "tactics"),
+           str(_PKG / "validators"), str(_PKG.parent)):
+    if _p not in _sys.path:
+        _sys.path.insert(0, _p)
+from paths import (PKG, REPO_ROOT, CORE, TOOLS, TACTICS, VALIDATORS,  # noqa: E402,F401
+                   BASES, PACKETS, PLAY, FIXTURES, SCHEMAS, BUILD_RUNS, SCRATCH)
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+BASE = BASES / "tactics_kernel_base"
+PACKET = PACKETS / "planning_packet_tactics_l7"
+OUT = PLAY
+
+# 스토리 캠페인 — 검증된 l7 엔진을 루트맵으로 엮은 6전투 + 서사 데이터(B겹, 출력전용). 엔진/룰은 안 건드림.
+# story.scenes[i] = 전투 i의 장면(이름/도입/처치문). 프롤로그·에필로그는 캠페인 양끝.
+CAMPAIGN = {
+    "id": "CAMPAIGN",
+    "title": "변칙검술 연대기 — 각인된 칼날",
+    "prologue": "제국이 '변칙'을 봉인한 지 백 년. 마나로 칼을 두른 마지막 변칙검사 카이런이, 무너진 성채를 거슬러 변칙의 핵으로 향한다.",
+    "epilogue": "변칙의 핵이 갈라지고, 봉인의 쇠사슬이 빛으로 흩어진다. 카이런의 칼끝에서 백 년의 침묵이 끝났다.",
+    "scenes": [
+        {"name": "Ⅰ. 성문 앞 보초", "intro": "허물어진 성문에 보초 하나가 창을 들고 막아선다.", "clear": "창이 부러지고, 길이 열린다."},
+        {"name": "Ⅱ. 무너진 다리", "intro": "끊어진 다리 건너 궁수가 시위를 겨눈다. 사이를 가른 잔벽은 칼은 막아도 변칙의 사거리는 막지 못한다.", "clear": "벽 너머로 변칙의 일격이 꽂힌다."},
+        {"name": "Ⅲ. 독안개 늪", "intro": "늪의 파수병은 두껍다. 단숨에 베지 못하면, 스며든 부식이 대신 갉아먹는다.", "clear": "부식이 끝까지 번져 파수병이 주저앉는다."},
+        {"name": "Ⅳ. 강철 관문", "intro": "강철로 두른 문지기. 한 겹씩 갑주를 깎아내야 한다.", "clear": "갑주가 마지막으로 갈라진다."},
+        {"name": "Ⅴ. 유리 성소", "intro": "성소를 지키는 유리 우상. 단단해 보이나, 받는 모든 충격이 두 배로 되돌아 깨진다.", "clear": "우상이 산산이 부서진다."},
+        {"name": "Ⅵ. 변칙의 핵", "intro": "핵을 지키는 수문장과 그 곁의 잔재. 마지막 두 그림자를 넘으면 봉인에 닿는다.", "clear": "두 그림자가 스러지고, 핵이 드러난다."}
+    ],
+    "initialState": {
+        "hero": {"hp": 220, "atk": 50, "pos": [0, 0], "mana": 0, "anomaly_dmg": 0,
+                 "corrosion": {"dmg": 15, "duration": 3}},
+        "enemies": [{"id": "보초", "hp": 40, "atk": 12, "pos": [1, 0]}],
+        "route": [
+            {"enemies": [{"id": "궁수", "hp": 45, "atk": 0, "pos": [2, 0]}], "terrain": {"1,0": "Wall"}},
+            {"enemies": [{"id": "파수병", "hp": 80, "atk": 0, "pos": [2, 0]}]},
+            {"enemies": [{"id": "문지기", "hp": 60, "atk": 8, "pos": [1, 0], "unit_type": "Hardened"}]},
+            {"enemies": [{"id": "유리우상", "hp": 90, "atk": 0, "pos": [2, 0], "unit_type": "Glass"}]},
+            {"enemies": [{"id": "수문장", "hp": 60, "atk": 10, "pos": [1, 0]},
+                          {"id": "잔재", "hp": 40, "atk": 0, "pos": [0, 1]}]}
+        ]
+    },
+    "actions": [
+        {"type": "attack", "target": "보초"},
+        {"type": "ranged_attack", "target": "궁수"},
+        {"type": "ranged_attack", "target": "파수병"}, {"type": "move", "dir": [0, 1]},
+        {"type": "attack", "target": "문지기"}, {"type": "attack", "target": "문지기"},
+        {"type": "ranged_attack", "target": "유리우상"},
+        {"type": "attack", "target": "수문장"}, {"type": "attack", "target": "수문장"}, {"type": "attack", "target": "잔재"}
+    ]
+}
+
+# 시나리오 라벨(어떤 메커니즘을 보여주나).
+LABELS = {
+    "SCN-001": "기본 멜레 — 3연타 처치", "SCN-002": "패배 — 강적", "SCN-003": "이동만",
+    "SCN-004": "적 0 → FINISHED", "SCN-005": "동시 사망 → DEFEAT", "SCN-006": "동시 0 → DEFEAT",
+    "SCN-007": "마나방패 흡수(무파열)", "SCN-008": "마나방패 파열(생존)", "SCN-009": "ANOMALY 파열 처치(스플래시)",
+    "SCN-010": "사거리 일방공격", "SCN-011": "사거리밖→이동→적중", "SCN-012": "사거리 무위험 처치",
+    "SCN-013": "지형 Wall 이동차단", "SCN-014": "Conductive ANOMALY ×2→VICTORY", "SCN-015": "Wall은 사거리 안 막음",
+    "SCN-016": "유닛 Hardened(멜레 -1)", "SCN-017": "유닛 Glass 사거리 ×2", "SCN-018": "유닛 Glass ANOMALY ×2→VICTORY",
+    "SCN-019": "유닛 Resonant 반사피해", "SCN-020": "루트맵 2전투 승리(hp 이월)",
+    "SCN-021": "루트 전환 후 FINISHED", "SCN-022": "루트 2전투에서 DEFEAT",
+    "SCN-023": "상태이상 Corrosion DoT 처치", "SCN-024": "Corrosion ×2(Glass)",
+    "SCN-025": "Corrosion 처치→루트 전환",
+    "SCN-026": "밸런스 recMult→DEFEAT", "SCN-027": "밸런스 atkMult→원샷", "SCN-028": "밸런스 anomMult→일소",
+    "SCN-029": "흡혈 — 근접 피해 회복", "SCN-030": "흡혈 — 치명타 직전 생존", "SCN-031": "흡혈 — 소량 회복",
+    "CAMPAIGN": "★ 캠페인 — 변칙검술 연대기(6전투·스토리)",
+}
+
+# 검증된 lN 참조 game_logic을 가져온다(gen_tactics_lN_golden 단일 출처 — 일반화: 아무 카드 레벨이든).
+def level_game_logic(level):
+    sys.path.insert(0, str(HERE))
+    from importlib import import_module
+    return import_module(f"gen_tactics_{level}_golden").REF_GAME_LOGIC
+
+# 턴별 상태를 뽑는 node 트레이서(engine 초기화 재현 + updateState/checkGameState 스텝마다 스냅샷).
+TRACER_JS = """
+const gl = require('./src/game_logic');
+const scenarios = require('./src/scenarios');
+const n = parseInt(process.argv[2], 10);
+const scn = scenarios.getScenario(n);
+let state = {
+  ...scn.initialState,
+  hero: { ...scn.initialState.hero, pos: [...scn.initialState.hero.pos] },
+  enemies: scn.initialState.enemies.map(e => ({ ...e, pos: [...e.pos] })),
+  turn: 0
+};
+const initialEnemyCount = state.enemies.length;
+const routeTotal = 1 + (Array.isArray(scn.initialState.route) ? scn.initialState.route.length : 0);
+function snap(s, status, lastAction) {
+  return {
+    turn: s.turn,
+    hero: { hp: s.hero.hp, mana: s.hero.mana || 0, anomaly_dmg: s.hero.anomaly_dmg || 0, atk: s.hero.atk, pos: [...s.hero.pos] },
+    enemies: s.enemies.map(e => ({ id: e.id, hp: e.hp, pos: [...e.pos], unit_type: e.unit_type || null })),
+    terrain: s.terrain || null,
+    status, lastAction,
+    battle: (s.route_index || 0) + 1, battles: routeTotal
+  };
+}
+const frames = [snap(state, 'READY', null)];
+let status = 'READY';
+for (const action of scn.actions) {
+  state = gl.updateState(state, action);
+  const result = gl.checkGameState(state, initialEnemyCount);
+  frames.push(snap(state, result || 'ACTIVE', action));
+  if (result) { status = result; break; }
+}
+if (status === 'READY') status = 'FINISHED';
+frames[frames.length - 1].status = status;
+process.stdout.write(JSON.stringify({ n, frames }));
+"""
+
+
+def main(argv=None):
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--level", default="l8", help="렌더할 카드 레벨(패킷·참조 자동 로드, 기본 최신 l8)")
+    args = ap.parse_args(argv)
+
+    sys.path.insert(0, str(HERE.parent))
+    sys.path.insert(0, str(HERE))
+    try:
+        from config import force_utf8_stdout
+        force_utf8_stdout()
+    except Exception:  # noqa: BLE001
+        pass
+    import build_graded as bg
+
+    packet = PACKETS / f"planning_packet_tactics_{args.level}"
+    contract = json.loads((packet / "contract.json").read_text(encoding="utf-8"))
+    scenario_data = list(contract["data_contract"]["scenario_data"]) + [CAMPAIGN]  # 전 세계 + 캠페인 1편
+    scenarios_js = bg._gen_scenarios_module(scenario_data)
+    ncards = {"l1": 1, "l2": 2, "l3": 3, "l4": 4, "l5": 5, "l6": 6, "l7": 7, "l8": 8}.get(args.level, "?")
+
+    # 검증된 lN 엔진 워크스페이스(읽기전용 재사용).
+    ws = BUILD_RUNS / "_tactics_play_engine_tmp"
+    if ws.exists():
+        shutil.rmtree(ws)
+    shutil.copytree(BASE, ws)
+    (ws / "module_manifest.json").unlink(missing_ok=True)
+    (ws / "src" / "game_logic.js").write_text(level_game_logic(args.level), encoding="utf-8")
+    (ws / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
+    (ws / "trace.js").write_text(TRACER_JS, encoding="utf-8")
+
+    traces = []
+    for i, s in enumerate(scenario_data, 1):
+        r = subprocess.run(["node", "trace.js", str(i)], cwd=str(ws),
+                           capture_output=True, text=True, encoding="utf-8", timeout=30, stdin=subprocess.DEVNULL)
+        if r.returncode != 0:
+            raise RuntimeError(f"trace 실패 scn{i}: {r.stderr[:300]}")
+        t = json.loads(r.stdout)
+        t["id"] = s["id"]
+        t["label"] = LABELS.get(s["id"], s["id"])
+        if s.get("scenes"):  # 스토리 캠페인 — 서사 데이터(B겹) 부착(엔진과 분리)
+            # 골렘 산출(gen_tactics_story.py)이 있으면 그걸, 없으면 인라인 초안 폴백
+            cs = OUT / "campaign_story.json"
+            if cs.exists():
+                t["story"] = json.loads(cs.read_text(encoding="utf-8"))
+            else:
+                t["story"] = {k: s[k] for k in ("title", "prologue", "epilogue", "scenes")}
+        traces.append(t)
+
+    shutil.rmtree(ws)
+
+    # 캠페인 한 편이 결정적으로 VICTORY로 닫히는지 sanity(엔진은 검증됨, 캠페인은 콘텐츠 입력).
+    camp = next(t for t in traces if t["id"] == "CAMPAIGN")
+    camp_final = camp["frames"][-1]
+    if camp_final["status"] != "VICTORY":
+        print(f"  CAMPAIGN sanity FAIL: 최종 status={camp_final['status']} (VICTORY 기대)")
+        return 1
+
+    OUT.mkdir(parents=True, exist_ok=True)
+    html = (HTML_TEMPLATE.replace("__TRACES__", json.dumps(traces, ensure_ascii=False))
+            .replace("__NCARDS__", str(ncards)).replace("__LEVEL__", args.level))
+    (OUT / "index.html").write_text(html, encoding="utf-8")
+    print(f"  [{args.level}] 트레이스 {len(traces)}세계(+캠페인) → {OUT / 'index.html'}")
+    print(f"  캠페인 {camp_final['battles']}전투 {len(camp['frames'])-1}액션 → VICTORY(turn {camp_final['turn']}).")
+    print("  브라우저로 열어 시나리오 선택·턴 재생(읽기전용, 검증된 "+args.level+" 엔진).")
+    return 0
+
+
+HTML_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>전술 SRPG — 7카드 쇼케이스</title>
+<style>
+  :root { --bg:#0f1220; --panel:#1a1f33; --grid:#2a3150; --cell:#161b2e; --hero:#4ea1ff; --enemy:#ff5d6c; --wall:#3a3f52; --cond:#21d3c8; --txt:#e6e9f5; --dim:#8b93b5; --ok:#43d17a; --bad:#ff6b7a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.4 system-ui,'Segoe UI',sans-serif; }
+  .wrap { max-width:860px; margin:0 auto; padding:16px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:12px; margin-bottom:12px; }
+  select, button { background:var(--panel); color:var(--txt); border:1px solid var(--grid); border-radius:8px; padding:7px 12px; font:inherit; cursor:pointer; }
+  button:hover { border-color:var(--hero); }
+  .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .stage { display:flex; gap:16px; flex-wrap:wrap; }
+  canvas { background:var(--panel); border-radius:12px; touch-action:none; }
+  .side { flex:1; min-width:220px; }
+  .stat { background:var(--panel); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .stat b { color:var(--hero); }
+  .status { font-size:16px; font-weight:700; }
+  .status.VICTORY { color:var(--ok); } .status.DEFEAT { color:var(--bad); } .status.FINISHED,.status.ACTIVE,.status.READY { color:var(--dim); }
+  .bars { height:7px; background:var(--cell); border-radius:4px; overflow:hidden; margin-top:3px; }
+  .bars > i { display:block; height:100%; }
+  .legend { font-size:11px; color:var(--dim); margin-top:8px; }
+  .legend span { display:inline-block; margin-right:10px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:3px; vertical-align:middle; margin-right:3px; }
+  .log { font-size:12px; color:var(--dim); margin-top:6px; min-height:18px; }
+  .story { background:linear-gradient(180deg,#1d2440,#161b2e); border:1px solid var(--grid); border-left:3px solid #ffd866; border-radius:10px; padding:11px 14px; margin-bottom:12px; display:none; }
+  .story.on { display:block; }
+  .story .title { color:#ffd866; font-weight:700; font-size:13px; margin-bottom:4px; }
+  .story .scene { color:var(--txt); font-weight:600; font-size:13px; }
+  .story .text { color:var(--dim); font-size:13px; margin-top:3px; line-height:1.5; }
+  .story .text.epi { color:var(--ok); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>전술 SRPG — __NCARDS__카드 쇼케이스</h1>
+  <div class="sub">골렘이 설계·검증한 __LEVEL__ 엔진(읽기전용 렌더) — 마나방패·ANOMALY · 사거리 · 지형 · 유닛 · 루트맵 · 상태이상 · 밸런스 · 흡혈</div>
+  <div class="bar">
+    <select id="pick"></select>
+    <button id="prev">◀ 이전</button>
+    <button id="play">▶ 재생</button>
+    <button id="next">다음 ▶</button>
+    <span id="frameinfo" class="sub" style="margin:0"></span>
+  </div>
+  <div id="story" class="story"></div>
+  <div class="stage">
+    <canvas id="cv" width="440" height="440"></canvas>
+    <div class="side">
+      <div class="stat"><span id="status" class="status"></span> <span id="battle" class="sub"></span></div>
+      <div class="stat">턴 <b id="turn"></b> · 영웅 HP <b id="hp"></b> · 마나 <b id="mana"></b> · ATK <b id="atk"></b>
+        <div class="bars"><i id="hpbar" style="background:var(--hero)"></i></div>
+      </div>
+      <div class="stat" id="enemybox"></div>
+      <div class="log" id="log"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--hero)"></i>영웅</span>
+        <span><i class="dot" style="background:var(--enemy)"></i>적</span>
+        <span><i class="dot" style="background:var(--wall)"></i>Wall</span>
+        <span><i class="dot" style="background:var(--cond)"></i>Conductive</span>
+        <span>적 글자 H=Hardened G=Glass R=Resonant</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const TRACES = __TRACES__;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let cur = 0, fi = 0, timer = null;
+
+function bounds(tr) {
+  let mx = 2, my = 2;
+  for (const f of tr.frames) {
+    mx = Math.max(mx, f.hero.pos[0]); my = Math.max(my, f.hero.pos[1]);
+    for (const e of f.enemies) { mx = Math.max(mx, e.pos[0]); my = Math.max(my, e.pos[1]); }
+    if (f.terrain) for (const k of Object.keys(f.terrain)) { const [x,y]=k.split(',').map(Number); mx=Math.max(mx,x); my=Math.max(my,y); }
+  }
+  return { w: mx + 1, h: my + 1 };
+}
+
+function draw() {
+  const tr = TRACES[cur], f = tr.frames[fi], b = bounds(tr);
+  const pad = 8, size = cv.width - pad*2, cs = Math.floor(size / Math.max(b.w, b.h));
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const ox = pad, oy = pad;
+  // y축은 위가 0(탑다운).
+  for (let y=0;y<b.h;y++) for (let x=0;x<b.w;x++){
+    const px=ox+x*cs, py=oy+y*cs;
+    let fill = getCss('--cell');
+    if (f.terrain){ const t=f.terrain[x+','+y]; if(t==='Wall')fill=getCss('--wall'); else if(t==='Conductive')fill=getCss('--cond'); }
+    ctx.fillStyle=fill; ctx.fillRect(px+1,py+1,cs-2,cs-2);
+    ctx.strokeStyle=getCss('--grid'); ctx.lineWidth=1; ctx.strokeRect(px+1,py+1,cs-2,cs-2);
+  }
+  // 적
+  for (const e of f.enemies){
+    const alive = e.hp>0; const px=ox+e.pos[0]*cs, py=oy+e.pos[1]*cs;
+    ctx.fillStyle = alive ? getCss('--enemy') : 'rgba(255,93,108,0.25)';
+    circle(px+cs/2, py+cs/2, cs*0.32);
+    ctx.fillStyle = alive ? '#fff' : getCss('--dim');
+    ctx.font = 'bold '+Math.floor(cs*0.22)+'px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(e.hp, px+cs/2, py+cs/2);
+    if (e.unit_type){ ctx.fillStyle='#ffd866'; ctx.font='bold '+Math.floor(cs*0.2)+'px system-ui';
+      ctx.fillText(e.unit_type[0], px+cs*0.78, py+cs*0.22); }
+  }
+  // 영웅
+  const hx=ox+f.hero.pos[0]*cs, hy=oy+f.hero.pos[1]*cs;
+  ctx.fillStyle=getCss('--hero'); circle(hx+cs/2, hy+cs/2, cs*0.34);
+  ctx.fillStyle='#fff'; ctx.font='bold '+Math.floor(cs*0.24)+'px system-ui';
+  ctx.fillText('英', hx+cs/2, hy+cs/2);
+  renderSide(tr, f);
+}
+function circle(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); }
+function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function renderSide(tr, f){
+  const st = document.getElementById('status'); st.textContent = f.status; st.className='status '+f.status;
+  document.getElementById('battle').textContent = tr.frames.some(x=>x.battles>1) ? ('전투 '+f.battle+'/'+f.battles) : '';
+  document.getElementById('turn').textContent = f.turn;
+  document.getElementById('hp').textContent = f.hero.hp;
+  document.getElementById('mana').textContent = f.hero.mana;
+  document.getElementById('atk').textContent = f.hero.atk;
+  const hp0 = tr.frames[0].hero.hp; document.getElementById('hpbar').style.width = Math.max(0, Math.min(100, 100*f.hero.hp/Math.max(1,hp0)))+'%';
+  const eb = document.getElementById('enemybox');
+  eb.innerHTML = f.enemies.map(e=>{
+    const tag = e.unit_type ? ' <span style="color:#ffd866">['+e.unit_type+']</span>' : '';
+    const dead = e.hp<=0 ? ' style="opacity:.4;text-decoration:line-through"' : '';
+    return '<div'+dead+'>'+e.id+tag+' — HP '+e.hp+' @['+e.pos+']</div>';
+  }).join('') || '<div class="sub">적 없음</div>';
+  const a = f.lastAction;
+  document.getElementById('log').textContent = a ? ('액션: '+a.type+(a.target?(' → '+a.target):(a.dir?(' '+JSON.stringify(a.dir)):''))) : '초기 상태';
+  document.getElementById('frameinfo').textContent = '프레임 '+(fi+1)+'/'+tr.frames.length;
+  renderStory(tr, f);
+}
+
+// 서사 패널(B겹) — 캠페인에만. 프롤로그(첫 프레임)→현재 전투 장면→승리시 에필로그.
+function renderStory(tr, f){
+  const box = document.getElementById('story');
+  if (!tr.story) { box.className='story'; box.innerHTML=''; return; }
+  box.className='story on';
+  const s = tr.story, last = fi === tr.frames.length-1;
+  const sc = s.scenes[Math.min(f.battle, s.scenes.length) - 1] || {};
+  let html = '<div class="title">'+s.title+'</div>';
+  if (fi === 0) html += '<div class="text">'+s.prologue+'</div>';
+  html += '<div class="scene">'+(sc.name||'')+'</div><div class="text">'+(sc.intro||'')+'</div>';
+  if (last && f.status==='VICTORY') html += '<div class="text epi">'+(sc.clear||'')+' '+s.epilogue+'</div>';
+  box.innerHTML = html;
+}
+
+function setScn(i){ cur=i; fi=0; stop(); draw(); }
+function go(d){ const tr=TRACES[cur]; fi=Math.max(0, Math.min(tr.frames.length-1, fi+d)); draw(); }
+function stop(){ if(timer){clearInterval(timer); timer=null; document.getElementById('play').textContent='▶ 재생';} }
+function play(){
+  if(timer){ stop(); return; }
+  document.getElementById('play').textContent='⏸ 정지';
+  timer=setInterval(()=>{ const tr=TRACES[cur]; if(fi>=tr.frames.length-1){stop();return;} fi++; draw(); }, 750);
+}
+
+const pick=document.getElementById('pick');
+TRACES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=t.id+' — '+t.label; pick.appendChild(o); });
+pick.onchange=e=>setScn(+e.target.value);
+document.getElementById('prev').onclick=()=>{stop();go(-1);};
+document.getElementById('next').onclick=()=>{stop();go(1);};
+document.getElementById('play').onclick=play;
+window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'){stop();go(-1);} if(e.key==='ArrowRight'){stop();go(1);} if(e.key===' '){e.preventDefault();play();} });
+setScn(0);
+</script>
+</body>
+</html>
+"""
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

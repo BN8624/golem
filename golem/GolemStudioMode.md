@@ -1,5 +1,7 @@
 # Golem Studio Mode 제안서
 
+> **레이아웃 주의 (2026-06-21 재설계)**: 이 문서 본문의 `golem/studio/...` 경로는 역사적 표기다. 코드는 `golem/{core,tools,tactics,validators}/`로 재편됐고 데이터는 `tactics/{bases,packets,play}`·`validators/{fixtures,schemas}`에 있다. 현재 경로 정본은 루트 `README.md`와 `golem/paths.py`를 본다. 검증 명령 = `python golem/validators/verify_tactics.py`.
+
 ## 11개 Gemma Worker Slot 기반 역할 순환형 가상 게임회사 구조
 
 ## 0. 배경

@@ -18,4 +18,4 @@ jobs:
       - name: install deps
         run: pip install -r requirements.txt
       - name: keyless suite (API calls = 0)
-        run: python golem/studio/run_keyless.py
+        run: python golem/validators/run_keyless.py

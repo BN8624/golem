@@ -10,14 +10,15 @@ __pycache__/
 .envrc
 
 # 생성물 (재생성 가능)
-golem/studio/build_runs/
+golem/build_runs/
 build_runs/
 golem/runs/
 /runs/
-golem/studio/reconcile_report.json
-golem/studio/replay_result.json
-golem/studio/contract_validation_report.md
-golem/studio/planning_result.json
+golem/build_runs/scratch/
+golem/reconcile_report.json
+golem/replay_result.json
+golem/contract_validation_report.md
+golem/planning_result.json
 
 # Game Bank 카드 DB (바이너리·재생성 가능. 카드#1=bank_init.py)
 golem/game_bank.sqlite
@@ -28,29 +29,21 @@ golem/_*.log
 
 # GPT↔Claude 회의 기록 (미추적, 디스크에만 보관)
 /meetings/
-golem/studio/station_xl/
-golem/studio/planning_packet_station_xl/
-golem/studio/specqa_packet_station_xl/
-golem/studio/_station_xl_ref_tmp/
-golem/studio/station_base_v1/
-golem/studio/_station_ref1_tmp/
-golem/studio/_station_ref2_tmp/
-golem/studio/station_base_v2/
-golem/studio/_station_ref2b_tmp/
-golem/studio/_station_ref3_tmp/
-golem/studio/_combat_ref_tmp/
 
 # card_delta.py 디버그 raw 응답 덤프(추적 안 함)
-golem/studio/_carddelta_*_raw.txt
+golem/build_runs/_carddelta_*_raw.txt
 
 # 픽셀 에셋 원본 팩(CC0, 재생성 가능) — 게임엔 tile_sprites.json(base64)만 필요
-golem/studio/tactics_play/assets/tiny_dungeon/
-golem/studio/tactics_play/assets/*.zip
-golem/studio/tactics_play/assets/contact_sheet.png
-golem/studio/tactics_play/assets/tiles_index.json
-golem/studio/tactics_play/assets/tile_preview.png
-golem/studio/tactics_play/assets/roguelike_rpg/
-golem/studio/tactics_play/assets/contact_roguelike.png
-golem/studio/tactics_play/assets/tiles_index_roguelike.json
-golem/studio/tactics_play/assets/tile_preview_roguelike.png
-golem/studio/tactics_play/assets/_pick_*.png
+golem/tactics/play/assets/tiny_dungeon/
+golem/tactics/play/assets/*.zip
+golem/tactics/play/assets/contact_sheet.png
+golem/tactics/play/assets/tiles_index.json
+golem/tactics/play/assets/tile_preview.png
+golem/tactics/play/assets/roguelike_rpg/
+golem/tactics/play/assets/contact_roguelike.png
+golem/tactics/play/assets/tiles_index_roguelike.json
+golem/tactics/play/assets/tile_preview_roguelike.png
+golem/tactics/play/assets/_pick_*.png
+
+# 해체된 studio/ 디스크 잔재(node 잠금으로 미삭제 — 전부 재생성 가능 disposable)
+golem/studio/

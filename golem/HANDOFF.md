@@ -2,6 +2,13 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-21, G86) — 폴더 재설계(풀 패키지화) 완료. studio/ 평면 → core/tools/tactics/validators 4서브패키지.**
+- **레이아웃**: `golem/{core,tools,tactics,validators}/` + 데이터 `tactics/{bases,packets,play}`·`validators/{fixtures,schemas}` + 경로 정본 `golem/paths.py`. studio/ 해체. 코드 42개 .py + 데이터 디렉토리 전부 `git mv`로 이동(히스토리 보존).
+- **경로 모델**: 각 .py 상단 균일 부트스트랩이 4개 코드 디렉토리+repo root를 sys.path에 올림 → bare import·동적 import·직접 실행(`python golem/<sub>/x.py`)·subprocess 스폰 전부 무손상(평면 네임스페이스). 데이터 경로는 `paths.py` 상수(BASES/PACKETS/PLAY/BUILD_RUNS 등). 마이그레이션은 1회용 스크립트로 결정적 처리(미라우트 0).
+- **검증: `verify_tactics` ALL PASS**(새 위치 `golem/validators/`) + 키 사용 도구 42개 import-smoke 0실패 + 키0 렌더러(`gen_tactics_play/interactive --level l9`) 정상 출력. CI(`.github/workflows/keyless.yml`)·gitignore·README·GolemStudioMode 경로 전부 갱신.
+- **정본 명령 변경**: `python golem/validators/verify_tactics.py` (옛 `golem/studio/verify_tactics.py`).
+- **★ 다음 액션은 그대로 깊이 카드 3종 무인 빌드**(아래 G84 ★, 경로만 갱신): `python golem/tools/driver_autocard.py --start l9 --ideas-file golem/build_runs/proposals/depth_ideas.json --max-cards 3`. depth_ideas.json은 build_runs(gitignore 스크래치, studio→golem 루트로 이동)에 보존됨.
+
 **현재 상태 (2026-06-21, G85) — 과거게임 cruft 청소 완료 + rocket CI를 tactics로 이식. 저장소가 본선(전술 9카드)만 남게 슬림화.**
 - **329 파일 삭제(-23k줄), 커밋 bf3155b.** live 파이프라인 의존 클로저를 추적해 안전 확인 후 삭제. 삭제 대상=과거 base(combat/detective/eterno/sokoban/station×3)·과거 골든생성기·검증기·죽은 측정도구(driver_showcase/card_proposer/cardgen/self_suggest/adversarial/sweep/integration/storyforge/multiseed)·슈퍼시드된 `_validate_tactics_l*`(verify_tactics가 흡수)·과거 패킷 100+·잡파일.
 - **rocket CI 이식(★ G84가 경고한 지점 해소).** rocket은 과거게임이나 `run_keyless`(CI)가 레버4 selective/patch·게이트 전시나리오 회귀의 픽스처로 물고 있었음. 동등 회귀를 본선 tactics 픽스처(`tactics_kernel_base` + l1 참조 `REF_GAME_LOGIC`)로 재작성한 `_validate_harness_keyless.py`로 통합 → rocket_base·rocket 패킷·l4 검증기 4종(`_validate_l4*`·`_derive_l4_goldens`·`_gate_allscenarios`) 삭제. `run_keyless.py`도 갱신.
