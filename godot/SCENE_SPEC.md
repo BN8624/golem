@@ -14,6 +14,9 @@
   (메뉴/브리핑을 거치지 않는다. 프로브가 이걸 직접 호출해 곧장 플레이한다.)
   내부에서 `state = 깊은복제(initialState)`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `screen="PLAYING"`.
 - 메서드 `func _unhandled_input(event)` : `screen=="PLAYING"`일 때 좌클릭으로 아래 [플레이 입력]을 처리.
+- **좌표계(고정·필수)**: PLAYING의 셀 크기는 `cell_size = 640.0 / state.gridSize`, 보드 원점은 화면 `(0,0)`.
+  클릭→셀은 `gx = int(event.position.x / cell_size)`, `gy = int(event.position.y / cell_size)`.
+  프로브가 정확히 이 좌표계(640/grid, 원점 0)로 클릭한다 — **고정 cell(예: 32)이나 offset(예: 100) 금지.** 보드는 640×640을 꽉 채운다.
 
 ## 화면 모드 (`var screen`)
 `"MENU" → "BRIEFING" → "PLAYING" → "RESULT"`. `_ready()`는 `screen="MENU"`로 시작.
@@ -42,20 +45,26 @@
   - 더 필요하면 `godot/assets/tinydungeon/Tiles/`에서 골라 써도 된다(같은 16x16).
 
 ## 맵·이펙트 요구 (게임답게 — 이번 단계 목표)
-- **맵(미션별 지형 톤)**: 바닥은 `tile_0048`을 깔되 `current_mission_idx`별로 `draw_texture_rect`의 modulate 색조를 다르게
+- **맵(미션별 지형 톤)**: 바닥은 `tile_0048`을 깔되 `current_mission_idx`별로 색조(tone)를 다르게
   (예: 0=기본, 1=청회색, 2=보라어둠, 3=황금). 칸 위치 해시로 변주 타일을 드물게 섞어 단조롭지 않게.
+  - 색조는 **반드시** `draw_texture_rect(tex, rect, false, tone)`의 **4번째 인자**로 준다.
+    `draw_set_transform`은 변환 행렬(pos,rot,scale)용이라 색을 못 준다 — 거기에 Color를 넣지 마라(인자 4개 금지).
 - **이펙트(시간 기반 — `set_process(true)` + `_process(delta)`로 갱신, `queue_redraw`)**:
   - **데미지/회복 플로팅 텍스트**: 액션 후 hp 변화량을 그 유닛 칸 위에 "-N"(빨강)/"+N"(초록)으로 띄우고 위로 떠오르며 페이드아웃.
   - **타격 플래시**: 피해 받은 유닛을 짧게(≈0.2s) 흰/빨강으로 깜빡(modulate).
   - **선택 하이라이트**: 아군 선택 시 이동 가능 빈 인접칸=초록 반투명, 사거리 내 적 칸=빨강 테두리.
   - 이펙트 상태는 멤버 배열/딕셔너리로 들고 `_process`에서 수명 감소·만료 제거. 룰/상태(state)는 절대 안 건드린다(표시 전용).
 - hp 변화 계산: `update_state` 호출 **전** 모든 유닛 hp를 스냅샷 → 호출 후 비교 → 변한 유닛에 플로터/플래시.
+- **⚠ 유닛 dict 키 함정(필수)**: 아군과 적은 **id가 겹친다**(양쪽 다 1,2,…). hp 스냅샷·flash·이펙트 등 유닛을
+  dict 키로 들 때 **반드시 진영을 합쳐라**(예: `"a"+str(id)` / `"e"+str(id)`). id만 키로 쓰면 같은 id의
+  아군·적이 섞여 **엉뚱한 유닛이 빨개지고(flash) 데미지 계산이 틀린다**(2026-06-23 실제 버그).
+- 바닥 변주 타일은 **2D 해시**(`(x*7 + y*13) % N`)로 드물게(≈10%) 섞어라. 행/열 단일 해시는 가로 띠가 진다.
 
 ## 플레이 입력 (`screen=="PLAYING"`, 좌클릭)
 - 클릭 셀에 살아있는 내 아군 → 그 아군 선택.
-- 아군 선택 상태에서:
-  - 빈 셀이 직교 인접(맨해튼 1) → `update_state(state, {"unit":선택id,"type":"move","dir":[dx,dy]})`.
-  - 적이 사거리 내(맨해튼 <= range, 기본 1, >=1) → `update_state(state, {"unit":선택id,"type":"attack"})`.
+- 아군 선택 상태에서, **클릭한 칸의 내용으로 분기**(occupied 여부 하나로 뭉뚱그리지 마라):
+  - 클릭 칸에 살아있는 적이 있고 맨해튼 dist가 `1 <= dist <= range`(기본 range 1) → `update_state(state, {"unit":선택id,"type":"attack"})`.
+  - 클릭 칸이 비었고 직교 인접(dist==1) → `update_state(state, {"unit":선택id,"type":"move","dir":[dx,dy]})`.
 - 매 액션 후: 반환 status를 `state.status`에 반영, `queue_redraw()`. VICTORY/DEFEAT면 `screen="RESULT"`.
 - 키(데스크톱 보조): `R` 현재 미션 리셋(load_mission), `N` 메뉴로. (폰엔 키 없음 → 화면 버튼이 정답.)
 
@@ -68,9 +77,11 @@
 - 공통: 화면 ~640px 기준 좌표.
 - **MENU**: 제목 + 4미션 버튼(사각형 + name/desc 텍스트). 버튼 위치를 `_unhandled_input`의 히트 판정과 동일 좌표로.
 - **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄 wrap) + 하단 "탭하여 시작".
-- **PLAYING**: 격자 gridSize×gridSize에 [에셋 사양]의 바닥 타일을 깔고([맵·이펙트] 톤 적용),
-  유닛은 **원이 아니라 스프라이트**(`draw_texture_rect`): 아군 근접=기사, 원거리=마법사, 적=몬스터.
-  유닛 칸에 `"HP %d"`(int) 라벨. hp<=0는 흐리게+✕. 선택 아군 하이라이트 + [맵·이펙트]의 이동/사거리 표시. 상단에 "미션명 · 턴".
+- **PLAYING**: 모든 그리기가 **같은 좌표계**(cell=640.0/gridSize, 원점 (0,0)). 각 칸 rect는 정확히 `Rect2(x*cell, y*cell, cell, cell)`.
+  - 바닥: 칸마다 바닥 타일을 **그 칸의 정사각 rect**에 `draw_texture_rect`(rect를 화면 폭으로 늘리지 마라 — 한 칸=cell×cell).
+  - 유닛: **원이 아니라 스프라이트**를 칸 중앙에 칸의 ~0.8 크기로. 텍스처 선택은 진영으로 고정 —
+    **아군만 기사(range 없음/1)·마법사(range>1), 적은 무조건 `tex_monster`(tile_0108).** 적에 기사/마법사 텍스처를 쓰면 안 된다.
+  - 유닛 칸에 `"HP %d"`(int) 라벨. hp<=0는 흐리게+✕. 선택 아군 하이라이트, [맵·이펙트]의 이동/사거리 표시도 **같은 cell/원점**. 상단에 "미션명 · 턴".
 - **RESULT**: 보드 위 반투명 오버레이 + victory/defeat 본문 + 버튼.
 
 ### ⚠ draw_string 시그니처 함정 (반드시 지킬 것)

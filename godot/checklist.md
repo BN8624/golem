@@ -29,10 +29,12 @@
 - [x] (골렘 ★키) board.gd 재생성 → 스모크 + 입력프로브 통과(get_default_font→fallback, draw_string 시그니처는 클로드가 실렌더 캡처로 바로잡음)
 - [x] (클로드) 캡처로 메뉴·브리핑·플레이 실렌더 확인 + 웹 export
 
-## Phase 3.5 — 그림 에셋  ✅ (도형→Tiny Dungeon 스프라이트)
-- [x] Tiny Dungeon(Kenney, CC0) 다운로드 → contact sheet로 타일 식별 → 바닥48·기사96·마법사84·적108 선택
-- [x] (클로드 외형) board _draw를 draw_texture_rect로 교체, texture_filter NEAREST, hp 라벨, 선택 하이라이트
-- [ ] (다음) 미션별 적/지형 다양화, hp 바, 헛탭 선택유지, R/N 화면 버튼
+## Phase 3.5 — 그림 에셋 + 맵·이펙트 (외형은 골렘이 저자, 클로드는 에셋·검증)  ✅
+- [x] (클로드 배관) Tiny Dungeon(Kenney, CC0)·나눔고딕(OFL) 다운로드·import, contact sheet로 타일 식별
+- [x] (클로드 배관) 웹 한글 깨짐 → 나눔고딕 임베드. 분업 교정 — 클로드가 _draw 직접 짠 건 위반(사용자 지적)
+- [x] (클로드 하네스) SCENE_SPEC v3 에셋 사양 + 맵/이펙트 요구 + 함정(좌표계·draw_string·draw_set_transform·id충돌) + **렌더 캡처 채택 게이트**
+- [x] (골렘 ★키) board.gd 외형 재생성 — 스프라이트·미션별 맵 톤·데미지텍스트·플래시·하이라이트. 게이트가 미관 못 잡는 미세버그(draw_set_transform 색오용·고정cell·id충돌 빨강)를 캡처로 잡아 사양 보강·되먹임 3회 → 채택
+- [ ] (다음 다듬기) 0행 hp라벨 화면밖 잘림, 바닥 변주 가로띠, 이동/넉백 트윈, hp 바
 
 ## Phase 4 — 확장(선택)
 - [ ] 고도+골렘 루프로 카드/레벨 확장, 재미 게이트 적용 검토
