@@ -1,6 +1,6 @@
 # golem — 결정적 게임 룰엔진을 골렘(31B)이 설계·검증하는 스튜디오
 
-LLM(gemma-4 31B)이 게임 규칙 엔진을 **설계→빌드→검증**하고, 사람은 "재미있나"만 판단한다. 검증은 모델 합의가 아니라 **모델 독립 Node 골든**(정확일치)이 정답 앵커다. 현재 본선은 **전술 SRPG(영걸전형)**.
+LLM(gemma-4 31B)이 게임 규칙 엔진을 **설계→빌드→검증**하고, 사람은 "재미있나"만 판단한다. 검증은 모델 합의가 아니라 **모델 독립 Node 골든**(정확일치)이 정답 앵커다. 본선은 **전술 SRPG(영걸전형)**, 활성 트랙은 **squad(부대+능동 적 AI)**다. tactics(영웅 1명)는 **회귀 기준/안정 baseline**으로 동결 유지(verify_tactics가 지킴).
 
 ## 정본 우선순위 (작업 시작 전 이 순서로 읽기)
 1. `golem/CLAUDE.md` — 작업 규칙.
@@ -25,8 +25,8 @@ golem/                  # 패키지 루트
 ```
 코드는 4개 서브패키지로 물리 분할하되, 각 파일 상단 부트스트랩이 코드 디렉토리 전부를 sys.path에 올려 bare import·동적 import·직접 실행(`python golem/<sub>/x.py`)이 그대로 동작한다(평면 네임스페이스). 데이터 경로는 `paths.py` 상수(BASES·PACKETS·PLAY·BUILD_RUNS 등)로 중앙화.
 
-## 본선 = 전술 SRPG, 누적 9카드
-- **두 트랙(패밀리)**: ① **tactics**(영웅 1명, 원조·안정) = `tactics_base_l1~l9`, 적 정지. ② **squad**(부대 다중 아군 + 능동적 적 AI, **현재 활성 트랙**) = `squad_base`·`squad_base_l1~l8`. 카드 도구가 `--family`로 양쪽 지원.
+## 본선 = 전술 SRPG (활성 트랙 = squad)
+- **두 트랙(패밀리)**: ① **squad**(부대 다중 아군 + 능동적 적 AI, **본선·활성 트랙**) = `squad_base`·`squad_base_l1~l8`. 신규 카드·레벨·서사는 여기서 누적한다. ② **tactics**(영웅 1명, 적 정지) = `tactics_base_l1~l9` — **원조이자 회귀 기준/안정 baseline으로 동결**(verify_tactics가 골든 회귀로 지킴, 새 기능은 안 얹음). 카드 도구가 `--family`로 양쪽 지원.
 - tactics 카드: l1 마나방패·l2 사거리·l3 지형·l4 유닛·l5 루트맵·l6 상태이상·l7 밸런스·l8 흡혈·l9 처형. squad 카드: 사거리·충격파·협공·가시갑옷·aura_shield + 에테르노 phalanx_defense/asymmetric_strike. 전부 게이트·골든 diff 0.
 - **새 카드는 stable base 위에 patch로 누적**(자율 파이프라인). 무인 한 줄: `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`.
 - **소설→게임 브리지**: `forge_ingest.py`가 forge 소설 백업을 `eterno_outline.json`(전제·인물·이벤트 미션·카드씨앗)으로 압축 → 서사(levelstory `--setting`)·카드(propose_cards `--ref`)·레벨(propose_levels `--missions`) 모두 소설에서 무인 생성. 소설=스킨/씨앗, 골렘=검증된 룰.
@@ -44,8 +44,8 @@ python golem/validators/verify_tactics.py     # 9카드 골든 회귀 + l8 stric
 - 아이폰 플레이: `node golem/tactics/play/server.js` (테일스케일).
 
 ## 자율 파이프라인 (골렘이 완결 후보를 무인 생성)
-`propose_cards.py`(다음 카드 제안·`--ref` 장르시드) → `card_delta.py`+`graft.py`(골렘 base-델타 설계·키0 검증·교차검산) → `build_graded --base tactics_base_lN --inject-modules src/game_logic.js --patch`(델타만 빌드) → `gen_tactics_story.py`(서사 B겹) → `gen_tactics_play.py`(렌더). **`driver_autocard.py` = 한 줄 아이디어→완결 후보 한 바퀴 무인.**
-- **레벨 시스템**: `propose_levels.py`(골렘 레벨 생성, 메커니즘×난이도 변별 누적으로 임의 N까지) + `play_signals.py`(결정적 신호=풀이/최소턴/지배전략/카드영향, 키0 검증·"실노출" 칸) → 변별 커브 `levels.json`(현재 18). 서사 = `gen_tactics_levelstory.py`(골렘이 레벨별 적·메커니즘 반영 서사 저작 → `levelstory.json`, 구조검증 키0).
+`propose_cards.py`(다음 카드 제안·`--ref` 장르시드) → **`critique_ideas`(★키 의미 비평가 선별기: 기존 카드 대비 역할겹침·얕음·실현불가를 골렘이 strict 평가해 약한 후보 자동 탈락, 빌드 전)** → `card_delta.py`+`graft.py`(골렘 base-델타 설계·키0 검증·교차검산) → `build_graded --base <family>_base_lN --inject-modules src/game_logic.js --patch`(델타만 빌드) → `gen_tactics_story.py`(서사 B겹) → 렌더. **`driver_autocard.py` = 한 줄 아이디어→선별→완결 후보 한 바퀴 무인(`--no-select`로 선별기 끔).**
+- **레벨 시스템**: `propose_levels.py`(골렘 레벨 생성, 메커니즘×난이도 변별 누적으로 임의 N까지) + `play_signals.py`(결정적 신호, 키0·"실노출" 칸): 풀이/최소턴/지배전략/카드영향 + **재미 신호(선택지 수=최단해 첫 수 가짓수·전략 다양성=최단해 개수·치사율=즉사 간선 비율)** → 변별 커브 `levels.json`. 서사 = `gen_tactics_levelstory.py`(골렘이 레벨별 적·메커니즘 반영 서사 저작 → `levelstory.json`, 구조검증 키0).
 - **비주얼**: `gen_assets.py`(팩 무관: `--pack` 레지스트리·시트형 슬라이스·`--solid` 불투명도 필터·`--slots` 병합 → CC0 팩→컨택트시트→**골렘 비전 선택**→tile_sprites.json) / `sprites.py`(SVG 폴백). 인터랙티브 플레이 `gen_tactics_interactive.py`. **외형도 골렘이 고른다**(클로드는 하네스만). 주의: 퀄리티 천장은 파이프라인이 아니라 **에셋**(여기선 래스터 생성 불가 — 좋은 에셋 떨구면 골렘이 통합).
 - 노브 몇 개로 조절(`--n/--min-turns/--ref/--scenario`), 손편집 없음 — "어디까지=완결 후보까지·선별에서 멈춤"(`§1.5`), "다 자동화·노브 몇 개" 운영원칙.
 
