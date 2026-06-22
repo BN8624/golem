@@ -3,3 +3,4 @@
 build_web/
 /android/
 *.translation
+test/cap_*.png

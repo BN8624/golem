@@ -18,6 +18,8 @@
 ## 렌더 (`_draw`)
 - 정사각 격자 gridSize×gridSize, 화면 ~640px에 맞춤.
 - 아군 = 파란 원, 적 = 빨간 원, 각 원에 id와 hp 텍스트. hp<=0(죽음)은 흐리게 + ✕.
+  - 텍스트 주의: id/hp는 JSON에서 **float**라 `%d`+`int(...)`로 정수 표시(안 그러면 `2.0`). 여러 줄은
+    `draw_string`이 `\n`을 무시하므로 **`draw_multiline_string`** 사용(예: `"%d\nHP %d"`). hp는 또렷이.
 - 선택된 아군은 테두리 강조.
 - `_ready`에서 Label 하나 add_child 해서 "미션명 · 턴 · 상태(PLAYING/VICTORY/DEFEAT)" 표시. 상태 바뀌면 갱신.
 

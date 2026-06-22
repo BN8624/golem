@@ -139,8 +139,8 @@ func _draw():
 			draw_line(pos + Vector2(-10, -10), pos + Vector2(10, 10), Color.WHITE, 2)
 			draw_line(pos + Vector2(10, -10), pos + Vector2(-10, 10), Color.WHITE, 2)
 		
-		var txt = "%s\n%d" % [u["id"], u["hp"]]
-		draw_string(font, pos + Vector2(-10, 0), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+		var txt = "%d\nHP %d" % [int(u["id"]), int(u["hp"])]
+		draw_multiline_string(font, pos + Vector2(-cell_size * 0.28, -6), txt, HORIZONTAL_ALIGNMENT_CENTER, cell_size * 0.56, 13)
 
 	for a in state["allies"]:
 		draw_unit.call(a, Color.CORNFLOWER_BLUE)
