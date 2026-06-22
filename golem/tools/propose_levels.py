@@ -1,9 +1,9 @@
 # 레벨 시스템 자동화 — 골렘이 (카드+난이도 노브)로 레벨 생성, play_signals로 검증·재시도, 통과본만 난이도순 팩으로
 """북극성 운영원칙(다 자동화·사용자는 노브 몇 개)대로 레벨 디자인을 자동화한다.
 레벨=데이터(initialState)라 엔진(l9, 검증됨)이 그대로 굴리므로 룰 위험 0 — 잘못된 레벨은 play_signals가 거른다.
-루프: 골렘이 레벨 제안(메커니즘·목표턴 의도) → play_signals 게이트(풀이가능·min_turns 범위·비원샷) → 미스면
-측정 피드백으로 재시도 → 통과본만 채택, 최소턴 오름차순으로 정렬(난이도 커브).
-사용자 노브: --n(개수) --min-turns/--max-turns(난이도) --ref(장르 시드). 손편집 없음.
+루프: 골렘이 레벨 제안(메커니즘·목표턴 의도) → play_signals 게이트(풀이가능·min_turns 범위·비원샷·비그리디
+·재미점수>=--min-fun) → 미스면 측정 피드백으로 재시도 → 통과본만 채택, 최소턴 오름차순으로 정렬(난이도 커브).
+사용자 노브: --n(개수) --min-turns/--max-turns(난이도) --min-fun(재미 하한) --ref(장르 시드). 손편집 없음.
 산출=build_runs/proposals/tactics_levels.json. (★키=생성 / 키0=검증)
 
 사용: python propose_levels.py [--prev l9] [--n 5] [--min-turns 3] [--max-turns 8]
@@ -119,6 +119,7 @@ def main(argv=None):
     ap.add_argument("--batch", type=int, default=6, help="한 ★키 생성당 요청 레벨 수(모델 친화적 작게)")
     ap.add_argument("--min-turns", type=int, default=3, help="목표 최소턴 하한(노브)")
     ap.add_argument("--max-turns", type=int, default=9, help="목표 최소턴 상한(노브)")
+    ap.add_argument("--min-fun", type=int, default=50, help="재미 점수 하한(0~100, 기본50=B+ 이상만 채택). 0=재미 게이트 끔")
     ap.add_argument("--ref", default=None, help="장르 레퍼런스 시드(기본=propose_cards 표본)")
     ap.add_argument("--cap", type=int, default=4, help="생성 재시도 수(목표 못 채우면 늘리기)")
     ap.add_argument("--replay", default=None, help="응답 파일 재생(키0 디버그)")
@@ -130,7 +131,7 @@ def main(argv=None):
     from config import force_utf8_stdout
     force_utf8_stdout()
     from planning import _extract_json
-    from play_signals import compute_signals
+    from play_signals import compute_signals, fun_score
     pc = import_module("propose_cards")
     fam = args.family
     fcfg = FAMILY[fam]
@@ -161,7 +162,12 @@ def main(argv=None):
                 return False, "그리디로 거저 승리(깊이 얕음)"
         elif s.get("greedy_melee") == "VICTORY" and s.get("greedy_ranged") == "VICTORY":
             return False, "지배전략 둘 다 거저 승리(깊이 얕음)"
-        return True, f"OK min_turns={mt}"
+        # 재미 평가 게이트 — 휴리스틱 점수가 임계 미만이면 자동 탈락("버릴 줄 아는 능력").
+        sc, gr, _ = fun_score(s)
+        s["fun_score"], s["fun_grade"] = sc, gr
+        if sc < args.min_fun:
+            return False, f"재미 부족({gr} {sc} < {args.min_fun})"
+        return True, f"OK min_turns={mt} 재미={gr}{sc}"
 
     # 미션 모드: 소설 이벤트 objective마다 레벨 매핑(캠페인). 자유 커브 대신 이야기 따라감.
     if args.missions:
@@ -196,7 +202,7 @@ def main(argv=None):
                     lv["_signals"] = {k: s[k] for k in s if k != "name"}
                     lv["mission_id"], lv["mission"] = m["id"], m["objective"]
                     accepted_m[m["id"]] = lv
-                    print(f"  ✓ {m['id']} [{lv.get('teaches','')[:14]}] min_turns={s['min_turns']} — {m['objective'][:32]}")
+                    print(f"  ✓ {m['id']} [{lv.get('teaches','')[:14]}] min_turns={s['min_turns']} 재미={s.get('fun_grade')}{s.get('fun_score')} — {m['objective'][:30]}")
                 else:
                     misses.append(f"{m['id']}={why}"); print(f"  ✗ {m['id']} — {why}")
             feedback = "미충족 미션을 그 objective에 맞게(난이도 범위·비그리디 지켜) 다시: " + "; ".join(misses[:3])
@@ -249,7 +255,7 @@ def main(argv=None):
                 print(f"  ~ {lv.get('name','?')[:30]} — {s['min_turns']}수 정원초과(cap {per_turn_cap})"); continue
             accepted.append(lv)
             gtxt = f"greedy={s['greedy'][:3]}" if "greedy" in s else f"greedy(멜{s.get('greedy_melee','')[:3]}/사{s.get('greedy_ranged','')[:3]})"
-            print(f"  ✓ {lv.get('name','?')[:30]} [{lv.get('teaches','')[:16]}] min_turns={s['min_turns']} "
+            print(f"  ✓ {lv.get('name','?')[:30]} [{lv.get('teaches','')[:16]}] min_turns={s['min_turns']} 재미={s.get('fun_grade')}{s.get('fun_score')} "
                   f"{gtxt} | 누적 {len(accepted)}/{args.n}")
             if len(accepted) >= args.n:
                 break
@@ -277,7 +283,8 @@ def main(argv=None):
         print(f"  라이브 승격 → {live}")
     print(f"\n채택 {len(accepted)}/{args.n} (난이도 커브=최소턴 오름차순) → {out}")
     for lv in accepted:
-        print(f"  · {lv['name']} (min_turns={lv['_signals']['min_turns']}, teaches={lv.get('teaches','')})")
+        sg = lv["_signals"]
+        print(f"  · {lv['name']} (min_turns={sg['min_turns']}, 재미={sg.get('fun_grade')}{sg.get('fun_score')}, teaches={lv.get('teaches','')})")
     if len(accepted) < args.n:
         print(f"  ⚠ {args.n - len(accepted)}개 부족 — --cap↑ 또는 --min/max-turns 범위 넓혀 재시도.")
         return 1
