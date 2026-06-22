@@ -91,33 +91,36 @@ def main(argv=None):
     ap.add_argument("--max-cards", type=int, default=0, help="ideas-file에서 누적할 카드 수 상한(0=전부)")
     args = ap.parse_args(argv)
 
+    sys.path.insert(0, str(HERE)); sys.path.insert(0, str(ROOT))
+    try:
+        from config import force_utf8_stdout
+        force_utf8_stdout()
+    except Exception:  # noqa: BLE001
+        pass
+
     # 기계 노브 제거: --start 비면 최신 동결 base 자동탐지(사람이 base 번호 외울 필요 없음).
     if not args.start:
         args.start = latest_level(args.family)
         if not args.start:
             ap.error(f"{args.family} 동결 base 없음 — 먼저 커널/카드를 빌드하라")
 
-    # 선별 퍼널: 제안 아이디어가 있으면 그걸로 PLAN 구성(start 위로 lN+1, lN+2 …). 없으면 기본 PLAN.
-    plan = PLAN
-    if args.ideas_file:
-        ideas = json.loads(Path(args.ideas_file).read_text(encoding="utf-8"))
-        if args.max_cards > 0:
-            ideas = ideas[:args.max_cards]
-        plan = []
-        prev = args.start
-        for x in ideas:
-            nxt = f"l{int(prev[1:]) + 1}"
-            idea_text = f"{x.get('name','')}: {x.get('mechanic','')} (관측: {x.get('observable','')})".strip()
-            plan.append((nxt, prev, idea_text))
-            prev = nxt
-
-    sys.path.insert(0, str(HERE))
-    sys.path.insert(0, str(ROOT))
-    try:
-        from config import force_utf8_stdout
-        force_utf8_stdout()
-    except Exception:  # noqa: BLE001
-        pass
+    # 선별 퍼널: 아이디어 없으면 골렘이 자동 제안(propose_cards ★키) → 진짜 한 명령 무인.
+    ideas_path = Path(args.ideas_file) if args.ideas_file else None
+    if ideas_path is None:
+        n_ideas = args.max_cards if args.max_cards > 0 else 4
+        log(f"아이디어 미지정 → 골렘 카드 제안 자동(propose_cards --family {args.family} --n {n_ideas})")
+        run([sys.executable, str(TOOLS / "propose_cards.py"), "--family", args.family,
+             "--prev", args.start, "--n", str(n_ideas)], MAX_SECONDS)
+        ideas_path = BUILD_RUNS / "proposals" / f"{args.family}_ideas.json"
+    ideas = json.loads(ideas_path.read_text(encoding="utf-8"))
+    if args.max_cards > 0:
+        ideas = ideas[:args.max_cards]
+    plan, prev = [], args.start
+    for x in ideas:
+        nxt = f"l{int(prev[1:]) + 1}"
+        idea_text = f"{x.get('name','')}: {x.get('mechanic','')} (관측: {x.get('observable','')})".strip()
+        plan.append((nxt, prev, idea_text))
+        prev = nxt
 
     showcase = BUILD_RUNS / "autocard"
     showcase.mkdir(parents=True, exist_ok=True)
