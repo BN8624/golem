@@ -9,10 +9,10 @@
 - [x] `godot/PORTING_SPEC.md` — 골렘 포팅 사양(인터페이스·불변식·검증)
 
 ## Phase 1 — 룰 포팅 (골렘 ★키 → 클로드 검증 키0, 고도 필요)
-- [ ] (사용자) Godot 4 설치 + exe 경로 공유
-- [ ] (골렘 ★키) `godot/scripts/rules.gd` 포팅(PORTING_SPEC 따라)
-- [ ] (클로드 키0) `godot --headless --path godot --script res://test/run_rules_golden.gd` → 0 실패
-- [ ] 불일치면 에러 되먹여 재포팅, 36/36 통과까지
+- [x] (클로드) Godot 4.7 설치(C:/Users/USER/godot-engine) + 포팅 하네스 godot_port_rules.py
+- [x] (골렘 ★키) `godot/scripts/rules.gd` 포팅 — 1시도 채택
+- [x] (클로드 키0) 헤드리스 골든 러너 → **36/36 통과, 0 실패**(독립 재실행도 동일)
+- [x] 검증된 JS와 0-diff 동치 증명
 
 ## Phase 2 — 플레이 가능한 씬 (골렘 ★키 + 클로드 배관, 고도 필요)
 - [ ] (골렘) `scenes/main.tscn` + 보드 렌더(도형)·유닛 선택→이동/공격 입력·턴 진행(rules.gd 호출)·승패 표시
