@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G88) — 다중 아군(squad) 커널 빌드·동결 완료. 영웅1 → 부대 전술.**
+- **일반화**: 적 AI를 "가장 가까운 **아군**을 목표로(거리 동률은 아군 id 작은 쪽)"로 일반화. 상태 `hero`(단일)→`allies`(리스트), 액션은 `{unit: 아군id, type}`로 어느 아군이 행동하는지 지정. 새 base(`squad_base`).
+- **골렘 설계(★키 planning)**: CONTRACT_STATUS **FROZEN**. 키0 REF 골든(`gen_squad_kernel_golden.py`) 9세계 — 적 목표선택(SCN-001 더 가까운 아군 추격·SCN-004 두 적이 각자 다른 아군 추격·SCN-005 동률 id타이브레이크)·협공 처치(SCN-002 VICTORY)·부대 패배(SCN-003 DEFEAT)·3아군 부대전(SCN-007) 결정적 확인.
+- **★키 build(2회)**: 1차 합의 0.951, 유일 불일치=죽은 유닛을 출력서 제거(모델 만장일치) vs oracle 유지. 기존 base 관례(렌더러 호환)는 **유지**라 계약에 "죽은 유닛도 로스터에 유지" 핀 → 2차 **합의 vs oracle 전부 일치**(0.975), 8/9 시도 golden_diff 0 → `tactics/bases/squad_base` 동결(검증 PASS·결정적).
+- **★ 다음 액션**: ① multiunit_base·squad_base를 키0 검증에 편입(`verify_tactics`에 회귀 추가 or 전용 validator) → ② 카드 재축적(방패·사거리·지형·상태이상을 squad_base 위에 patch로) → ③ 렌더(`gen_tactics_*`를 allies 출력에 맞게) + 직접 플레이 → ④ 에테르노 서사 B겹. 산출=`*_packet_squad_kernel` + `bases/squad_base` + `gen_squad_kernel_golden.py`. (참고: squad_base가 본선 후보, multiunit_base는 단일아군 디딤돌.)
+
 **현재 상태 (2026-06-22, G87) — 능동적 적 AI 커널 빌드·동결 완료. "허수아비 적" 끝남.**
 - **트랙 전환(사용자 진단)**: 게임성이 30년 전 게임만도 못한 근본 원인 = 영웅1·적 정지·그리디. 다중유닛보다 **적이 안 움직이는 게 먼저**(사용자). 영웅 카드 누적 보류 → 적 AI base 신규 트랙.
 - **골렘 설계(★키 planning)**: 적 AI 룰 — 매 영웅 액션 직후 적 턴, id오름차순, 인접시 공격·아니면 거리최소화 이동(타이브레이크 X축→작은x→작은y)·다 막히면 정지. 핵심 통찰 = **적 AI가 결정적이면 골든으로 검증된다.**

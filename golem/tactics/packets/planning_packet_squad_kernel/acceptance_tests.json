@@ -1,0 +1,26 @@
+[
+  {
+    "id": "SCN-001",
+    "setup": "1 Ally [0,0, hp:10, atk:10], 1 Enemy [1,0, hp:5, atk:2], Seq: [{unit:1, type:'attack'}]",
+    "input": "node main.js --scenario 1",
+    "expect": "status: 'VICTORY', turn: 1, enemies: []"
+  },
+  {
+    "id": "SCN-002",
+    "setup": "1 Ally [0,0, hp:2, atk:1], 1 Enemy [1,0, hp:10, atk:5], Seq: [{unit:1, type:'move', dir:'right'}]",
+    "input": "node main.js --scenario 2",
+    "expect": "status: 'DEFEAT', turn: 1, allies: []"
+  },
+  {
+    "id": "SCN-003",
+    "setup": "1 Ally [0,0, hp:10, atk:1], 1 Enemy [4,4, hp:10, atk:1], Seq: [{unit:1, type:'move', dir:'right'}]",
+    "input": "node main.js --scenario 3",
+    "expect": "status: 'FINISHED', turn: 1, allies: [{id:1, ...}], enemies: [{id:1, ...}]"
+  },
+  {
+    "id": "SCN-004",
+    "setup": "1 Ally [0,0, hp:10, atk:1], 1 Enemy [0,1, hp:10, atk:1], Seq: [{unit:1, type:'move', dir:'down'}]",
+    "input": "node main.js --scenario 4",
+    "expect": "turn: 1, allies: [{id:1, pos:[0,0]}], description: 'Move failed because cell occupied'"
+  }
+]

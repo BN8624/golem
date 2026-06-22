@@ -1,0 +1,229 @@
+{
+  "reviews": [
+    {
+      "ambiguous_terms": [
+        "dir",
+        "X-axis move > Y-axis move"
+      ],
+      "missing_rules": [
+        "Timing of Win/Lose condition evaluation (immediately after ally action vs. after the full coordinated enemy response phase)"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assumption that 'dir' follows standard cardinal directions (e.g., 'up', 'down', 'left', 'right')"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If an ally action eliminates the last enemy, does the game transition to VICTORY immediately, or do other living enemies still get to execute their reactions for that turn before the status is checked?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Regarding the enemy move tie-break ('resulting smaller x'), since only one direction on a given axis can reduce Manhattan distance to a specific target, how can this tie-break be triggered?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [
+        "Handling of actions in the sequence assigned to a unitId that is already dead",
+        "Handling of invalid direction strings in the Move action (e.g., typo or unsupported direction)",
+        "Enemy AI behavior if no living allies exist when the AI phase begins",
+        "Timing of win/loss condition checks: whether they occur immediately after an ally action, after the full enemy response phase, or after the turn increment"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "Assuming 'right' corresponds to a specific coordinate change (e.g., x+1) without a defined coordinate system"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If a unit in the action sequence is dead, does the turn still increment and the action simply fail?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the game end immediately the moment the last unit of a side dies, or does the full turn cycle (Ally Action -> Enemy AI response) complete first?",
+          "class": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [
+        "REQ-005 assumes that multiple moves along the same axis can simultaneously reduce Manhattan distance to a single target, which is mathematically impossible on a square grid."
+      ],
+      "questions_for_lead": [
+        {
+          "q": "How should the 'no use of Math.random()' constraint in REQ-001 be verified, as it is an implementation constraint with no unique observable output in the game state?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "In REQ-005, the tie-breakers for 'resulting smaller x' and 'resulting smaller y' are unreachable under Manhattan distance logic; should these be removed or is a different distance metric intended?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The Requirements section (REQ-001 through REQ-008) almost entirely duplicates the logic already defined in the GDD (Player Actions, Enemy AI Logic, and Win/Lose Conditions). Should the GDD be the sole source of truth to avoid redundancy and potential synchronization drift?",
+          "class": "DEFERRED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "target"
+      ],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": [
+        {
+          "q": "The term 'target' is used to refer to both a coordinate/cell (in Move) and a unit entity (in Attack); should these be distinguished (e.g., 'target cell' vs 'target unit') to prevent implementation errors?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [
+        "dir (valid values not defined)",
+        "resulting smaller x $\\rightarrow$ resulting smaller y (redundant/unclear for Manhattan distance reduction)"
+      ],
+      "missing_rules": [
+        "Behavior when an action in the sequence is assigned to a unit that is already dead",
+        "Timing of win/loss condition checks: does the game terminate immediately upon HP <= 0, or after the full round of enemy responses?",
+        "Sorting criteria for the 'sorted lists' in REQ-009"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "The specific sorting key for the living units output in REQ-009"
+      ],
+      "risky_assumptions": [
+        "The assumption that Manhattan distance reduction allows for multiple X-axis options, necessitating a 'smaller x' tie-break"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If the action sequence references a unit that has been defeated, does the action fail and the turn increment, or is the action skipped?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the game terminate immediately when all allies or enemies are defeated, specifically interrupting the remaining enemies' turns in the AI phase?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "What are the accepted string values for 'dir' (e.g., 'up', 'down', 'left', 'right')?",
+          "class": "ASSUMED"
+        }
+      ]
+    },
+    {
+      "ambiguous_terms": [],
+      "missing_rules": [],
+      "conflicting_rules": [],
+      "underspecified_outputs": [],
+      "risky_assumptions": [],
+      "questions_for_lead": []
+    },
+    {
+      "ambiguous_terms": [
+        "dir (valid values not defined)",
+        "X-axis move > Y-axis move (implies prioritization of axis change, but lacks formal definition)"
+      ],
+      "missing_rules": [
+        "Handling of actionSequence entries where the unitId is already dead",
+        "Timing of Win/Lose checks relative to the Enemy AI execution cycle (e.g., if an ally kills the last enemy, do enemies still get a final response?)",
+        "Definition of grid origin (0,0) to clarify 'smaller x/y' tie-breaking"
+      ],
+      "conflicting_rules": [],
+      "underspecified_outputs": [
+        "The format and frequency of the REQ-009 log (per-turn vs. final state only)"
+      ],
+      "risky_assumptions": [
+        "Assumption that 'dir' maps to standard cardinal strings ('up', 'down', 'left', 'right')"
+      ],
+      "questions_for_lead": [
+        {
+          "q": "If a unit in the actionSequence is dead when its turn arrives, does the action fail and the turn counter still increment?",
+          "class": "BLOCKING"
+        },
+        {
+          "q": "Does the game check for VICTORY immediately after an ally action, or only after the full Enemy AI cycle has completed?",
+          "class": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "aggregated": {
+    "ambiguous_terms": [
+      "dir",
+      "X-axis move > Y-axis move",
+      "target",
+      "dir (valid values not defined)",
+      "resulting smaller x $\\rightarrow$ resulting smaller y (redundant/unclear for Manhattan distance reduction)",
+      "dir (valid values not defined)",
+      "X-axis move > Y-axis move (implies prioritization of axis change, but lacks formal definition)"
+    ],
+    "missing_rules": [
+      "Timing of Win/Lose condition evaluation (immediately after ally action vs. after the full coordinated enemy response phase)",
+      "Handling of actions in the sequence assigned to a unitId that is already dead",
+      "Handling of invalid direction strings in the Move action (e.g., typo or unsupported direction)",
+      "Enemy AI behavior if no living allies exist when the AI phase begins",
+      "Timing of win/loss condition checks: whether they occur immediately after an ally action, after the full enemy response phase, or after the turn increment",
+      "Behavior when an action in the sequence is assigned to a unit that is already dead",
+      "Timing of win/loss condition checks: does the game terminate immediately upon HP <= 0, or after the full round of enemy responses?",
+      "Sorting criteria for the 'sorted lists' in REQ-009",
+      "Handling of actionSequence entries where the unitId is already dead",
+      "Timing of Win/Lose checks relative to the Enemy AI execution cycle (e.g., if an ally kills the last enemy, do enemies still get a final response?)",
+      "Definition of grid origin (0,0) to clarify 'smaller x/y' tie-breaking"
+    ],
+    "conflicting_rules": [],
+    "underspecified_outputs": [
+      "The specific sorting key for the living units output in REQ-009",
+      "The format and frequency of the REQ-009 log (per-turn vs. final state only)"
+    ],
+    "risky_assumptions": [
+      "Assumption that 'dir' follows standard cardinal directions (e.g., 'up', 'down', 'left', 'right')",
+      "Assuming 'right' corresponds to a specific coordinate change (e.g., x+1) without a defined coordinate system",
+      "REQ-005 assumes that multiple moves along the same axis can simultaneously reduce Manhattan distance to a single target, which is mathematically impossible on a square grid.",
+      "The assumption that Manhattan distance reduction allows for multiple X-axis options, necessitating a 'smaller x' tie-break",
+      "Assumption that 'dir' maps to standard cardinal strings ('up', 'down', 'left', 'right')"
+    ],
+    "BLOCKING_questions": [
+      "If an ally action eliminates the last enemy, does the game transition to VICTORY immediately, or do other living enemies still get to execute their reactions for that turn before the status is checked?",
+      "If a unit in the action sequence is dead, does the turn still increment and the action simply fail?",
+      "Does the game end immediately the moment the last unit of a side dies, or does the full turn cycle (Ally Action -> Enemy AI response) complete first?",
+      "How should the 'no use of Math.random()' constraint in REQ-001 be verified, as it is an implementation constraint with no unique observable output in the game state?",
+      "If the action sequence references a unit that has been defeated, does the action fail and the turn increment, or is the action skipped?",
+      "Does the game terminate immediately when all allies or enemies are defeated, specifically interrupting the remaining enemies' turns in the AI phase?",
+      "If a unit in the actionSequence is dead when its turn arrives, does the action fail and the turn counter still increment?",
+      "Does the game check for VICTORY immediately after an ally action, or only after the full Enemy AI cycle has completed?"
+    ]
+  }
+}

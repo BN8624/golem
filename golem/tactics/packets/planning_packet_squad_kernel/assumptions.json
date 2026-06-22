@@ -1,0 +1,7 @@
+{
+  "consumer": "Build/Spec QA가 명시 가정으로 따른다",
+  "assumed": [
+    "The CLI will receive scenarios as JSON files or internal lookup tables indexed by N.",
+    "The memory footprint is small enough that state can be passed by value or reference without performance bottlenecks."
+  ]
+}

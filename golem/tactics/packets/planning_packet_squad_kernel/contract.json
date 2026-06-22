@@ -1,0 +1,593 @@
+{
+  "data_contract": {
+    "state_shape": {
+      "gridSize": "number",
+      "turn": "number",
+      "status": "'PLAYING' | 'VICTORY' | 'DEFEAT' | 'FINISHED'",
+      "allies": [
+        {
+          "id": "number",
+          "hp": "number",
+          "atk": "number",
+          "pos": [
+            "number",
+            "number"
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": "number",
+          "hp": "number",
+          "atk": "number",
+          "pos": [
+            "number",
+            "number"
+          ]
+        }
+      ],
+      "actionSequence": [
+        {
+          "unit": "number",
+          "type": "'move' | 'attack'",
+          "dir": "string (optional)"
+        }
+      ]
+    },
+    "rules": [
+      "REQ-001: Zero non-determinism (No Math.random).",
+      "REQ-002: MOVE fails if target is out of [0, gridSize-1] or occupied by any living unit.",
+      "REQ-003: ATTACK targets the living enemy with min ID at Manhattan distance 1.",
+      "REQ-004: Enemy AI targets living ally with min Manhattan distance, tie-break by min ally ID.",
+      "REQ-005: Enemy MOVE priority: X-axis reduction > Y-axis reduction > smaller resulting x > smaller resulting y.",
+      "REQ-006: Turn counter increments after every ally action attempt, regardless of success.",
+      "REQ-007: Enemy AI executes in ascending order of enemy IDs after every ally action.",
+      "REQ-008: Immediate termination on VICTORY (all enemies dead) or DEFEAT (all allies dead).",
+      "REQ-009: Final output is a JSON object containing sorted lists of living units.",
+      "Output roster is full: allies and enemies arrays ALWAYS contain every unit from the initial state in ascending id, including units whose hp has dropped to 0 or below. Never remove a dead unit from the output."
+    ],
+    "output_contract": {
+      "fields": [
+        "status",
+        "turn",
+        "allies",
+        "enemies"
+      ],
+      "lines": [
+        "status: <one of PLAYING|VICTORY|DEFEAT|FINISHED>",
+        "turn: <integer>",
+        "allies: <a JSON array of ALL ally units in ascending id, INCLUDING dead ones (hp may be <=0); each EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — never drop a unit when it dies, no atk>",
+        "enemies: <a JSON array of ALL enemy units in ascending id, INCLUDING dead ones (hp may be <=0); each EXACTLY {\"id\":..., \"hp\":..., \"pos\":[x,y]} — never drop a unit when it dies, no atk>"
+      ]
+    },
+    "scenario_data": [
+      {
+        "id": "SCN-001",
+        "covers_reqs": [
+          "AI-TARGET"
+        ],
+        "initialState": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                4,
+                4
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 2,
+              "pos": [
+                5,
+                5
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-002",
+        "covers_reqs": [
+          "WIN",
+          "FOCUS"
+        ],
+        "initialState": {
+          "gridSize": 5,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                2,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 6,
+              "atk": 1,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "attack"
+          },
+          {
+            "unit": 2,
+            "type": "attack"
+          }
+        ]
+      },
+      {
+        "id": "SCN-003",
+        "covers_reqs": [
+          "LOSE"
+        ],
+        "initialState": {
+          "gridSize": 5,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 3,
+              "atk": 1,
+              "pos": [
+                2,
+                2
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                1,
+                2
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                3,
+                2
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "attack"
+          }
+        ]
+      },
+      {
+        "id": "SCN-004",
+        "covers_reqs": [
+          "AI-TARGET",
+          "MULTI"
+        ],
+        "initialState": {
+          "gridSize": 7,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 12,
+              "atk": 3,
+              "pos": [
+                6,
+                6
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 1,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 1,
+              "pos": [
+                6,
+                4
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-005",
+        "covers_reqs": [
+          "AI-TARGET-TIE"
+        ],
+        "initialState": {
+          "gridSize": 5,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                4,
+                2
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 1,
+              "pos": [
+                2,
+                2
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 2,
+            "type": "move",
+            "dir": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-006",
+        "covers_reqs": [
+          "ALLY-BLOCK"
+        ],
+        "initialState": {
+          "gridSize": 5,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                1,
+                1
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                2,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 1,
+              "pos": [
+                4,
+                4
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-007",
+        "covers_reqs": [
+          "MULTI",
+          "SQUAD"
+        ],
+        "initialState": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": 3,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                2
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 6,
+              "atk": 2,
+              "pos": [
+                3,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 6,
+              "atk": 2,
+              "pos": [
+                3,
+                2
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          },
+          {
+            "unit": 2,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          },
+          {
+            "unit": 3,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-008",
+        "covers_reqs": [
+          "WIN",
+          "MULTI"
+        ],
+        "initialState": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 6,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 12,
+              "atk": 6,
+              "pos": [
+                5,
+                5
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 2,
+              "pos": [
+                3,
+                5
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "attack"
+          },
+          {
+            "unit": 2,
+            "type": "move",
+            "dir": [
+              -1,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SCN-009",
+        "covers_reqs": [
+          "FINISHED"
+        ],
+        "initialState": {
+          "gridSize": 8,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 1,
+              "pos": [
+                7,
+                7
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "unit": 1,
+            "type": "move",
+            "dir": [
+              1,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "interface_contract": {
+    "entry": "main.js",
+    "files": [
+      {
+        "path": "main.js",
+        "exports": [],
+        "imports": [
+          "src/engine.js"
+        ],
+        "description": "Handles CLI arguments (--scenario N), loads scenario data, and invokes the engine."
+      },
+      {
+        "path": "src/engine.js",
+        "exports": [
+          "GameEngine"
+        ],
+        "imports": [],
+        "description": "Contains the deterministic game loop, movement/attack logic, and AI implementation."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+A deterministic tactical squad simulator where a sequence of ally actions is executed on a square grid. Each ally action is followed by a coordinated response from all living enemies based on fixed AI priority rules. The goal is to eliminate all enemies before all allies are defeated or the action sequence expires.

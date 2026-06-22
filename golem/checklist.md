@@ -329,3 +329,13 @@ P1 (다음 실험 전):
 - [x] base 동결 → tactics/bases/multiunit_base (검증 PASS)
 - [ ] 에테르노 서사 B겹(gen_tactics_story --idea "에테르노…")
 - [ ] 렌더(gen_tactics_play/interactive)
+
+## 다중 아군(squad) 트랙 (G88) — 완료
+- [x] planning --synthesize (★키) → squad 룰 설계 (FROZEN)
+- [x] REF base + 9세계 골든 역산(키0) — 적 목표선택·협공·부대전 증명
+- [x] build_graded (★키, 2회) — 죽은유닛 유지 핀 후 합의 vs oracle 전부일치
+- [x] squad_base 동결 (검증 PASS·결정적, golden_diff 0)
+- [ ] multiunit_base·squad_base 키0 검증 편입(verify)
+- [ ] 카드 재축적(방패·사거리·지형을 squad_base 위에 patch)
+- [ ] 렌더 allies 출력 대응 + 직접 플레이
+- [ ] 에테르노 서사 B겹
