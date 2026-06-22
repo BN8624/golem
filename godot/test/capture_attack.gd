@@ -22,16 +22,20 @@ func _cap(path):
 
 func _process(_d):
 	frame += 1
-	if frame == 3:
+	if frame == 2:
+		_cap("res://test/cap_menu.png")  # _ready 직후 screen=MENU
+	elif frame == 3:
+		board.load_mission(0)  # v2 계약: 메뉴 우회하고 곧장 플레이 상태로
+	elif frame == 5:
 		_cap("res://test/cap_before.png")
 		print("BEFORE enemies: ", _enemy_hps())
-	elif frame == 5:
+	elif frame == 7:
 		# ally2(range2) 선택 → enemy2[2,1] 공격
 		_tap(0, 1)
 		_tap(2, 1)
 		board.queue_redraw()
 		print("AFTER  enemies: ", _enemy_hps())
-	elif frame == 8:
+	elif frame == 10:
 		_cap("res://test/cap_after.png")
 		quit()
 		return true

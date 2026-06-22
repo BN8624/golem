@@ -22,10 +22,17 @@
 - [x] (클로드) **클릭 무반응 버그 수정** — JSON float `pos`와 int `[gx,gy]` 배열 비교가 항상 false라 클릭이 전부 죽어 있던 것. 원소별 비교로 수정. 헤드리스 입력 프로브(`run_input_probe.gd`)로 선택+이동 결정적 검증. project.godot에 stretch/viewport 640·터치에뮬 추가.
 - [ ] (사용자) 아이폰에서 유닛 탭·이동·공격 확인 ← 지금 여기
 
-## Phase 3 — 4미션 + 외형
-- [ ] 미션 선택 UI → 4미션 플레이
-- [ ] 에셋(도형→그림): 골렘 CC0 선택 + 클로드 import 배관
-- [ ] 서사 한 겹
+## Phase 3 — 미션선택 + 서사 (사용자 선택, 골렘 ★키)  ✅
+- [x] (클로드 키0) 서사 하네스 godot_gen_narrative.py — 미션 메타 주고 story JSON 받아 검증·병합
+- [x] (골렘 ★키) 4미션 story(briefing/victory/defeat) 생성 → squad_levels.json 병합, 골든 36/36 유지
+- [x] (클로드 키0) SCENE_SPEC v2 + 입력프로브 채택 게이트(load_mission/state/_unhandled_input 계약)
+- [x] (골렘 ★키) board.gd 재생성 → 스모크 + 입력프로브 통과(get_default_font→fallback, draw_string 시그니처는 클로드가 실렌더 캡처로 바로잡음)
+- [x] (클로드) 캡처로 메뉴·브리핑·플레이 실렌더 확인 + 웹 export
+
+## Phase 3.5 — 그림 에셋  ✅ (도형→Tiny Dungeon 스프라이트)
+- [x] Tiny Dungeon(Kenney, CC0) 다운로드 → contact sheet로 타일 식별 → 바닥48·기사96·마법사84·적108 선택
+- [x] (클로드 외형) board _draw를 draw_texture_rect로 교체, texture_filter NEAREST, hp 라벨, 선택 하이라이트
+- [ ] (다음) 미션별 적/지형 다양화, hp 바, 헛탭 선택유지, R/N 화면 버튼
 
 ## Phase 4 — 확장(선택)
 - [ ] 고도+골렘 루프로 카드/레벨 확장, 재미 게이트 적용 검토
