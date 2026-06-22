@@ -5,8 +5,9 @@ const path = require('path');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8770;
 const PAGES = {
-  '/': path.join(__dirname, 'index.html'),       // 턴 재생 뷰어(gen_tactics_play.py)
-  '/play': path.join(__dirname, 'play.html'),    // 직접 플레이(gen_tactics_interactive.py, 픽셀팩)
+  '/': path.join(__dirname, 'index.html'),         // 턴 재생 뷰어(gen_tactics_play.py)
+  '/play': path.join(__dirname, 'play.html'),      // 직접 플레이(gen_tactics_interactive.py, 픽셀팩)
+  '/squad': path.join(__dirname, 'squad.html'),    // 부대 뷰어(gen_squad_play.py, --source levels=실미션)
 };
 
 const server = http.createServer((req, res) => {
@@ -24,5 +25,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`전술 서버 → http://0.0.0.0:${PORT}/ (뷰어) · /play (직접 플레이)  [테일스케일 IP로 아이폰 접속]`);
+  console.log(`전술 서버 → http://0.0.0.0:${PORT}/ (뷰어) · /play (직접 플레이) · /squad (부대 실미션)  [테일스케일 IP로 아이폰 접속]`);
 });
