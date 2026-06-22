@@ -57,5 +57,44 @@ func _process(_d):
 		print("PROBE RESULT: 입력 로직 동작함")
 	else:
 		print("PROBE RESULT: 무반응 — board.gd 문제")
+
+	# 3) 공격 — 미션 리셋 후, 사거리 내 적이 있는 아군을 찾아 그 적 칸을 탭 → 적 hp 감소 기대
+	board.load_mission(0)
+	var atk_ally = null
+	var atk_enemy = null
+	for a in board.state["allies"]:
+		if a["hp"] <= 0:
+			continue
+		var rng = a.get("range", 1)
+		for e in board.state["enemies"]:
+			var d = abs(a["pos"][0] - e["pos"][0]) + abs(a["pos"][1] - e["pos"][1])
+			if e["hp"] > 0 and d >= 1 and d <= rng:
+				atk_ally = a
+				atk_enemy = e
+				break
+		if atk_ally:
+			break
+	if atk_ally == null:
+		print("PROBE [attack] 첫 턴 사거리 내 쌍 없음(이동 후에만 공격 가능 — 룰상 정상)")
+	else:
+		var ea = atk_ally["pos"][0]
+		var eb = atk_ally["pos"][1]
+		var sel = InputEventMouseButton.new()
+		sel.button_index = MOUSE_BUTTON_LEFT
+		sel.pressed = true
+		sel.position = Vector2(ea * cell + cell / 2, eb * cell + cell / 2)
+		board._unhandled_input(sel)
+		var hp_before = atk_enemy["hp"]
+		var tap = InputEventMouseButton.new()
+		tap.button_index = MOUSE_BUTTON_LEFT
+		tap.pressed = true
+		tap.position = Vector2(atk_enemy["pos"][0] * cell + cell / 2, atk_enemy["pos"][1] * cell + cell / 2)
+		board._unhandled_input(tap)
+		print("PROBE [attack] ally=", atk_ally["id"], " range=", atk_ally.get("range", 1),
+			" enemy=", atk_enemy["id"], " hp ", hp_before, "->", atk_enemy["hp"])
+		if atk_enemy["hp"] < hp_before:
+			print("PROBE ATTACK RESULT: 공격 동작함")
+		else:
+			print("PROBE ATTACK RESULT: 공격 무반응 — board.gd 공격 분기 문제")
 	quit()
 	return true
