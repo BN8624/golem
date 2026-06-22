@@ -68,6 +68,7 @@ def run():
         "fixtures_passed": sum(1 for r in records if r["assertion_ok"]),
         "records": records,
     }
+    BUILD_RUNS.mkdir(parents=True, exist_ok=True)   # 신선한 체크아웃(CI)엔 gitignore된 build_runs 없음
     (BUILD_RUNS / "replay_result.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     _write_report(summary)
