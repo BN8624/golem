@@ -63,6 +63,18 @@ def run_smoke(godot):
     return errs == "", out, errs
 
 
+def run_probe(godot):
+    # 입력 프로브 — load_mission(0)으로 메뉴 우회 후 선택·이동·공격을 결정적 검증(스모크가 못 잡는 무반응 잡기)
+    r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
+                        "--script", "res://test/run_input_probe.gd"],
+                       capture_output=True, text=True, encoding="utf-8", timeout=120)
+    out = (r.stdout or "") + (r.stderr or "")
+    ok = ("입력 로직 동작함" in out) and ("공격 동작함" in out)
+    lines = "\n".join(l for l in out.splitlines()
+                      if "PROBE" in l or any(m in l for m in ERR_MARKERS))
+    return ok, lines
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--cap", type=int, default=3)
@@ -79,9 +91,11 @@ def main(argv=None):
     if args.replay:
         OUT.write_text(Path(args.replay).read_text(encoding="utf-8"), encoding="utf-8")
         ok, out, _ = run_smoke(args.godot)
-        print(out.strip()[-1500:])
-        print("스모크:", "OK" if ok else "FAIL")
-        return 0 if ok else 1
+        pok, plines = run_probe(args.godot) if ok else (False, "(스모크 실패로 프로브 생략)")
+        print(out.strip()[-1200:])
+        print(plines)
+        print("스모크:", "OK" if ok else "FAIL", "| 프로브:", "OK" if pok else "FAIL")
+        return 0 if (ok and pok) else 1
 
     from config import get_api_keys
     from llm import KeyPool, LLMClient
@@ -99,12 +113,19 @@ def main(argv=None):
             raw = LLMClient(api_key=key).generate("generator", prompt)
         OUT.write_text(_strip_fences(raw) + "\n", encoding="utf-8")
         ok, out, errs = run_smoke(args.godot)
-        if ok:
-            print(f"★ 씬 스모크 통과(에러 없음) → {OUT}")
-            print("  플레이는 사용자가 F5로 확인(godot --path godot 또는 에디터에서 열기).")
+        if not ok:
+            print("  ✗ 스모크 에러:\n" + "\n".join("    " + l for l in errs.splitlines()[:8]))
+            feedback = errs[:1800]
+            continue
+        pok, plines = run_probe(args.godot)
+        if pok:
+            print(f"★ 씬 스모크+입력프로브 통과(선택·이동·공격 동작) → {OUT}")
+            print("  메뉴/브리핑/결과 미관은 사용자가 F5로 확인.")
             return 0
-        print("  ✗ 스모크 에러:\n" + "\n".join("    " + l for l in errs.splitlines()[:8]))
-        feedback = errs[:1800]
+        print("  ✗ 입력 프로브 실패(클릭/공격 무반응):\n" + "\n".join("    " + l for l in plines.splitlines()[:10]))
+        feedback = ("스모크는 통과했으나 입력 프로브 실패. load_mission(0) 후 클릭이 무반응이다. "
+                    "자동 검증 계약(state/selected_unit_id/load_mission/_unhandled_input)과 "
+                    "좌표 비교 함정(pos[0]==gx and pos[1]==gy)을 다시 확인하라. 프로브 출력:\n" + plines[:1500])
     print(f"\n{args.cap}회 내 미통과 — --cap 늘리거나 SCENE_SPEC 보강.")
     return 1
 

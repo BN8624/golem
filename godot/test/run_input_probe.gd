@@ -12,6 +12,7 @@ func _process(_d):
 	if done:
 		return true
 	done = true
+	board.load_mission(0)  # v2 계약: 메뉴 우회하고 곧장 플레이 상태로
 	# 여기선 board._ready 가 이미 실행됨(미션0 로드)
 	var grid = board.state["gridSize"]
 	var cell = 640.0 / grid
