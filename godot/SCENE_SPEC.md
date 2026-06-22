@@ -29,6 +29,12 @@
 - 매 액션 후: 반환 status로 Label 갱신, `queue_redraw()`. VICTORY/DEFEAT면 입력 잠금.
 - 키: `R` 현재 미션 리셋, `N` 다음 미션(끝이면 처음으로).
 
+### ⚠ 좌표 비교 함정 (반드시 지킬 것)
+- `pos`는 JSON에서 와서 **float**(`[0.0, 0.0]`)다. 클릭 셀 `gx,gy`는 `int(...)`라 **int**다.
+- GDScript에서 `[0.0,0.0] == [0,0]`은 **false**다(배열 비교는 원소 타입까지 엄격). 스칼라 `0.0==0`만 true.
+- 그래서 **배열째 `pos == [gx,gy]` 비교 금지.** 반드시 원소별로: `pos[0] == gx and pos[1] == gy`.
+- 이걸 어기면 스모크는 통과하지만 클릭이 전부 무반응이 된다(2026-06-23 실제 버그).
+
 ## 불변식
 1. **rules.gd 수정·재구현 금지.** 룰 판정은 전부 update_state 경유. 씬은 표시·입력만.
 2. 결정적 — RNG 금지.
@@ -36,5 +42,8 @@
 4. 순수 표시/입력 — 파일 IO·네트워크 없음(레벨 JSON 로드 제외).
 
 ## 검증
-헤드리스 스모크: `godot --headless --path godot --quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 떠야 채택
-(플레이 가능·UI 정확성은 사용자가 F5로 확인 — 0-diff 범위 밖).
+1. 헤드리스 스모크: `godot --headless --path godot --quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 떠야 함.
+2. **입력 프로브**: `godot --headless --path godot --script res://test/run_input_probe.gd` 가
+   `PROBE RESULT: 입력 로직 동작함`(선택+이동 반영)을 찍어야 채택.
+   스모크만으론 위 좌표 비교 함정 같은 입력 무반응 버그를 못 잡는다 — 프로브로 클릭 경로를 결정적으로 검증한다.
+3. UI 미관·실제 터치는 사용자가 확인(0-diff 범위 밖).

@@ -63,7 +63,7 @@ func _unhandled_input(event):
 		# Check if clicking an ally
 		var clicked_ally = null
 		for a in state["allies"]:
-			if a["hp"] > 0 and a["pos"] == [gx, gy]:
+			if a["hp"] > 0 and a["pos"][0] == gx and a["pos"][1] == gy:
 				clicked_ally = a
 				break
 		
@@ -89,7 +89,7 @@ func _unhandled_input(event):
 				if dist == 1:
 					var occupied = false
 					for u in state["allies"] + state["enemies"]:
-						if u["hp"] > 0 and u["pos"] == [gx, gy]:
+						if u["hp"] > 0 and u["pos"][0] == gx and u["pos"][1] == gy:
 							occupied = true
 							break
 					if not occupied:
@@ -102,7 +102,7 @@ func _unhandled_input(event):
 				# Try attack enemy in range
 				var clicked_enemy = null
 				for e in state["enemies"]:
-					if e["hp"] > 0 and e["pos"] == [gx, gy]:
+					if e["hp"] > 0 and e["pos"][0] == gx and e["pos"][1] == gy:
 						clicked_enemy = e
 						break
 				

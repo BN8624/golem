@@ -18,7 +18,9 @@
 - [x] (클로드) scenes/main.tscn 래퍼 + SCENE_SPEC + 스모크 하네스 godot_port_scene.py
 - [x] (골렘 ★키) `scripts/board.gd` — 렌더·선택→이동/공격·턴 진행(rules.gd 호출)·승패. 2시도 채택(1시도 get_default_font 에러→되먹임 수정)
 - [x] (클로드) 헤드리스 스모크 통과(SCRIPT ERROR 없음)
-- [ ] (사용자) F5/창으로 미션1 플레이·피드백 ← 지금 여기
+- [x] (클로드) 웹 export + 테일스케일 HTTPS(`tailscale serve --https=443`)로 아이폰 보안 컨텍스트 충족
+- [x] (클로드) **클릭 무반응 버그 수정** — JSON float `pos`와 int `[gx,gy]` 배열 비교가 항상 false라 클릭이 전부 죽어 있던 것. 원소별 비교로 수정. 헤드리스 입력 프로브(`run_input_probe.gd`)로 선택+이동 결정적 검증. project.godot에 stretch/viewport 640·터치에뮬 추가.
+- [ ] (사용자) 아이폰에서 유닛 탭·이동·공격 확인 ← 지금 여기
 
 ## Phase 3 — 4미션 + 외형
 - [ ] 미션 선택 UI → 4미션 플레이
