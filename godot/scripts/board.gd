@@ -16,7 +16,7 @@ var tex_goblin
 
 func _ready():
 	rules = load("res://scripts/rules.gd").new()
-	font = ThemeDB.get_fallback_font()
+	font = load("res://assets/fonts/NanumGothic-Regular.ttf")  # 웹 빌드엔 시스템 한글 폰트가 없어 직접 임베드(OFL)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	tex_floor = load("res://assets/tinydungeon/Tiles/tile_0048.png")
 	tex_knight = load("res://assets/tinydungeon/Tiles/tile_0096.png")
