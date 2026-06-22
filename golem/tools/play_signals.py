@@ -3,6 +3,9 @@
 측정 가능한 신호를 뽑는다(잴 수 있는 페이싱·지배전략=코드, 재미·취향=사람):
   - solvable / min_turns: 승리가 가능한가, 최소 몇 수(BFS, 상태 dedup·경계/깊이 cap).
   - 지배전략: greedy 멜레·greedy 사거리가 거저 이기나(둘 다 이기면 깊이 얕음=FLAG 후보).
+  - 선택지 수(branch_first): 최단해의 서로 다른 첫 수 가짓수(1=단선 퍼즐, 클수록 진짜 선택).
+  - 전략 다양성(shortest_solutions): 최단 길이 해의 개수(1=한 전략 몰빵).
+  - 치사율(lethality): 탐색 영역에서 즉사(DEFEAT)로 끝나는 간선 비율(높을수록 한 수 실수=즉사, 재시도 빡셈).
   - 카드영향: hero의 opt-in 필드(mana/anomaly_dmg/corrosion/execute) 제거 시 풀이가능성/최소턴 변화(카드가 실제로 결정적인가).
 판정은 사람이. 이 신호는 '재미있나'를 사람이 데이터로 보게 하는 보조다. (키0)
 
@@ -97,14 +100,45 @@ function stripCard(init){  // hero opt-in 카드 필드 제거본
   return [{...init, hero:h}, removed];
 }
 
+// 재미 신호: 최단해 레이어까지 BFS — 선택지 수(서로다른 첫 수)·최단해 개수·치사율(즉사 간선 비율)
+function analyze(init){
+  const ic=init.enemies.length, [bx,by]=bbox(init);
+  let frontier=[{s:mkState(init), fm:null}];
+  const seen=new Set([key(frontier[0].s)]); let depth=0, cap=STATE_CAP;
+  let minWin=null, solCount=0; const winFirst=new Set();
+  let defeatEdges=0, totalEdges=0;
+  while(frontier.length && depth<DEPTH){
+    const next=[];
+    for(const node of frontier){
+      for(const a of actionsFor(node.s)){
+        if(a.type==='move'){const nx=node.s.hero.pos[0]+a.dir[0],ny=node.s.hero.pos[1]+a.dir[1];
+          if(nx<0||ny<0||nx>bx||ny>by) continue;}
+        const ns=GLupdate(node.s,a); const r=GLcheck(ns,ic);
+        totalEdges++; const fm=node.fm||a;
+        if(r==='VICTORY'){ if(minWin===null) minWin=depth+1;
+          if(depth+1===minWin){ solCount++; winFirst.add(JSON.stringify(fm)); } continue; }
+        if(r==='DEFEAT'){ defeatEdges++; continue; }
+        if(r) continue;
+        const k=key(ns); if(seen.has(k)) continue; seen.add(k); next.push({s:ns, fm});
+        if(seen.size>cap) return {minWin, solCount, branchFirst:winFirst.size, lethality:null};
+      }
+    }
+    if(minWin!==null) break;   // 최단 깊이 레이어를 다 봤으니 종료(더 깊은 해는 무의미)
+    frontier=next; depth++;
+  }
+  return {minWin, solCount, branchFirst:winFirst.size,
+          lethality: totalEdges? +(defeatEdges/totalEdges).toFixed(2):0};
+}
+
 const out=[];
 for(const lvl of LV){
   const init=lvl.initialState;
-  const minw=bfsMinWin(init);
+  const A=analyze(init);
   const gm=greedy(init,'melee'), gr=greedy(init,'ranged');
   const [stripped, removed]=stripCard(init);
   const minwNoCard = removed.length? bfsMinWin(stripped): null;
-  out.push({name:lvl.name, solvable: minw!==null, min_turns: minw,
+  out.push({name:lvl.name, solvable: A.minWin!==null, min_turns: A.minWin,
+            branch_first: A.branchFirst, shortest_solutions: A.solCount, lethality: A.lethality,
             greedy_melee: gm, greedy_ranged: gr,
             card_fields: removed, min_turns_no_card: minwNoCard});
 }
@@ -168,13 +202,40 @@ function stripCard(init){ const opt=['range','knockback','flank_bonus','reflect_
   const strip=arr=>arr.map(u=>{const c={...u}; for(const f of opt) if(f in c){delete c[f]; if(!removed.includes(f))removed.push(f);} return c;});
   return [{...init, allies:strip(init.allies), enemies:strip(init.enemies)}, removed]; }
 
+// 재미 신호(부대): 최단해 레이어까지 BFS — 선택지 수·최단해 개수·치사율
+function analyze(init){
+  let frontier=[{s:mkState(init), fm:null}];
+  const seen=new Set([key(frontier[0].s)]); let depth=0;
+  let minWin=null, solCount=0; const winFirst=new Set();
+  let defeatEdges=0, totalEdges=0;
+  while(frontier.length && depth<DEPTH){
+    const next=[];
+    for(const node of frontier){
+      for(const a of actionsFor(node.s)){
+        const ns=clone(node.s); const r=GL.updateState(ns,a);
+        totalEdges++; const fm=node.fm||a;
+        if(r==='VICTORY'){ if(minWin===null) minWin=depth+1;
+          if(depth+1===minWin){ solCount++; winFirst.add(JSON.stringify(fm)); } continue; }
+        if(r==='DEFEAT'){ defeatEdges++; continue; }
+        const k=key(ns); if(seen.has(k)) continue; seen.add(k); next.push({s:ns, fm});
+        if(seen.size>STATE_CAP) return {minWin, solCount, branchFirst:winFirst.size, lethality:null};
+      }
+    }
+    if(minWin!==null) break;
+    frontier=next; depth++;
+  }
+  return {minWin, solCount, branchFirst:winFirst.size,
+          lethality: totalEdges? +(defeatEdges/totalEdges).toFixed(2):0};
+}
+
 const out=[];
 for(const lvl of LV){ const init=lvl.initialState;
-  const minw=bfsMinWin(init); const g=greedy(init);
+  const A=analyze(init); const g=greedy(init);
   const [stripped,removed]=stripCard(init);
   const minwNo = removed.length? bfsMinWin(stripped): null;
-  out.push({name:lvl.name||lvl.id, solvable:minw!==null, min_turns:minw, greedy:g,
-            card_fields:removed, min_turns_no_card:minwNo});
+  out.push({name:lvl.name||lvl.id, solvable:A.minWin!==null, min_turns:A.minWin,
+            branch_first:A.branchFirst, shortest_solutions:A.solCount, lethality:A.lethality,
+            greedy:g, card_fields:removed, min_turns_no_card:minwNo});
 }
 process.stdout.write(JSON.stringify(out));
 """
@@ -190,6 +251,16 @@ def verdict(s):
             flags.append("그리디(전진·공격)로 거저 승리(깊이 얕음)")
     elif s.get("greedy_melee") == "VICTORY" and s.get("greedy_ranged") == "VICTORY":
         flags.append("지배전략 둘 다 거저 승리(깊이 얕음)")
+    # 재미 신호(선택지·전략 다양성·재시도 가치) — 판정은 사람, 여기선 플래그만
+    bf = s.get("branch_first")
+    if bf is not None and bf <= 1:
+        flags.append("선택지 좁음(최단해 첫 수 1가지=단선)")
+    ss = s.get("shortest_solutions")
+    if ss is not None and ss == 1:
+        flags.append("전략 단일(최단해 1개=몰빵)")
+    leth = s.get("lethality")
+    if leth is not None and leth >= 0.5:
+        flags.append(f"고치사율({leth}=한 수 실수 즉사 잦음, 재시도 빡셈)")
     if s["card_fields"]:
         if s["min_turns_no_card"] is None:
             flags.append(f"카드 결정적({'·'.join(s['card_fields'])} 없으면 풀이불가)")
@@ -239,7 +310,8 @@ def main(argv=None):
     for s in sig:
         mt = s["min_turns"] if s["solvable"] else "-"
         gtxt = f"greedy={s['greedy']}" if "greedy" in s else f"greedy 멜레={s.get('greedy_melee')} 사거리={s.get('greedy_ranged')}"
-        print(f"  {s['name']}: 풀이={'O' if s['solvable'] else 'X'} 최소턴={mt} | {gtxt}"
+        fun = f" | 선택지={s.get('branch_first')} 최단해={s.get('shortest_solutions')} 치사율={s.get('lethality')}"
+        print(f"  {s['name']}: 풀이={'O' if s['solvable'] else 'X'} 최소턴={mt} | {gtxt}{fun}"
               + (f" | 카드{s['card_fields']} 없을때={s['min_turns_no_card']}" if s['card_fields'] else "")
               + f"  → {verdict(s)}")
     return 0
