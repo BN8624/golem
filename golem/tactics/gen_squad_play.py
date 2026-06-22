@@ -17,16 +17,47 @@ from paths import (PKG, REPO_ROOT, CORE, TOOLS, TACTICS, VALIDATORS,  # noqa: E4
 
 import argparse
 import json
+from pathlib import Path
+
+
+def _game_logic(level):
+    base = BASES / ("squad_base" if level == "kernel" else f"squad_base_{level}")
+    return (base / "src" / "game_logic.js").read_text(encoding="utf-8")
+
+
+def _rules(level):
+    try:
+        pkt = PACKETS / f"planning_packet_squad_{level}"
+        return json.loads((pkt / "contract.json").read_text(encoding="utf-8"))["data_contract"]["rules"]
+    except Exception:  # noqa: BLE001
+        return []
 
 
 def load(level):
-    base = BASES / ("squad_base" if level == "kernel" else f"squad_base_{level}")
+    """계약 데모월드(scenario_data) 모드 — 검증 세계를 그대로 재생."""
     pkt = PACKETS / f"planning_packet_squad_{level}"
-    game_logic = (base / "src" / "game_logic.js").read_text(encoding="utf-8")
     contract = json.loads((pkt / "contract.json").read_text(encoding="utf-8"))
     worlds = contract["data_contract"]["scenario_data"]
-    rules = contract["data_contract"]["rules"]
-    return game_logic, worlds, rules
+    return _game_logic(level), worlds, contract["data_contract"]["rules"]
+
+
+def load_levels(level, levels_path):
+    """실미션 레벨 모드 — squad_levels.json을 로드, 레벨별 최단 솔루션을 BFS로 풀어 actions로 붙여 재생 가능하게.
+    풀이불가 레벨은 건너뛰고 경고. 룰 패널은 계약 누적 규칙을 보여줌."""
+    from play_signals import solve_levels
+    game_logic = _game_logic(level)
+    levels = json.loads(Path(levels_path).read_text(encoding="utf-8"))
+    if not levels:
+        raise RuntimeError(f"{levels_path} 비어있음 — 먼저 propose_levels로 레벨 생성")
+    sols = solve_levels(levels, game_logic, "squad")
+    worlds, skipped = [], []
+    for lv, sol in zip(levels, sols):
+        name = lv.get("name") or lv.get("id", "?")
+        if not sol:
+            skipped.append(name); continue
+        worlds.append({"id": name, "initialState": lv["initialState"], "actions": sol,
+                       "covers_reqs": [lv.get("teaches", ""), f"{len(sol)}수 해법"]})
+    return game_logic, worlds, _rules(level), skipped
 
 
 HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
@@ -149,17 +180,31 @@ setScn(0);
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", default="l4", help="squad 레벨(kernel|l1|l2|...). 검증된 누적 base를 embed")
+    ap.add_argument("--source", default="contract", choices=["contract", "levels"],
+                    help="contract=계약 데모월드 재생(기본) | levels=실미션 레벨(squad_levels.json) 솔루션 재생")
+    ap.add_argument("--levels", default=None, help="levels 모드의 레벨팩 경로(기본=tactics/play/squad_levels.json)")
     args = ap.parse_args(argv)
 
-    game_logic, worlds, rules = load(args.level)
-    html = (HTML.replace("%LEVEL%", args.level)
+    skipped = []
+    if args.source == "levels":
+        levels_path = args.levels or (PLAY / "squad_levels.json")
+        game_logic, worlds, rules, skipped = load_levels(args.level, levels_path)
+        if not worlds:
+            print(f"  [squad {args.level}] 재생 가능한 레벨 0개(전부 풀이불가?) — 렌더 생략"); return 1
+    else:
+        game_logic, worlds, rules = load(args.level)
+
+    html = (HTML.replace("%LEVEL%", f"{args.level} · {args.source}")
             .replace("%GAME_LOGIC%", game_logic)
             .replace("%WORLDS%", json.dumps(worlds, ensure_ascii=False))
             .replace("%RULES%", json.dumps(rules, ensure_ascii=False)))
     OUT = PLAY / "squad.html"
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
-    print(f"  [squad {args.level}] {len(worlds)}세계 뷰어 → {OUT}")
+    kind = "실미션 레벨(솔루션 재생)" if args.source == "levels" else "계약 데모월드"
+    print(f"  [squad {args.level}] {kind} {len(worlds)}세계 뷰어 → {OUT}")
+    if skipped:
+        print(f"  ⚠ 풀이불가로 건너뜀 {len(skipped)}개: {', '.join(skipped[:4])}")
     print(f"  아군 다수·적 AI 추격을 턴별 재생(읽기전용·검증 엔진 그대로). 브라우저로 열기.")
     return 0
 

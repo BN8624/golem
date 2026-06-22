@@ -212,7 +212,8 @@ def main(argv=None):
             rc = run([sys.executable, str(TACTICS / "gen_tactics_levelstory.py"), "--family", "squad",
                       "--idea", args.setting, "--cap", "2"], MAX_SECONDS)
             story_ok = rc == 0
-            rc = run([sys.executable, str(TACTICS / "gen_squad_play.py"), "--level", last_good], MAX_SECONDS)
+            rc = run([sys.executable, str(TACTICS / "gen_squad_play.py"), "--level", last_good,
+                      "--source", "levels"], MAX_SECONDS)
             render_ok = rc == 0
         else:
             rc = run([sys.executable, str(TACTICS / "gen_tactics_story.py"), "--idea", args.setting, "--cap", "3"], MAX_SECONDS)

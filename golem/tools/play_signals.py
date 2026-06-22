@@ -241,6 +241,63 @@ process.stdout.write(JSON.stringify(out));
 """
 
 
+# 부대 솔버 — 레벨별 최단 승리 액션 수열을 BFS로 반환(경로 추적). 뷰어가 솔루션 턴재생에 씀.
+SQUAD_SOLVE_JS = r"""
+__GAME_LOGIC__
+const GL = module.exports;
+const LV = __LEVEL_JSON__;
+const DEPTH = 14, STATE_CAP = 400000;
+function clone(s){ return JSON.parse(JSON.stringify(s)); }
+function mkState(init){ const s=clone(init); s.turn=0; return s; }
+function actionsFor(s){ const acts=[];
+  for(const a of s.allies) if(a.hp>0){
+    acts.push({unit:a.id,type:'attack'});
+    acts.push({unit:a.id,type:'move',dir:[1,0]}); acts.push({unit:a.id,type:'move',dir:[-1,0]});
+    acts.push({unit:a.id,type:'move',dir:[0,1]}); acts.push({unit:a.id,type:'move',dir:[0,-1]});
+  } return acts; }
+function key(s){ return JSON.stringify([s.allies.map(a=>[a.id,a.hp,a.pos]), s.enemies.map(e=>[e.id,e.hp,e.pos])]); }
+function solve(init){
+  let frontier=[{s:mkState(init), path:[]}];
+  const seen=new Set([key(frontier[0].s)]); let depth=0;
+  while(frontier.length && depth<DEPTH){
+    const next=[];
+    for(const node of frontier){
+      for(const a of actionsFor(node.s)){
+        const ns=clone(node.s); const r=GL.updateState(ns,a); const np=node.path.concat([a]);
+        if(r==='VICTORY') return np;
+        if(r==='DEFEAT') continue;
+        const k=key(ns); if(seen.has(k)) continue; seen.add(k); next.push({s:ns, path:np});
+        if(seen.size>STATE_CAP) return null;
+      }
+    }
+    frontier=next; depth++;
+  }
+  return null;
+}
+const out=[];
+for(const lvl of LV){ out.push(solve(lvl.initialState)); }
+process.stdout.write(JSON.stringify(out));
+"""
+
+
+def solve_levels(levels, gl_src, family="squad"):
+    """레벨별 최단 승리 액션 수열을 반환(BFS·키0). 풀이불가면 그 자리 None. 뷰어가 솔루션 재생에 씀.
+    현재 squad 전용(아군 다중유닛·mutable 엔진)."""
+    if family != "squad":
+        raise NotImplementedError("solve_levels는 현재 squad 전용")
+    js = SQUAD_SOLVE_JS.replace("__GAME_LOGIC__", gl_src).replace("__LEVEL_JSON__", json.dumps(levels, ensure_ascii=False))
+    BUILD_RUNS.mkdir(parents=True, exist_ok=True)
+    tmp = BUILD_RUNS / "_solve_tmp.js"
+    tmp.write_text(js, encoding="utf-8")
+    try:
+        r = subprocess.run(["node", str(tmp)], capture_output=True, text=True, encoding="utf-8", timeout=300)
+    finally:
+        tmp.unlink(missing_ok=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"node 실패: {r.stderr[:400]}")
+    return json.loads(r.stdout)
+
+
 def verdict(s):
     if not s["solvable"]:
         return "FLAG 풀이불가(레벨 결함)"
