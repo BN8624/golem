@@ -2,6 +2,10 @@
 
 ## ▶ 새 세션 여기부터
 
+**▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 뷰어가 실제 미션 레벨을 보이게 한다.** 완결후보(엔진+카드8+에테르노 미션레벨+서사)는 다 있는데 `gen_squad_play.py` 뷰어는 **검증 데모월드(계약 scenario_data)만 재생**한다 — 사용자가 만든 에테르노 레벨을 못 본다. 사용자 역할="재미있나" 판단인데 그러려면 **봐야** 한다. → 뷰어가 `tactics/play/squad_levels.json`을 로드하되 레벨엔 액션 스크립트가 없으니 **`play_signals` BFS가 솔루션 경로를 반환하게 보강**해 그 솔루션을 턴재생(또는 직접 플레이). "보고 판단"의 마지막 갭.
+- (대안) 5권 전체 캠페인부터: `python golem/tools/propose_levels.py --family squad --prev l8 --missions golem/build_runs/proposals/eterno_outline.json --n 20 --min-turns 3 --max-turns 9`(★키, 길다) → 20미션. 그담 levelstory 미션 재정렬.
+- **세션 상태: 작업트리 클린·origin/main 푸시됨(34c6816)·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만).
+
 **현재 상태 (2026-06-22, G93) — 소설(에테르노 5권)→게임 브리지 닫힘. 서사·카드 둘 다 소설에서 무인 생성.**
 - **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
 - **서사 브리지**: 아웃라인 전제→`gen_tactics_levelstory --family squad` → squad 캠페인 서사가 실제 에테르노(카엘5·리아3·조각8·발타자르3 언급). 산출 squad_levelstory.json.

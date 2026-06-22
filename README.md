@@ -26,9 +26,11 @@ golem/                  # 패키지 루트
 코드는 4개 서브패키지로 물리 분할하되, 각 파일 상단 부트스트랩이 코드 디렉토리 전부를 sys.path에 올려 bare import·동적 import·직접 실행(`python golem/<sub>/x.py`)이 그대로 동작한다(평면 네임스페이스). 데이터 경로는 `paths.py` 상수(BASES·PACKETS·PLAY·BUILD_RUNS 등)로 중앙화.
 
 ## 본선 = 전술 SRPG, 누적 9카드
-- **stable baseline = `golem/tactics/bases/tactics_base_l8`** (검증·동결). **실험 = `tactics_base_l9`**.
-- 카드 l1 마나방패·l2 사거리·l3 지형·l4 유닛·l5 루트맵·l6 상태이상·l7 밸런스·l8 흡혈·l9 처형. 전부 게이트·골든 diff 0.
-- **새 카드는 stable(l8) 위에 patch로 누적**한다(아래 자율 파이프라인).
+- **두 트랙(패밀리)**: ① **tactics**(영웅 1명, 원조·안정) = `tactics_base_l1~l9`, 적 정지. ② **squad**(부대 다중 아군 + 능동적 적 AI, **현재 활성 트랙**) = `squad_base`·`squad_base_l1~l8`. 카드 도구가 `--family`로 양쪽 지원.
+- tactics 카드: l1 마나방패·l2 사거리·l3 지형·l4 유닛·l5 루트맵·l6 상태이상·l7 밸런스·l8 흡혈·l9 처형. squad 카드: 사거리·충격파·협공·가시갑옷·aura_shield + 에테르노 phalanx_defense/asymmetric_strike. 전부 게이트·골든 diff 0.
+- **새 카드는 stable base 위에 patch로 누적**(자율 파이프라인). 무인 한 줄: `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`.
+- **소설→게임 브리지**: `forge_ingest.py`가 forge 소설 백업을 `eterno_outline.json`(전제·인물·이벤트 미션·카드씨앗)으로 압축 → 서사(levelstory `--setting`)·카드(propose_cards `--ref`)·레벨(propose_levels `--missions`) 모두 소설에서 무인 생성. 소설=스킨/씨앗, 골렘=검증된 룰.
+- **현재 위치·다음 액션은 `golem/HANDOFF.md`만 본다.**
 
 ## 검증 정본 (수정 후 반드시 실행)
 ```
@@ -37,7 +39,7 @@ python golem/validators/verify_tactics.py     # 9카드 골든 회귀 + l8 stric
 구성: `core/build_graded.py`(빌드·게이트·채점) + `core/contract_validator.py` + `core/static_gate.py` + `validators/` keyless 스크립트. 후보=strict False, **base 승격=strict True**.
 
 ## 생성 산출물 (수정 금지 — source of truth 아님)
-- `golem/tactics/play/` = 외형(검증 엔진을 **읽기전용** require, 룰 복제 안 함). `index.html`(`gen_tactics_play.py`=턴 재생 뷰어) · **`play.html`(`gen_tactics_interactive.py`=직접 플레이, 픽셀 스프라이트 + 풀 타일링)** · `levels.json`(`propose_levels.py` 생성, 현재 18레벨) · `levelstory.json`(`gen_tactics_levelstory.py`=레벨팩 서사 B겹) · `assets/tile_sprites.json`(골렘 비전이 CC0 팩서 선택: 캐릭터=Kenney Tiny Dungeon, 바닥/벽=Kenney Roguelike RPG). 수정은 `tactics/bases/`/제너레이터에서만.
+- `golem/tactics/play/` = 외형(검증 엔진을 **읽기전용** require, 룰 복제 안 함). tactics: `index.html`(`gen_tactics_play.py`=턴 재생) · **`play.html`(`gen_tactics_interactive.py`=직접 플레이)** · `levels.json`·`levelstory.json`·`assets/tile_sprites.json`(골렘 비전이 CC0 팩서 선택). **squad: `squad.html`(`gen_squad_play.py`=부대 턴재생 뷰어) · `squad_levels.json`(미션 레벨) · `squad_levelstory.json`(에테르노 서사).** 수정은 `tactics/bases/`/제너레이터에서만.
 - `golem/build_runs/` = 빌드/제안 산출물(gitignore).
 - 아이폰 플레이: `node golem/tactics/play/server.js` (테일스케일).
 
