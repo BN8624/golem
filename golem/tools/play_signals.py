@@ -1,4 +1,4 @@
-# 실노출 신호(결정적) — 검증 엔진 위에서 레벨의 풀이가능성·최소턴·지배전략·카드영향을 계산해 사람 판단(재미/밸런스)에 보탬
+# 실노출 신호(결정적) + 재미 평가 — 검증 엔진 위에서 레벨의 풀이가능성·최소턴·지배전략·카드영향·선택지·치사율을 계산하고 휴리스틱 재미 점수(A/B/C/D)로 합쳐 자동 선별·정렬에 보탬
 """북극성 퍼널의 마지막 칸 '[실노출]→신호'. 엔진이 결정적이라 랜덤 플레이테스트 대신 검증 l9 엔진 위에서
 측정 가능한 신호를 뽑는다(잴 수 있는 페이싱·지배전략=코드, 재미·취향=사람):
   - solvable / min_turns: 승리가 가능한가, 최소 몇 수(BFS, 상태 dedup·경계/깊이 cap).
@@ -271,6 +271,75 @@ def verdict(s):
     return "OK · " + "; ".join(flags) if flags else "OK"
 
 
+def fun_score(s):
+    """결정적 재미 평가(휴리스틱·키0): 신호들을 0~100 점수+등급(A/B/C/D)으로 합친다.
+    가중치·임계값은 미보정(뷰어 플레이로 보정 예정) — '정답'이 아니라 정렬·자동탈락용 보조다.
+    A(재밌음 후보)>=70, B(보통)>=50, C(약함)>=30, D(버릴 후보)<30. 풀이불가=REJECT."""
+    if not s.get("solvable"):
+        return 0, "REJECT", ["풀이불가(레벨 결함)"]
+    score, r = 50, []
+    # 1) 지배전략(깊이): 그리디로 거저 이기면 감점, 없으면 가점
+    if "greedy" in s:  # squad
+        if s["greedy"] == "VICTORY":
+            score -= 25; r.append("그리디 거저승리 -25")
+        else:
+            score += 15; r.append("지배전략 없음 +15")
+    else:  # tactics(멜레·사거리)
+        gv = (s.get("greedy_melee") == "VICTORY") + (s.get("greedy_ranged") == "VICTORY")
+        if gv == 2:
+            score -= 25; r.append("두 그리디 거저승리 -25")
+        elif gv == 1:
+            score -= 5; r.append("한 그리디 통함 -5")
+        else:
+            score += 15; r.append("지배전략 없음 +15")
+    # 2) 선택지(최단해 첫 수 가짓수)
+    bf = s.get("branch_first") or 0
+    if bf >= 3:
+        score += 15; r.append(f"선택지 풍부({bf}) +15")
+    elif bf == 2:
+        score += 8; r.append("선택지 있음(2) +8")
+    else:
+        score -= 15; r.append(f"선택지 좁음({bf}) -15")
+    # 3) 전략 다양성(최단해 개수)
+    ss = s.get("shortest_solutions") or 0
+    if ss >= 4:
+        score += 8; r.append(f"최단해 다양({ss}) +8")
+    elif ss >= 2:
+        score += 4; r.append(f"최단해 복수({ss}) +4")
+    else:
+        score -= 8; r.append("최단해 단일 -8")
+    # 4) 카드 관련성(카드 테스트 레벨만)
+    if s.get("card_fields"):
+        nc, mt = s.get("min_turns_no_card"), s.get("min_turns")
+        if nc is None or (mt is not None and nc > mt):
+            score += 12; r.append("카드 결정적 +12")
+        else:
+            score -= 12; r.append("카드 영향 약함 -12")
+    # 5) 페이싱(최소턴)
+    mt = s.get("min_turns") or 0
+    if 3 <= mt <= 9:
+        score += 8; r.append(f"페이싱 적정({mt}) +8")
+    elif mt <= 1:
+        score -= 10; r.append(f"즉결({mt}) -10")
+    elif mt > 9:
+        score += 2
+    # 6) 재시도/치사율
+    leth = s.get("lethality")
+    if leth is None:
+        pass
+    elif leth == 0:
+        score -= 3; r.append("위험 전무 -3")
+    elif leth < 0.4:
+        score += 8; r.append(f"긴장 적정({leth}) +8")
+    elif leth < 0.6:
+        score += 2
+    else:
+        score -= 10; r.append(f"즉사 과함({leth}) -10")
+    score = max(0, min(100, score))
+    grade = "A" if score >= 70 else "B" if score >= 50 else "C" if score >= 30 else "D"
+    return score, grade, r
+
+
 def compute_signals(levels, gl_src, family="tactics"):
     """레벨 리스트 + 엔진 소스 → 신호 dict 리스트(재사용 가능·키0). propose_levels가 검증 게이트로 씀.
     family=tactics(영웅 BFS·멜레/사거리 그리디) | squad(부대 다중유닛 BFS·전진/공격 그리디)."""
@@ -306,14 +375,27 @@ def main(argv=None):
     else:
         levels = import_module("gen_tactics_interactive").LEVELS
     sig = compute_signals(levels, gl, args.family)
-    print(f"== 실노출 신호(결정적, {args.family} {args.level} 엔진) — 판정은 사람 ==")
+    print(f"== 재미 평가 + 실노출 신호(결정적, {args.family} {args.level} 엔진) — 점수는 휴리스틱 보조, 최종 취향은 사람 ==")
+    scored = []
     for s in sig:
+        sc, gr, reasons = fun_score(s)
+        s["fun_score"], s["fun_grade"] = sc, gr
+        scored.append((sc, gr, s, reasons))
         mt = s["min_turns"] if s["solvable"] else "-"
         gtxt = f"greedy={s['greedy']}" if "greedy" in s else f"greedy 멜레={s.get('greedy_melee')} 사거리={s.get('greedy_ranged')}"
         fun = f" | 선택지={s.get('branch_first')} 최단해={s.get('shortest_solutions')} 치사율={s.get('lethality')}"
-        print(f"  {s['name']}: 풀이={'O' if s['solvable'] else 'X'} 최소턴={mt} | {gtxt}{fun}"
+        print(f"  [{gr} {sc:>3}] {s['name']}: 풀이={'O' if s['solvable'] else 'X'} 최소턴={mt} | {gtxt}{fun}"
               + (f" | 카드{s['card_fields']} 없을때={s['min_turns_no_card']}" if s['card_fields'] else "")
               + f"  → {verdict(s)}")
+    # 재미 등급 분포 + 버릴 후보 요약
+    from collections import Counter
+    dist = Counter(gr for _, gr, _, _ in scored)
+    weak = [(sc, s["name"]) for sc, gr, s, _ in scored if gr in ("C", "D", "REJECT")]
+    print(f"\n== 재미 등급 분포: " + " ".join(f"{g}={dist.get(g,0)}" for g in ("A", "B", "C", "D", "REJECT")) + " ==")
+    if weak:
+        print("버릴 후보(C이하):")
+        for sc, nm in sorted(weak):
+            print(f"  - [{sc}] {nm}")
     return 0
 
 
