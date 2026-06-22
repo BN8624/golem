@@ -21,7 +21,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import contract_validator  # noqa: E402
 
-FIXTURES = FIXTURES / "fixtures"
+# FIXTURES는 paths에서 import(=validators/fixtures). (마이그레이션이 HERE/"fixtures"를 한 겹 더 중첩시킨 버그 교정.)
 
 
 def _failed_checks(result):
