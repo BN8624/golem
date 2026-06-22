@@ -1,29 +1,92 @@
 [
   {
-    "name": "1. 사거리의 기초",
-    "desc": "적의 강력한 공격 범위를 피해 원거리에서 공격하세요.",
+    "name": "1. V1-E01. 성문 돌파",
+    "desc": "제국 성문의 보초병들을 밀쳐내어 진입로를 확보하라.",
+    "teaches": "knockback",
+    "mission_id": "V1-E01",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 4,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            1
+          ],
+          "range": 2
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 5,
+          "pos": [
+            2,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 4,
+          "pos": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 7,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "knockback",
+        "range"
+      ],
+      "min_turns_no_card": null
+    },
+    "mission": "제국의 삼엄한 감시망을 뚫고 에테르노 성문 내부로 진입한다."
+  },
+  {
+    "name": "2. V1-E02. 하수구 진입",
+    "desc": "슬럼가의 좁은 골목, 원거리 공격으로 적의 기선을 제압하라.",
     "teaches": "range",
+    "mission_id": "V1-E02",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
           "hp": 10,
-          "atk": 3,
+          "atk": 4,
           "pos": [
             0,
             0
-          ],
-          "range": 2
+          ]
         },
         {
           "id": 2,
-          "hp": 20,
-          "atk": 2,
+          "hp": 8,
+          "atk": 3,
           "pos": [
             0,
             1
-          ]
+          ],
+          "range": 3
         }
       ],
       "enemies": [
@@ -32,33 +95,44 @@
           "hp": 8,
           "atk": 6,
           "pos": [
-            2,
+            3,
             0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 8,
+          "atk": 6,
+          "pos": [
+            3,
+            1
           ]
         }
       ]
     },
     "_signals": {
       "solvable": true,
-      "min_turns": 3,
+      "min_turns": 6,
       "greedy": "PLAYING",
       "card_fields": [
         "range"
       ],
-      "min_turns_no_card": 4
-    }
+      "min_turns_no_card": null
+    },
+    "mission": "슬럼가의 혼란을 틈타 비밀리에 지하 배수로 입구를 찾아낸다."
   },
   {
-    "name": "2. 가시 돋친 갑옷",
-    "desc": "반사 피해를 고려하여 공격 유닛을 신중하게 선택하세요.",
+    "name": "3. V1-E03. 미궁의 제단",
+    "desc": "반사 피해를 주는 저주받은 석상을 피해 미궁을 돌파하라.",
     "teaches": "reflect_dmg",
+    "mission_id": "V1-E03",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
-          "hp": 15,
-          "atk": 5,
+          "hp": 12,
+          "atk": 4,
           "pos": [
             0,
             0
@@ -66,8 +140,8 @@
         },
         {
           "id": 2,
-          "hp": 8,
-          "atk": 2,
+          "hp": 10,
+          "atk": 3,
           "pos": [
             0,
             1
@@ -84,51 +158,11 @@
             0
           ],
           "reflect_dmg": 3
-        }
-      ]
-    },
-    "_signals": {
-      "solvable": true,
-      "min_turns": 3,
-      "greedy": "PLAYING",
-      "card_fields": [
-        "reflect_dmg"
-      ],
-      "min_turns_no_card": 3
-    }
-  },
-  {
-    "name": "3. 거리 조절",
-    "desc": "밀쳐내기를 통해 적의 접근을 막고 아군을 보호하세요.",
-    "teaches": "knockback",
-    "initialState": {
-      "gridSize": 6,
-      "allies": [
-        {
-          "id": 1,
-          "hp": 12,
-          "atk": 3,
-          "pos": [
-            1,
-            1
-          ],
-          "knockback": true
         },
         {
           "id": 2,
-          "hp": 12,
-          "atk": 3,
-          "pos": [
-            1,
-            2
-          ]
-        }
-      ],
-      "enemies": [
-        {
-          "id": 1,
-          "hp": 10,
-          "atk": 5,
+          "hp": 8,
+          "atk": 4,
           "pos": [
             2,
             1
@@ -138,110 +172,75 @@
     },
     "_signals": {
       "solvable": true,
-      "min_turns": 4,
+      "min_turns": 7,
       "greedy": "PLAYING",
       "card_fields": [
-        "knockback"
+        "reflect_dmg"
       ],
-      "min_turns_no_card": 5
-    }
+      "min_turns_no_card": 7
+    },
+    "mission": "잊혀진 왕궁의 잔해와 지하 미궁을 돌파하여 제단에 도달한다."
   },
   {
-    "name": "4. 난공불락의 요새",
-    "desc": "오라 쉴드로 버티며 움직이지 않는 거대 적을 공략하세요.",
-    "teaches": "aura_shield + unmovable + phalanx_defense",
+    "name": "4. V1-E04. 왕가의 각성",
+    "desc": "혈통의 각성과 함께 앞을 가로막는 근위병들을 밀쳐내고 탈출하십시오.",
+    "teaches": "knockback, range",
+    "mission_id": "V1-E04",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
           "hp": 20,
-          "atk": 4,
+          "atk": 3,
           "pos": [
             0,
             0
           ],
-          "aura_shield": 3
+          "knockback": true
         },
         {
           "id": 2,
           "hp": 15,
-          "atk": 5,
+          "atk": 6,
           "pos": [
             0,
             1
-          ]
+          ],
+          "range": 2
         }
       ],
       "enemies": [
         {
           "id": 1,
-          "hp": 15,
-          "atk": 7,
-          "pos": [
-            2,
-            0
-          ],
-          "unmovable": true,
-          "phalanx_defense": 2
-        }
-      ]
-    },
-    "_signals": {
-      "solvable": true,
-      "min_turns": 4,
-      "greedy": "PLAYING",
-      "card_fields": [],
-      "min_turns_no_card": null
-    }
-  },
-  {
-    "name": "5. 협공의 기초",
-    "desc": "두 아군이 적을 포위하여 flank_bonus 데미지를 유도하세요.",
-    "teaches": "flank_bonus",
-    "initialState": {
-      "gridSize": 6,
-      "allies": [
-        {
-          "id": 1,
-          "hp": 12,
+          "hp": 10,
           "atk": 3,
           "pos": [
-            0,
-            2
-          ],
-          "flank_bonus": 3
+            3,
+            0
+          ]
         },
         {
           "id": 2,
-          "hp": 12,
+          "hp": 10,
           "atk": 3,
           "pos": [
-            5,
-            2
-          ]
-        }
-      ],
-      "enemies": [
-        {
-          "id": 1,
-          "hp": 15,
-          "atk": 4,
-          "pos": [
             3,
-            2
+            1
           ]
         }
       ]
     },
     "_signals": {
       "solvable": true,
-      "min_turns": 6,
+      "min_turns": 5,
       "greedy": "PLAYING",
       "card_fields": [
-        "flank_bonus"
+        "knockback",
+        "range"
       ],
-      "min_turns_no_card": 7
-    }
+      "min_turns_no_card": 5
+    },
+    "mission": "첫 번째 조각을 활성화하여 왕가의 혈통임을 깨닫고 탈출한다."
   }
 ]

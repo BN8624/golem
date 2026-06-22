@@ -82,12 +82,40 @@ Output ONE JSON object EXACTLY, no prose, no markdown fences:
   "initialState": {example} }} ] }}
 "levels" must have EXACTLY {batch} entries. Return only the JSON."""
 
+# 미션 모드: 소설 이벤트 objective마다 그에 맞는 레벨을 설계(캠페인 매핑). 자유 커브 대신 이야기 따라감.
+MISSION_PROMPT = """You are a LEVEL DESIGNER for a {game}. The engine and rules are FIXED (below).
+Design playable single-battle levels as DATA only (initialState) — never change rules.
+
+CARDS/RULES IN THE ENGINE (mechanics you can build encounters around):
+{cards}
+
+INVARIANTS: {invariants}
+
+STATE SCHEMA for each level's initialState (small grid, min coord 0; keep coords 0..5):
+{schema}
+
+Below are STORY MISSIONS in order. Design EXACTLY ONE level per mission, in the SAME order, whose encounter FITS
+that mission's objective and danger (e.g. "breach the surveillance net" → enemies blocking a chokepoint to push
+through; "elite with mage shields" → enemies given a shield/armor field; a climactic mission → a harder fight).
+Each level must be SOLVABLE, take roughly {tmin}..{tmax} actions (not a 1-action auto-win, not unwinnable), and
+must NOT be beatable by mindless greedy play (advance+attack nearest) — positioning/card use must matter. Set each
+level's "teaches" to the mechanic it features and "desc" to a one-line Korean tie-in to the mission.
+
+MISSIONS:
+{missions}
+{feedback}
+Output ONE JSON object EXACTLY, no prose, no markdown fences:
+{{ "levels": [ {{ "name": "<번호. 이름>", "desc": "<미션 연결 한 줄>", "teaches": "<메커니즘>", "mission_id": "<해당 미션 id>",
+  "initialState": {example} }} ] }}
+"levels" MUST have EXACTLY {batch} entries, one per mission in order. Return only the JSON."""
+
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", default="l9", help="엔진/카드 레벨(이 계약·참조 사용)")
     ap.add_argument("--family", default="tactics", help="tactics(영웅)|squad(부대)")
-    ap.add_argument("--n", type=int, default=5, help="목표 레벨 총수(볼륨 노브 — 1시간 분량이면 ~18)")
+    ap.add_argument("--missions", default=None, help="forge 아웃라인(eterno_outline.json) — 이벤트 objective마다 미션 레벨 매핑")
+    ap.add_argument("--n", type=int, default=5, help="목표 레벨 총수(미션모드=매핑할 미션 수, 볼륨 노브)")
     ap.add_argument("--batch", type=int, default=6, help="한 ★키 생성당 요청 레벨 수(모델 친화적 작게)")
     ap.add_argument("--min-turns", type=int, default=3, help="목표 최소턴 하한(노브)")
     ap.add_argument("--max-turns", type=int, default=9, help="목표 최소턴 상한(노브)")
@@ -134,6 +162,53 @@ def main(argv=None):
         elif s.get("greedy_melee") == "VICTORY" and s.get("greedy_ranged") == "VICTORY":
             return False, "지배전략 둘 다 거저 승리(깊이 얕음)"
         return True, f"OK min_turns={mt}"
+
+    # 미션 모드: 소설 이벤트 objective마다 레벨 매핑(캠페인). 자유 커브 대신 이야기 따라감.
+    if args.missions:
+        outline = json.loads(Path(args.missions).read_text(encoding="utf-8"))
+        evs = (outline.get("events") or [])[:args.n]
+        missions = [{"id": e.get("id", f"M{i}"), "objective": e.get("objective", ""),
+                     "danger": e.get("danger", "")} for i, e in enumerate(evs, 1)]
+        accepted_m, feedback = {}, ""
+        for attempt in range(1, args.cap + 1):
+            pending = [m for m in missions if m["id"] not in accepted_m]
+            if not pending:
+                break
+            chunk = pending[:args.batch]
+            mlines = "\n".join(f"  - {m['id']} (danger {m['danger']}): {m['objective']}" for m in chunk)
+            print(f"[MISSIONS] 시도 {attempt}/{args.cap} — {len(chunk)}미션 레벨 설계 (★키) | 매핑 {len(accepted_m)}/{len(missions)}")
+            prompt = MISSION_PROMPT.format(game=fcfg["game"], cards=cards, invariants=pc.FAMILY[fam]["invariants"],
+                                           schema=fcfg["schema"], example=fcfg["example"], batch=len(chunk),
+                                           tmin=args.min_turns, tmax=args.max_turns, missions=mlines,
+                                           feedback=("\n" + feedback + "\n") if feedback else "")
+            try:
+                levels = _extract_json(gen(prompt))["levels"]
+            except Exception as e:  # noqa: BLE001
+                feedback = f"JSON 파싱 실패({e}). JSON만 출력."; print(f"  파싱 실패: {e}"); continue
+            sigs = compute_signals(levels, gl, fam)
+            misses = []
+            for i, (lv, s) in enumerate(zip(levels, sigs)):
+                if i >= len(chunk):
+                    break
+                m = chunk[i]
+                ok, why = gate(lv, s)
+                if ok and m["id"] not in accepted_m:
+                    lv["_signals"] = {k: s[k] for k in s if k != "name"}
+                    lv["mission_id"], lv["mission"] = m["id"], m["objective"]
+                    accepted_m[m["id"]] = lv
+                    print(f"  ✓ {m['id']} [{lv.get('teaches','')[:14]}] min_turns={s['min_turns']} — {m['objective'][:32]}")
+                else:
+                    misses.append(f"{m['id']}={why}"); print(f"  ✗ {m['id']} — {why}")
+            feedback = "미충족 미션을 그 objective에 맞게(난이도 범위·비그리디 지켜) 다시: " + "; ".join(misses[:3])
+        final = [accepted_m[m["id"]] for m in missions if m["id"] in accepted_m]
+        _renumber(final)
+        out = BUILD_RUNS / "proposals" / f"{fam}_levels.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8")
+        live = PLAY / ("levels.json" if fam == "tactics" else f"{fam}_levels.json")
+        live.write_text(json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"\n미션 매핑 {len(final)}/{len(missions)} → {out}\n  라이브 → {live}")
+        return 0
 
     # 변별 누적: attempt마다 batch개 생성 → 게이트 통과분을 (메커니즘×최소턴) 중복제거 + 난이도 구간 cap로 누적.
     # 단순 누적이 쉬운 레벨만 남기던 과거 문제는 구간별 cap + 커버리지 피드백(보완 생성 유도)으로 차단한다.
