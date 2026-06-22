@@ -2,11 +2,12 @@
 
 LLM(gemma-4 31B)이 게임 규칙 엔진을 **설계→빌드→검증**하고, 사람은 "재미있나"만 판단한다. 검증은 모델 합의가 아니라 **모델 독립 Node 골든**(정확일치)이 정답 앵커다. 본선은 **전술 SRPG(영걸전형)**, 활성 트랙은 **squad(부대+능동 적 AI)**다. tactics(영웅 1명)는 **회귀 기준/안정 baseline**으로 동결 유지(verify_tactics가 지킴).
 
-## 정본 우선순위 (작업 시작 전 이 순서로 읽기)
-1. `golem/CLAUDE.md` — 작업 규칙.
-2. `golem/HANDOFF.md` — **현재 위치와 다음 액션(여기만 보면 됨).**
-3. `golem/GolemStudioMode.md` — 설계 정본(§23=실현된 자율 파이프라인).
-4. `golem/context-notes.md`(결정+왜) · `golem/checklist.md`(진행).
+## 작업 시작 — 이 3개만 보면 움직인다
+1. **`golem/HANDOFF.md`** — 현재 위치와 다음 액션(★첫 동작). **여기만 보면 됨.**
+2. **검증 명령** — `python golem/validators/verify_tactics.py`(ALL PASS여야 함, 키0).
+3. **금지** — Gemini/Gemma 키 런은 사용자 명시 go 뒤에만(아래 "키 사용").
+
+참고(깊이 파거나 이유 추적할 때만): `golem/CLAUDE.md`(작업 규칙) · `golem/GolemStudioMode.md`(설계 정본 §23) · `golem/context-notes.md`(결정+왜) · `golem/checklist.md`(진행).
 
 ## 레이아웃 (2026-06-21 재설계 — core/tools/tactics/validators 패키지)
 ```
