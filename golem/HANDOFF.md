@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G92) — 한 명령 end-to-end 무인 실연 성공. "골렘이 자동·노브는 취향만" 실증.**
+- **노브 정제(사용자 통찰 "노브 줄여야 자동화")**: 노브=개수 아니라 종류. 기계 노브(plumbing) 0, 취향 노브(taste)만. `--start`=최신 동결 base 자동탐지(`latest_level`), `--ideas-file` 없으면 골렘이 `propose_cards` 자동 호출 → **진짜 한 줄**. 메모리 [[golem-automate-all-few-knobs]] 정제 박음.
+- **★ 한 명령 실연**: `driver_autocard --family squad --max-cards 2 --setting "..."` 한 줄로 골렘이 손번역 0으로: 카드 제안→l5·l6 자율 빌드(gate 11/11·합의 1.0·27세계 oracle 일치, 골렘이 새 메커닉 aura_shield 발명)→동결→레벨 5개(난이도 3→8·전부 greedy=PLAYING 거저풀림 거부)→서사("철문의 귀환" 5장면)→렌더(squad.html). REPORT 전 단계 True. l6 base 검증 PASS(27세계 골든0·결정적).
+- **누적**: squad 카드 6장(l1 사거리·l2 충격파·l3 협공·l4 가시갑옷·l5/l6 골렘 자율). 산출=`squad_base_l5/l6`·`squad_levels.json`·`squad_levelstory.json`·`squad.html`.
+- **★ 다음**: ① 뷰어가 squad_levels.json+서사 로드해 **실제 레벨** 보기(현재 계약 데모월드 재생) / 직접 플레이 / ② 에테르노 `--setting` / ③ 더 키우려면 `--max-cards`↑ 재실행(무인). 사용자=취향 노브+"재미있나" 판단.
+
 **현재 상태 (2026-06-22, G91) — 완전 무인 루프(A) 닫힘: 부대 엔진→카드→레벨→서사→렌더 통째 자율.**
 - **렌더·레벨·서사 squad 일반화 완료** → driver_autocard가 한 명령에 전부 돌림(사용자=노브+판단).
   - **렌더** `gen_squad_play.py`(신규): 검증 squad 엔진 embed 턴재생 뷰어, 골든 일치(l1 12·l4 21세계). 산출 `tactics/play/squad.html`.
