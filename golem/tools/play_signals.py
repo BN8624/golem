@@ -417,6 +417,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", default="l9", help="embed할 검증 엔진(기본 l9)")
     ap.add_argument("--family", default="tactics", help="tactics(영웅)|squad(부대)")
+    ap.add_argument("--source", default="contract", choices=["contract", "levels"],
+                    help="contract=계약 데모월드 평가(기본) | levels=실미션 레벨팩 평가(tactics=levels.json/squad=squad_levels.json)")
+    ap.add_argument("--levels", default=None, help="levels 모드 레벨팩 경로(기본=tactics/play의 해당 팩)")
     args = ap.parse_args(argv)
     sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE.parent.parent))
     try:
@@ -425,14 +428,20 @@ def main(argv=None):
     except Exception:  # noqa: BLE001
         pass
     gl = import_module(f"gen_{args.family}_{args.level}_golden").REF_GAME_LOGIC
-    if args.family == "squad":
-        # squad 레벨원: 계약 세계(아직 전용 levels.json 전이라 검증 월드로 신호 표시)
+    if args.source == "levels":
+        # 실미션 레벨팩 평가(임계값 보정용 — 사람이 볼 실제 레벨의 재미 점수)
+        lp = Path(args.levels) if args.levels else (PLAY / ("levels.json" if args.family == "tactics" else f"{args.family}_levels.json"))
+        pack = json.loads(lp.read_text(encoding="utf-8"))
+        levels = [{"name": lv.get("name") or lv.get("id", "?"), "initialState": lv["initialState"]} for lv in pack]
+    elif args.family == "squad":
+        # squad 데모월드: 계약 세계(검증 월드 — 실미션 아님, --source levels로 실미션 평가)
         c = json.loads((PACKETS / f"planning_packet_squad_{args.level}" / "contract.json").read_text(encoding="utf-8"))
         levels = [{"name": w["id"], "initialState": w["initialState"]} for w in c["data_contract"]["scenario_data"]]
     else:
         levels = import_module("gen_tactics_interactive").LEVELS
     sig = compute_signals(levels, gl, args.family)
-    print(f"== 재미 평가 + 실노출 신호(결정적, {args.family} {args.level} 엔진) — 점수는 휴리스틱 보조, 최종 취향은 사람 ==")
+    src = "실미션 레벨팩" if args.source == "levels" else "계약 데모월드"
+    print(f"== 재미 평가 + 실노출 신호(결정적, {args.family} {args.level} 엔진, {src}) — 점수는 휴리스틱 보조, 최종 취향은 사람 ==")
     scored = []
     for s in sig:
         sc, gr, reasons = fun_score(s)
