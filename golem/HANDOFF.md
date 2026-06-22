@@ -2,9 +2,10 @@
 
 ## ▶ 새 세션 여기부터
 
-**▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 뷰어가 실제 미션 레벨을 보이게 한다.** 완결후보(엔진+카드8+에테르노 미션레벨+서사)는 다 있는데 `gen_squad_play.py` 뷰어는 **검증 데모월드(계약 scenario_data)만 재생**한다 — 사용자가 만든 에테르노 레벨을 못 본다. 사용자 역할="재미있나" 판단인데 그러려면 **봐야** 한다. → 뷰어가 `tactics/play/squad_levels.json`을 로드하되 레벨엔 액션 스크립트가 없으니 **`play_signals` BFS가 솔루션 경로를 반환하게 보강**해 그 솔루션을 턴재생(또는 직접 플레이). "보고 판단"의 마지막 갭.
-- (대안) 5권 전체 캠페인부터: `python golem/tools/propose_levels.py --family squad --prev l8 --missions golem/build_runs/proposals/eterno_outline.json --n 20 --min-turns 3 --max-turns 9`(★키, 길다) → 20미션. 그담 levelstory 미션 재정렬.
-- **세션 상태: G94 로컬 커밋 4개(origin보다 앞섬·미푸시)·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만, 이제 빌드 전 ★키 선별기 1콜 포함).
+**▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 재미 임계값을 사람이 보정한다.** 뷰어 갭은 닫혔다(G94 ⑦ — `/squad`에서 에테르노 4미션 솔루션 재생 가능). 이제 사람이 그 4미션을 실제로 보고/플레이해 ⑤⑥의 `B+=50`이 맞는 바인지 판단한다 → 맞으면 그대로, 아니면 `play_signals.fun_score` 가중치/임계 손보고 `propose_levels --min-fun` 기본값 조정. **이게 "보고 판단"의 실행이고, 그동안 "미보정"이라 단 단서를 닫는 자리.** 아이폰 = 서버 켜고(`node golem/tactics/play/server.js`) `http://<테일스케일IP>:8770/squad`.
+- (대안 B, ★키) **실제 라이브 런으로 선별기+재미게이트 검증**: `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"` — 이번에 박은 ②선별기·⑥재미게이트가 실생성에서 작동하는지 본다(지금까진 replay/키0만). 사용자 go 뒤에만.
+- (대안 C) **squad 재미평가를 실미션에**: `play_signals`를 데모월드 말고 `squad_levels.json`에 돌리게(현 squad fun 숫자는 계약 데모월드 기준이라 실미션 아님).
+- **세션 상태: G94 로컬 커밋 8개(origin보다 앞섬·미푸시)·로컬 verify_tactics ALL PASS·서버 8770 떠있음(/squad).** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만, 이제 빌드 전 ★키 선별기 1콜 + 레벨 재미게이트 포함).
 - **CI 교훈(G91 레이아웃 마이그레이션 후속 버그 2건, 푸시 후 keyless 실패로 발견)**: ① replay FIXTURES 이중중첩(`HERE/"fixtures"`→`FIXTURES/"fixtures"` 라우팅 오류, 로컬 0개 진공통과) ② replay가 gitignore된 build_runs에 쓰는데 신선 체크아웃엔 그 디렉토리 없음(mkdir 추가). **둘 다 로컬 통과·CI만 실패** — 로컬엔 잔재폴더·gitignore 디렉토리가 있어 가려졌다. **규칙: 대규모 경로 마이그레이션 뒤엔 신선 체크아웃 모사(gitignore 디렉토리 비우고 run_keyless)로 검증해야 한다.** [[fresh-checkout-after-path-migration]]
 
 **현재 상태 (2026-06-22, G94) — 외부 비판 리뷰 수용: "다음 병목은 코드가 아니라 게임 디자인 평가"에 맞춰 4건 처리. 보는 것(뷰어)만 사용자 지시로 맨 뒤로 미룸.**
@@ -15,7 +16,8 @@
 - **④ 문서 정본 압축(커밋 9910aaa)**: README "작업 시작"을 3개(HANDOFF+verify_tactics+키금지)로 줄이고 나머지(CLAUDE/GolemStudioMode/context-notes/checklist)는 참고로 강등(내용 삭제 없음).
 - **⑤ 재미 평가(`play_signals.fun_score`, 키0, 커밋 31a623a)**: ①의 신호를 0~100 점수+등급(A>=70/B>=50/C>=30/D, 풀이불가=REJECT)으로 합침(지배전략없음·선택지·다양성·카드결정성·페이싱·치사율 가중합). CLI가 등급분포+"버릴 후보(C이하)" 정렬 출력. **검증: tactics 정식 18레벨 A2·B4·C4·D8 — 절반이 거저풀림 단선이라 D. squad 숫자는 데모월드 평가라 실미션 아님(뷰어서 실측 필요).** 가중치·임계 미보정(정렬·탈락 보조, 정답 아님).
 - **⑥ 재미 게이트 배선(`propose_levels --min-fun`, 키0, 커밋 cc09c76)**: 레벨 생성 단일 게이트 gate()에 fun_score<--min-fun(기본50) 자동 탈락 추가(미션·커브 양모드). 카드는 ②비평가, 레벨은 ⑥점수가 거른다 — "버리기"가 양쪽에 박힘. 검증: replay로 D27 탈락·A86 채택. (주의: 기본50은 더 거르므로 --n 채우려면 --cap↑.)
-- **▶ 다음 ★(미룬 #5 = 사용자 지시로 맨 뒤)**: 뷰어가 실제 미션 레벨을 보이게(아래 G93 ★ 그대로). 그래야 ⑤⑥의 재미 임계값(B+=50이 맞는 바인가)을 사람이 플레이로 보정하고, ②의 ★키 비평 런을 실제로 돌려본다. **남은 보정: 재미 점수 임계값 미보정(휴리스틱), 선별기 실키 미검증, squad 재미평가는 실미션 레벨에 미적용(데모월드만 봄).**
+- **⑦ 뷰어 실미션 재생(미룬 #5 닫음, 키0, 커밋 2e4d92d·f9d0dde)**: `play_signals.solve_levels()`가 레벨별 최단 승리 액션 수열을 BFS로 반환 → `gen_squad_play --source levels`가 `squad_levels.json`을 풀어 턴재생(contract 모드는 default 보존). `driver_autocard` squad 렌더도 `--source levels`로 방금 만든 실미션을 봄. server.js `/squad` 라우트 추가(아이폰). **검증: 에테르노 4미션 7/6/7/5수 솔루션 전부 VICTORY, /squad 200.** "보고 판단" 갭 닫힘 — 이제 임계값 보정은 사람 몫(위 ▶▶).
+- **남은 보정(사람/★키)**: 재미 점수 임계값 미보정(휴리스틱·위 ▶▶에서 사람이) · 선별기 실키 미검증(대안 B) · squad 재미평가 실미션 미적용(대안 C).
 
 **현재 상태 (2026-06-22, G93) — 소설(에테르노 5권)→게임 브리지 닫힘. 서사·카드 둘 다 소설에서 무인 생성.**
 - **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
