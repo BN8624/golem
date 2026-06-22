@@ -32,6 +32,12 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 MAX_SECONDS = int(3.5 * 3600)
 
+# 패밀리별 base 네이밍·렌더 가용(영웅/부대). render=렌더러가 그 출력형식을 지원하나(squad 렌더는 미적응).
+FAMILY = {
+    "tactics": {"kernel": "tactics_kernel_base", "base": "tactics_base_{}", "render": True},
+    "squad": {"kernel": "squad_base", "base": "squad_base_{}", "render": False},
+}
+
 # 누적할 카드 계획 — (새 레벨, 이전 레벨, 아이디어). 기본 시연=l9 처형 한 장. 더 누적하려면 줄 추가.
 PLAN = [
     ("l9", "l8", "처형(execute): opt-in 정수 hero.execute. 근접(attack)으로 적을 때린 직후, 그 적의 hp가 0보다 크고 hero.execute 이하이면 즉사시켜 hp를 0으로 만든다. 사거리/anomaly/corrosion엔 적용 안 됨, 근접만. 없으면 기존과 동일."),
@@ -42,15 +48,14 @@ def log(m):
     print(f"[{datetime.now():%H:%M:%S}] {m}", flush=True)
 
 
-def freeze_base(level):
-    """gen_tactics_{level}_golden.REF_GAME_LOGIC를 tactics_base_{level}로 동결(다음 patch base)."""
+def freeze_base(level, family="tactics"):
+    """gen_{family}_{level}_golden.REF_GAME_LOGIC를 {family}_base_{level}로 동결(다음 patch base)."""
     from importlib import import_module, reload
-    mod = import_module(f"gen_tactics_{level}_golden")
-    mod = reload(mod)
-    out = BASES / f"tactics_base_{level}"
+    mod = reload(import_module(f"gen_{family}_{level}_golden"))
+    out = BASES / FAMILY[family]["base"].format(level)
     if out.exists():
         shutil.rmtree(out)
-    shutil.copytree(BASES / "tactics_kernel_base", out)
+    shutil.copytree(BASES / FAMILY[family]["kernel"], out)
     (out / "src" / "game_logic.js").write_text(mod.REF_GAME_LOGIC, encoding="utf-8")
     return out
 
@@ -69,6 +74,7 @@ def run(cmd, timeout):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="l8", help="시작 base 레벨(이미 graft 검증된 최신)")
+    ap.add_argument("--family", default="tactics", help="base 패밀리: tactics(영웅)|squad(부대)")
     ap.add_argument("--setting", default="백 년 전 봉인된 '변칙' 검술을 되살린 마지막 검사가 무너진 제국 성채를 거슬러 봉인의 핵으로 향한다.",
                     help="캠페인 서사 세계관 한 줄")
     ap.add_argument("--ideas-file", default=None,
@@ -102,10 +108,11 @@ def main(argv=None):
     showcase.mkdir(parents=True, exist_ok=True)
     started = time.time()
 
+    fam = args.family
     # 시작 base 동결(없으면).
-    if not (BASES / f"tactics_base_{args.start}").exists():
-        freeze_base(args.start)
-        log(f"시작 base 동결: tactics_base_{args.start}")
+    if not (BASES / FAMILY[fam]["base"].format(args.start)).exists():
+        freeze_base(args.start, fam)
+        log(f"시작 base 동결: {FAMILY[fam]['base'].format(args.start)}")
 
     results = []
     last_good = args.start
@@ -117,25 +124,25 @@ def main(argv=None):
         log(f"=== 카드 {level} (prev {prev}) ===")
 
         # 1) 설계: card_delta(골렘 base-델타 → graft 키0 검증 + 교차검산)
-        rc = run([sys.executable, str(TOOLS / "card_delta.py"), "--level", level, "--prev", prev,
+        rc = run([sys.executable, str(TOOLS / "card_delta.py"), "--family", fam, "--level", level, "--prev", prev,
                   "--idea", idea, "--cap", "3"], MAX_SECONDS)
-        if rc != 0 or not (PACKETS / f"planning_packet_tactics_{level}" / "contract.json").exists():
+        if rc != 0 or not (PACKETS / f"planning_packet_{fam}_{level}" / "contract.json").exists():
             stopped = f"{level} card_delta 실패"
             results.append({"level": level, "stage": "design", "ok": False})
             break
         log(f"  설계 OK — 패킷/specqa/참조 작성됨")
 
         # 2) 새 참조 동결(다음 base)
-        freeze_base(level)
+        freeze_base(level, fam)
 
         # 3) patch 빌드(직전 base에 델타만)
         out_dir = showcase / level
         if out_dir.exists():
             shutil.rmtree(out_dir)
         rc = run([sys.executable, str(CORE / "build_graded.py"),
-                  "--base", str(BASES / f"tactics_base_{prev}"),
-                  "--packet", str(PACKETS / f"planning_packet_tactics_{level}"),
-                  "--specqa", str(PACKETS / f"specqa_packet_tactics_{level}"),
+                  "--base", str(BASES / FAMILY[fam]["base"].format(prev)),
+                  "--packet", str(PACKETS / f"planning_packet_{fam}_{level}"),
+                  "--specqa", str(PACKETS / f"specqa_packet_{fam}_{level}"),
                   "--inject-modules", "src/game_logic.js", "--patch", "--cap", "11",
                   "--out", str(out_dir)], MAX_SECONDS)
         cons = None
@@ -156,14 +163,16 @@ def main(argv=None):
             break
         last_good = level
 
-    # 완결 후보: 스토리(★키) + 렌더
+    # 완결 후보: 스토리(★키) + 렌더 — 렌더러가 그 패밀리 출력형식을 지원할 때만(squad 렌더 미적응).
     story_ok = render_ok = False
-    if last_good != args.start or not stopped:
+    if FAMILY[fam]["render"] and (last_good != args.start or not stopped):
         log(f"=== 완결 후보: 스토리 + 렌더 (level {last_good}) ===")
         rc = run([sys.executable, str(TACTICS / "gen_tactics_story.py"), "--idea", args.setting, "--cap", "3"], MAX_SECONDS)
         story_ok = rc == 0
         rc = run([sys.executable, str(TACTICS / "gen_tactics_play.py"), "--level", last_good], MAX_SECONDS)
         render_ok = rc == 0
+    elif not FAMILY[fam]["render"]:
+        log(f"  (렌더 스킵 — {fam} 렌더러 미적응; 카드 누적만)")
 
     report = {"start": args.start, "last_good": last_good, "stopped": stopped,
               "cards": results, "story_ok": story_ok, "render_ok": render_ok,

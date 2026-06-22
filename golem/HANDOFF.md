@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G90) — 부대 카드 무인 누적 루프 완전 자율(propose→설계→빌드→동결). l1~l4 4장.**
+- **사용자 교정 반영**: 클로드가 매 ★키 스텝 손으로 돌리던 걸 멈추고 `propose_cards`·`driver_autocard`도 `--family squad` 일반화 → **한 명령에 골렘이 카드 제안+누적**. 사용자=노브(`--max-cards`)+끝 판단만.
+- **무인 실연**: `propose_cards --family squad`(골렘이 카드 4개 제안: 충격파·협공·가시갑옷·강철피부) → `driver_autocard --family squad --start l1 --max-cards 3` → 3장 무인 누적: l2 충격파(밀치기)·l3 협공(인접 보너스)·l4 가시갑옷(반사). 마지막 빌드 gate 11/11·합의 1.0(21세계)·oracle 전부일치·중단 None. 동결 squad_base_l1~l4(계약 세계 주입 검증 PASS·결정적).
+- 카드가 서로 엮임(충격파=위치·협공=부대 시너지·가시갑옷=방어). 골렘이 프레임만으로 자율 선택.
+- **★ 다음(사용자와 논의 중)**: 렌더/레벨/서사가 아직 hero 출력 전용 → squad 일반화 필요. 추천 순서 = ① 렌더/플레이(부대전 눈으로 보고 "재미있나" 판단) → ② 레벨+play_signals 그리디게이트(거저풀림 거부=진짜 선택) → ③ 서사(에테르노). 셋 다 일반화하면 driver가 엔진→카드→레벨→서사→렌더 통째 무인. 갈림길=A(완전무인 우선) vs B(렌더 먼저 플레이/판단, 추천).
+
 **현재 상태 (2026-06-22, G89) — 부대 base 위 첫 카드(사거리) 자율 빌드·동결. 카드 도구 영웅/부대 일반화.**
 - **카드 도구 일반화**: `card_delta`·`graft`에 `--family`(tactics/squad) 추가 — base·출력키·패킷 네이밍·프롬프트(불변식·출력계약·status·id) 패밀리별 분리. tactics 경로 무결 확인(`graft` _demo_l7 OK).
 - **★ 근본 버그 발견·교정**: 내 `gen_squad_kernel_golden` REF가 **immutable**(clone 후 새 state 반환)인데 동결 squad_base(모델)는 **mutable**(updateState가 state in-place 변경+status 반환). card_delta가 골렘에 immutable REF를 줘 카드가 base 엔진에 안 먹혀 0/3 발동·turn0. 회귀는 ref·prev_ref 둘 다 immutable이라 동일하게 깨져 통과(가짜 그린). **규칙 확립: prev_ref는 반드시 동결 base의 실제 game_logic** → `gen_squad_kernel_golden.REF_*`를 squad_base 실모듈로 교체.

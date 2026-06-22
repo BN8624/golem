@@ -24,10 +24,24 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 MODEL_31 = "gemma-4-31b-it"
 
-INVARIANTS = (
-    "HERO-ONLY·결정적 불변: 적은 수동(턴/AI/이동 없음), 영웅만 행동, 액션은 move/attack/ranged_attack, "
-    "출력은 status/turn/hero_hp/hero_pos/enemies(각 {id,hp,pos}) 고정, RNG 없음. 새 카드는 순수 가산"
-    "(새 opt-in 필드 없으면 기존 바이트동일)이고 game_logic.js 한 모듈 안에서 결정적으로 구현 가능해야 한다.")
+# 패밀리별 불변식·게임 묘사(영웅/부대) — 카드 제안도 family에 맞아야 함
+FAMILY = {
+    "tactics": {
+        "game": "deterministic, hero-only tactical-grid SRPG",
+        "invariants": (
+            "HERO-ONLY·결정적 불변: 적은 수동(턴/AI/이동 없음), 영웅만 행동, 액션은 move/attack/ranged_attack, "
+            "출력은 status/turn/hero_hp/hero_pos/enemies(각 {id,hp,pos}) 고정, RNG 없음. 새 카드는 순수 가산"
+            "(새 opt-in 필드 없으면 기존 바이트동일)이고 game_logic.js 한 모듈 안에서 결정적으로 구현 가능해야 한다."),
+    },
+    "squad": {
+        "game": "deterministic, squad (multiple ally units vs AI-controlled enemies) tactical-grid SRPG",
+        "invariants": (
+            "SQUAD·결정적 불변: 적은 능동(매 영웅 액션 직후 결정적 AI로 가장 가까운 아군 추격·인접시 공격), 아군이 "
+            "여럿(액션은 {unit: 아군id, type}), 출력은 status/turn/allies/enemies(각 {id,hp,pos}, 죽은 유닛도 "
+            "id오름차순 유지) 고정, RNG 없음. 적 AI·턴구조는 절대 안 건드림. 새 카드는 순수 가산(새 opt-in 필드 "
+            "없으면 기존 바이트동일)이고 game_logic.js 한 모듈서 결정적으로 구현 가능해야 한다."),
+    },
+}
 
 # 장르 레퍼런스 — 검증된 디자인의 '패턴'을 우리 제약에 맞게 차용(특정 게임 클론 금지). 시드 품질 레버.
 DEFAULT_REFS = (
@@ -35,7 +49,7 @@ DEFAULT_REFS = (
     "Final Fantasy Tactics (높이·직업 특성), Slay the Spire (카드 시너지·콤보), "
     "로그라이트 유물 (빌드를 규정하는 패시브 변형)")
 
-PROMPT = """You are a GAME DESIGNER proposing the NEXT cards for a deterministic, hero-only tactical-grid SRPG.
+PROMPT = """You are a GAME DESIGNER proposing the NEXT cards for a {game}.
 The engine is FIXED; cards are additive opt-in mechanics. Below are the cards already in the game (do NOT repeat
 them) and the hard invariants any new card must respect.
 
@@ -44,11 +58,11 @@ EXISTING CARDS (rules already in the contract):
 
 INVARIANTS: {invariants}
 
-GENRE REFERENCES — adapt the PATTERNS from these proven tactics/roguelite designs to our hero-only deterministic
+GENRE REFERENCES — adapt the PATTERNS from these proven tactics/roguelite designs to our deterministic
 grid (borrow the IDEA, do NOT clone any specific game): {refs}
 
 Propose {n} DISTINCT, fresh next-card ideas that are deterministic, purely additive (gated by a new optional
-field so absence = unchanged), implementable within game_logic.js, and observable in the fixed 5-field output.
+field so absence = unchanged), implementable within game_logic.js, and observable in the fixed output.
 Ground each idea in a recognizable genre pattern (positioning/zone-control, synergy/combo with EXISTING cards,
 risk-reward, resource/tempo) adapted to our constraints. Favor variety (offense / defense / positioning / tempo /
 risk) and synergy with the existing cards above. Avoid anything needing enemy turns, RNG, or output-format
@@ -59,9 +73,9 @@ Output ONE JSON object EXACTLY, no prose, no markdown fences:
 "ideas" must have EXACTLY {n} entries. Return only the JSON."""
 
 
-def card_summary(prev):
+def card_summary(prev, family="tactics"):
     """직전 패킷 계약에서 REQ 목록(앞 줄)을 카드 요약으로."""
-    c = json.loads((PACKETS / f"planning_packet_tactics_{prev}" / "contract.json").read_text(encoding="utf-8"))
+    c = json.loads((PACKETS / f"planning_packet_{family}_{prev}" / "contract.json").read_text(encoding="utf-8"))
     lines = []
     for r in c["data_contract"]["rules"]:
         head = r.split(".")[0].split(":")[0].strip()
@@ -73,6 +87,7 @@ def card_summary(prev):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", default="l9", help="현 누적 레벨(이 계약을 읽어 제안)")
+    ap.add_argument("--family", default="tactics", help="base 패밀리: tactics(영웅)|squad(부대)")
     ap.add_argument("--n", type=int, default=5, help="제안 개수")
     ap.add_argument("--ref", default=DEFAULT_REFS, help="장르 레퍼런스(패턴 차용 시드). 기본=SRPG/로그라이트 표본")
     ap.add_argument("--replay", default=None, help="응답 파일로 키 없이 재생(디버그)")
@@ -88,7 +103,9 @@ def main(argv=None):
     force_utf8_stdout()
     from planning import _extract_json
 
-    prompt = PROMPT.format(cards=card_summary(args.prev), invariants=INVARIANTS, n=args.n, refs=args.ref)
+    cfg = FAMILY[args.family]
+    prompt = PROMPT.format(game=cfg["game"], cards=card_summary(args.prev, args.family),
+                           invariants=cfg["invariants"], n=args.n, refs=args.ref)
 
     if args.replay:
         d = _extract_json(Path(args.replay).read_text(encoding="utf-8"))
@@ -103,7 +120,7 @@ def main(argv=None):
     if not ideas:
         print("제안 없음(파싱 실패?)")
         return 1
-    out = BUILD_RUNS / "proposals" / "tactics_ideas.json"
+    out = BUILD_RUNS / "proposals" / f"{args.family}_ideas.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(ideas, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"제안 {len(ideas)}개 → {out}")

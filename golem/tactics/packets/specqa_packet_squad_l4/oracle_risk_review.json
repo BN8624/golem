@@ -1,0 +1,9 @@
+{
+  "risky_scenarios": [],
+  "notes": [
+    {
+      "risk": false,
+      "reason": "graft.py 자동 그래프트 l4 — 골든은 참조엔진 실Node 역산(모델 독립)."
+    }
+  ]
+}
