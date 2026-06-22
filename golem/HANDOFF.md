@@ -4,8 +4,16 @@
 
 **▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 뷰어가 실제 미션 레벨을 보이게 한다.** 완결후보(엔진+카드8+에테르노 미션레벨+서사)는 다 있는데 `gen_squad_play.py` 뷰어는 **검증 데모월드(계약 scenario_data)만 재생**한다 — 사용자가 만든 에테르노 레벨을 못 본다. 사용자 역할="재미있나" 판단인데 그러려면 **봐야** 한다. → 뷰어가 `tactics/play/squad_levels.json`을 로드하되 레벨엔 액션 스크립트가 없으니 **`play_signals` BFS가 솔루션 경로를 반환하게 보강**해 그 솔루션을 턴재생(또는 직접 플레이). "보고 판단"의 마지막 갭.
 - (대안) 5권 전체 캠페인부터: `python golem/tools/propose_levels.py --family squad --prev l8 --missions golem/build_runs/proposals/eterno_outline.json --n 20 --min-turns 3 --max-turns 9`(★키, 길다) → 20미션. 그담 levelstory 미션 재정렬.
-- **세션 상태: 작업트리 클린·origin/main 푸시됨(44401e8)·CI keyless 그린·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만).
+- **세션 상태: G94 로컬 커밋 4개(origin보다 앞섬·미푸시)·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만, 이제 빌드 전 ★키 선별기 1콜 포함).
 - **CI 교훈(G91 레이아웃 마이그레이션 후속 버그 2건, 푸시 후 keyless 실패로 발견)**: ① replay FIXTURES 이중중첩(`HERE/"fixtures"`→`FIXTURES/"fixtures"` 라우팅 오류, 로컬 0개 진공통과) ② replay가 gitignore된 build_runs에 쓰는데 신선 체크아웃엔 그 디렉토리 없음(mkdir 추가). **둘 다 로컬 통과·CI만 실패** — 로컬엔 잔재폴더·gitignore 디렉토리가 있어 가려졌다. **규칙: 대규모 경로 마이그레이션 뒤엔 신선 체크아웃 모사(gitignore 디렉토리 비우고 run_keyless)로 검증해야 한다.** [[fresh-checkout-after-path-migration]]
+
+**현재 상태 (2026-06-22, G94) — 외부 비판 리뷰 수용: "다음 병목은 코드가 아니라 게임 디자인 평가"에 맞춰 4건 처리. 보는 것(뷰어)만 사용자 지시로 맨 뒤로 미룸.**
+- **리뷰 핵심**: 룰 정확성(골든/회귀)은 강한데 "재미있나/선택지 늘었나/버릴 줄 아나"를 기계가 못 잡음. 더 만들지 말고 "재미없는 자동생성물을 자동으로 버리는 기준"을 박아라. (합의 위험만 반박 — 정답 앵커는 합의가 아니라 결정적 Node 골든이라 차단됨.)
+- **① 재미 신호 3종(`play_signals.py`, 키0, 커밋 fdbb53e)**: BFS를 최단해 레이어까지 돌려 `branch_first`(최단해 첫 수 가짓수=선택지), `shortest_solutions`(최단해 개수=몰빵 여부), `lethality`(즉사 간선 비율=재시도 가치 역) 추가. 양 패밀리. verdict에 플래그(판정은 사람). **발견: tactics 정식 레벨 대부분 선택지=1·최단해=1(단선 퍼즐) — 리뷰가 옳음.**
+- **② 선별기(★키 의미 비평가, 커밋 c20ee43)**: `propose_cards.critique_ideas()` — 골렘이 제안 카드를 기존 카드 대비 역할겹침/얕음/실현불가로 strict 평가해 keep/drop. `driver_autocard`가 빌드 전에 약한 후보 자동 탈락(★키 낭비 전 차단). 자동삭제(롤백)는 안 함(빌드 전이라 불필요)·fail-open·`--no-select`. **키0 검증만 함(replay 필터+fail-open 통과) — 실제 ★키 비평 런은 아직 안 돌림.**
+- **③ squad 본선 고정(커밋 33b5fb8)**: README가 무엇이 본선인지 흐리던 걸 못박음 — 활성/본선=squad, tactics=회귀 기준/안정 baseline 동결(새 기능 안 얹음). 코드 default는 안 건드림(driver는 --family squad 명시).
+- **④ 문서 정본 압축(커밋 9910aaa)**: README "작업 시작"을 3개(HANDOFF+verify_tactics+키금지)로 줄이고 나머지(CLAUDE/GolemStudioMode/context-notes/checklist)는 참고로 강등(내용 삭제 없음).
+- **▶ 다음 ★(미룬 #5 = 사용자 지시로 맨 뒤)**: 뷰어가 실제 미션 레벨을 보이게(아래 G93 ★ 그대로). 그래야 ①의 재미 신호 임계값(선택지 몇 이상이 "좋음"인가)을 사람이 플레이로 보정하고, ②의 ★키 비평 런을 실제로 돌려본다. **남은 보정: 재미 신호 임계값 미보정(휴리스틱), 선별기 실키 미검증.**
 
 **현재 상태 (2026-06-22, G93) — 소설(에테르노 5권)→게임 브리지 닫힘. 서사·카드 둘 다 소설에서 무인 생성.**
 - **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
