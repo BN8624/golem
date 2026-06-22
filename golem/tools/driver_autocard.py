@@ -48,6 +48,15 @@ def log(m):
     print(f"[{datetime.now():%H:%M:%S}] {m}", flush=True)
 
 
+def latest_level(family):
+    """동결된 {family}_base_lN 중 최신(가장 큰 N)을 자동 탐지 — 기계 노브 --start 제거용."""
+    import re
+    prefix = FAMILY[family]["base"].format("")  # "squad_base_" / "tactics_base_"
+    levels = [int(m.group(1)) for d in BASES.iterdir() if d.is_dir()
+              for m in [re.fullmatch(re.escape(prefix) + r"l(\d+)", d.name)] if m]
+    return f"l{max(levels)}" if levels else None
+
+
 def freeze_base(level, family="tactics"):
     """gen_{family}_{level}_golden.REF_GAME_LOGIC를 {family}_base_{level}로 동결(다음 patch base)."""
     from importlib import import_module, reload
@@ -73,7 +82,7 @@ def run(cmd, timeout):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start", default="l8", help="시작 base 레벨(이미 graft 검증된 최신)")
+    ap.add_argument("--start", default=None, help="시작 base 레벨(기본=최신 동결 base 자동탐지 — 기계 노브라 비워두면 자동)")
     ap.add_argument("--family", default="tactics", help="base 패밀리: tactics(영웅)|squad(부대)")
     ap.add_argument("--setting", default="백 년 전 봉인된 '변칙' 검술을 되살린 마지막 검사가 무너진 제국 성채를 거슬러 봉인의 핵으로 향한다.",
                     help="캠페인 서사 세계관 한 줄")
@@ -81,6 +90,12 @@ def main(argv=None):
                     help="propose_cards.py 산출(tactics_ideas.json) 경로. 주면 그 아이디어들로 PLAN 자동 구성(선별 퍼널).")
     ap.add_argument("--max-cards", type=int, default=0, help="ideas-file에서 누적할 카드 수 상한(0=전부)")
     args = ap.parse_args(argv)
+
+    # 기계 노브 제거: --start 비면 최신 동결 base 자동탐지(사람이 base 번호 외울 필요 없음).
+    if not args.start:
+        args.start = latest_level(args.family)
+        if not args.start:
+            ap.error(f"{args.family} 동결 base 없음 — 먼저 커널/카드를 빌드하라")
 
     # 선별 퍼널: 제안 아이디어가 있으면 그걸로 PLAN 구성(start 위로 lN+1, lN+2 …). 없으면 기본 PLAN.
     plan = PLAN
