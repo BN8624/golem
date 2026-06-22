@@ -31,6 +31,26 @@
   - `story = { "briefing":str, "victory":str, "defeat":str }`.
 - 깊은 복제는 `JSON.parse_string(JSON.stringify(initialState))`.
 
+## 에셋 사양 (반드시 이 경로를 load — 클로드가 준비·동결한 CC0 에셋)
+- **폰트(필수)**: `font = load("res://assets/fonts/NanumGothic-Regular.ttf")`. 모든 `draw_string`에 이 font를 써라.
+  `ThemeDB.get_fallback_font()` 금지 — 웹 빌드엔 한글 글리프가 없어 □로 깨진다.
+- **픽셀 필터**: `_ready`에서 `texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST` (16px 타일이 뭉개지지 않게).
+- **타일(Tiny Dungeon, 16x16)** — `res://assets/tinydungeon/Tiles/tile_XXXX.png`:
+  - 바닥: `tile_0048`(흙). 바닥 변주(드물게 섞기): `tile_0049`, `tile_0050`, `tile_0051`.
+  - 아군 근접(range 없음/1): `tile_0096`(은색 기사). 아군 원거리(range>1): `tile_0084`(마법사).
+  - 적: `tile_0108`(초록 몬스터).
+  - 더 필요하면 `godot/assets/tinydungeon/Tiles/`에서 골라 써도 된다(같은 16x16).
+
+## 맵·이펙트 요구 (게임답게 — 이번 단계 목표)
+- **맵(미션별 지형 톤)**: 바닥은 `tile_0048`을 깔되 `current_mission_idx`별로 `draw_texture_rect`의 modulate 색조를 다르게
+  (예: 0=기본, 1=청회색, 2=보라어둠, 3=황금). 칸 위치 해시로 변주 타일을 드물게 섞어 단조롭지 않게.
+- **이펙트(시간 기반 — `set_process(true)` + `_process(delta)`로 갱신, `queue_redraw`)**:
+  - **데미지/회복 플로팅 텍스트**: 액션 후 hp 변화량을 그 유닛 칸 위에 "-N"(빨강)/"+N"(초록)으로 띄우고 위로 떠오르며 페이드아웃.
+  - **타격 플래시**: 피해 받은 유닛을 짧게(≈0.2s) 흰/빨강으로 깜빡(modulate).
+  - **선택 하이라이트**: 아군 선택 시 이동 가능 빈 인접칸=초록 반투명, 사거리 내 적 칸=빨강 테두리.
+  - 이펙트 상태는 멤버 배열/딕셔너리로 들고 `_process`에서 수명 감소·만료 제거. 룰/상태(state)는 절대 안 건드린다(표시 전용).
+- hp 변화 계산: `update_state` 호출 **전** 모든 유닛 hp를 스냅샷 → 호출 후 비교 → 변한 유닛에 플로터/플래시.
+
 ## 플레이 입력 (`screen=="PLAYING"`, 좌클릭)
 - 클릭 셀에 살아있는 내 아군 → 그 아군 선택.
 - 아군 선택 상태에서:
@@ -47,9 +67,18 @@
 ## 렌더 (`_draw`) — screen별 분기
 - 공통: 화면 ~640px 기준 좌표.
 - **MENU**: 제목 + 4미션 버튼(사각형 + name/desc 텍스트). 버튼 위치를 `_unhandled_input`의 히트 판정과 동일 좌표로.
-- **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄은 `draw_multiline_string`, 박스 폭으로 wrap) + 하단 "탭하여 시작".
-- **PLAYING**: 정사각 격자 gridSize×gridSize. 아군=파란 원, 적=빨간 원, 각 원에 `"%d\nHP %d" % [int(id),int(hp)]`를 **`draw_multiline_string`**(draw_string은 `\n` 무시). hp<=0는 흐리게+✕. 선택 아군은 테두리 강조. 상단 Label에 "미션명 · 턴 · 상태".
+- **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄 wrap) + 하단 "탭하여 시작".
+- **PLAYING**: 격자 gridSize×gridSize에 [에셋 사양]의 바닥 타일을 깔고([맵·이펙트] 톤 적용),
+  유닛은 **원이 아니라 스프라이트**(`draw_texture_rect`): 아군 근접=기사, 원거리=마법사, 적=몬스터.
+  유닛 칸에 `"HP %d"`(int) 라벨. hp<=0는 흐리게+✕. 선택 아군 하이라이트 + [맵·이펙트]의 이동/사거리 표시. 상단에 "미션명 · 턴".
 - **RESULT**: 보드 위 반투명 오버레이 + victory/defeat 본문 + 버튼.
+
+### ⚠ draw_string 시그니처 함정 (반드시 지킬 것)
+- Godot 4: `draw_string(font, pos:Vector2, text, alignment, width, font_size, modulate)`.
+  색을 주려면 `draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, color)`.
+- `draw_string(font, 0, pos, text, color)`처럼 쓰면 인자가 밀려 **실렌더 시 깨진다**(헤드리스 스모크/프로브는
+  `_draw`를 호출 안 해 못 잡으니 렌더 캡처 게이트로 잡는다. 2026-06-23 실제 버그).
+- `draw_string`은 `\n`을 무시한다. 여러 줄은 줄 단위로 나눠 그리거나 `draw_multiline_string`.
 
 ## 불변식
 1. **rules.gd 수정·재구현 금지.** 룰 판정은 전부 update_state 경유. 씬은 표시·입력만.
@@ -61,5 +90,8 @@
 ## 검증 (모두 통과해야 채택)
 1. 헤드리스 스모크: `--quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 뜸.
 2. 입력 프로브: `--script res://test/run_input_probe.gd` 가 `PROBE RESULT: 입력 로직 동작함` + `PROBE ATTACK RESULT: 공격 동작함`.
-   (프로브는 `load_mission(0)`로 메뉴를 우회 → 클릭 선택·이동·공격을 결정적 검증. 스모크만으론 입력 무반응을 못 잡음.)
-3. 메뉴/브리핑/결과 미관과 실제 터치는 사용자가 확인(0-diff 범위 밖).
+   (프로브는 `load_mission(0)`로 메뉴를 우회 → 클릭 선택·이동·공격을 결정적 검증.)
+3. **렌더 캡처(windowed)**: `--script res://test/capture_attack.gd` 가 _draw(MENU+PLAYING)를 실제로 그리며
+   SCRIPT ERROR/Parse Error 없이 `test/cap_menu.png`·`test/cap_after.png`를 생성해야 한다.
+   (헤드리스 스모크/프로브가 `_draw`를 호출 안 해 못 잡는 draw_string 시그니처·폰트·텍스처 로드 에러를 여기서 잡는다.)
+4. 최종 미관(예쁜지)과 실제 터치는 사람이 확인(0-diff 범위 밖).
