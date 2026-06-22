@@ -2,6 +2,15 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G91) — 완전 무인 루프(A) 닫힘: 부대 엔진→카드→레벨→서사→렌더 통째 자율.**
+- **렌더·레벨·서사 squad 일반화 완료** → driver_autocard가 한 명령에 전부 돌림(사용자=노브+판단).
+  - **렌더** `gen_squad_play.py`(신규): 검증 squad 엔진 embed 턴재생 뷰어, 골든 일치(l1 12·l4 21세계). 산출 `tactics/play/squad.html`.
+  - **레벨** `propose_levels --family squad`: 골렘 생성 + `play_signals --family squad`(다중유닛 BFS+그리디게이트)로 거저풀림 거부. 실연=5레벨 난이도커브(최소턴 3→6)·채택 전부 greedy=PLAYING(진짜 선택). 산출 `squad_levels.json`.
+  - **서사** `gen_tactics_levelstory --family squad`: 레벨별 적·카드 반영 5장면("회군: 무너진 전선"). 산출 `squad_levelstory.json`.
+  - **driver 배선**: `driver_autocard --family squad`가 카드 누적 후 propose_levels→levelstory→gen_squad_play 자동 마감.
+- **검증**: 전 도구 import OK·tactics 경로 무결(graft _demo·verify_tactics ALL PASS)·squad 렌더 골든일치. 카드 도구 6종 family화(card_delta/graft/propose_cards/driver/propose_levels/levelstory).
+- **★ 다음**: ① **driver 한 명령 end-to-end 실연**(`python golem/tools/driver_autocard.py --family squad --start l4 --setting "..." --ideas-file <squad_ideas> --max-cards N`) — 새 카드+레벨+서사+렌더 완결후보 무인 생성(★키, 20~30분). ② 뷰어를 squad_levels.json+서사 로드(레벨 직접 보기) / 직접 플레이(play.html squad). ③ 에테르노 세계관으로 --setting. (남은 hero-coupled: gen_squad_play는 현재 계약 데모월드 재생 — 레벨 솔루션 재생/인터랙티브는 다음.)
+
 **현재 상태 (2026-06-22, G90) — 부대 카드 무인 누적 루프 완전 자율(propose→설계→빌드→동결). l1~l4 4장.**
 - **사용자 교정 반영**: 클로드가 매 ★키 스텝 손으로 돌리던 걸 멈추고 `propose_cards`·`driver_autocard`도 `--family squad` 일반화 → **한 명령에 골렘이 카드 제안+누적**. 사용자=노브(`--max-cards`)+끝 판단만.
 - **무인 실연**: `propose_cards --family squad`(골렘이 카드 4개 제안: 충격파·협공·가시갑옷·강철피부) → `driver_autocard --family squad --start l1 --max-cards 3` → 3장 무인 누적: l2 충격파(밀치기)·l3 협공(인접 보너스)·l4 가시갑옷(반사). 마지막 빌드 gate 11/11·합의 1.0(21세계)·oracle 전부일치·중단 None. 동결 squad_base_l1~l4(계약 세계 주입 검증 PASS·결정적).

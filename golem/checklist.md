@@ -340,3 +340,13 @@ P1 (다음 실험 전):
 - [ ] 카드 더 누적(지형·상태이상, --prev l1)
 - [ ] 렌더 allies 출력 대응 + 직접 플레이
 - [ ] 에테르노 서사 B겹
+
+## 완전 무인 루프(A) — 닫힘 (G91)
+- [x] 렌더 squad — gen_squad_play.py(턴재생 뷰어, 골든일치)
+- [x] play_signals squad — 다중유닛 BFS + 그리디게이트
+- [x] propose_levels squad — 5레벨 난이도커브, 거저풀림 거부(전부 greedy=PLAYING)
+- [x] levelstory squad — 5장면 서사(구조검증)
+- [x] driver_autocard --family squad 배선 — 카드→레벨→서사→렌더 무인
+- [x] 검증: 전 도구 import·tactics 무결(verify_tactics ALL PASS)·squad 렌더 골든일치
+- [ ] driver end-to-end 한 명령 실연(★키 20~30분)
+- [ ] 뷰어 squad_levels.json+서사 로드 / 직접 플레이 / 에테르노 --setting

@@ -163,22 +163,31 @@ def main(argv=None):
             break
         last_good = level
 
-    # 완결 후보: 스토리(★키) + 렌더 — 렌더러가 그 패밀리 출력형식을 지원할 때만(squad 렌더 미적응).
-    story_ok = render_ok = False
-    if FAMILY[fam]["render"] and (last_good != args.start or not stopped):
-        log(f"=== 완결 후보: 스토리 + 렌더 (level {last_good}) ===")
-        rc = run([sys.executable, str(TACTICS / "gen_tactics_story.py"), "--idea", args.setting, "--cap", "3"], MAX_SECONDS)
-        story_ok = rc == 0
-        rc = run([sys.executable, str(TACTICS / "gen_tactics_play.py"), "--level", last_good], MAX_SECONDS)
-        render_ok = rc == 0
-    elif not FAMILY[fam]["render"]:
-        log(f"  (렌더 스킵 — {fam} 렌더러 미적응; 카드 누적만)")
+    # 완결 후보: 레벨(★키)·서사(★키)·렌더 — 패밀리별 마감. 완전 무인 루프의 끝.
+    story_ok = render_ok = levels_ok = False
+    if last_good != args.start or not stopped:
+        log(f"=== 완결 후보 마감 ({fam}, level {last_good}) ===")
+        if fam == "squad":
+            # 부대: 골렘 레벨 생성(그리디게이트) → 서사 → 뷰어
+            rc = run([sys.executable, str(TOOLS / "propose_levels.py"), "--family", "squad", "--prev", last_good,
+                      "--n", "5", "--min-turns", "3", "--max-turns", "8"], MAX_SECONDS)
+            levels_ok = rc == 0
+            rc = run([sys.executable, str(TACTICS / "gen_tactics_levelstory.py"), "--family", "squad",
+                      "--idea", args.setting, "--cap", "2"], MAX_SECONDS)
+            story_ok = rc == 0
+            rc = run([sys.executable, str(TACTICS / "gen_squad_play.py"), "--level", last_good], MAX_SECONDS)
+            render_ok = rc == 0
+        else:
+            rc = run([sys.executable, str(TACTICS / "gen_tactics_story.py"), "--idea", args.setting, "--cap", "3"], MAX_SECONDS)
+            story_ok = rc == 0
+            rc = run([sys.executable, str(TACTICS / "gen_tactics_play.py"), "--level", last_good], MAX_SECONDS)
+            render_ok = rc == 0
 
-    report = {"start": args.start, "last_good": last_good, "stopped": stopped,
-              "cards": results, "story_ok": story_ok, "render_ok": render_ok,
+    report = {"family": fam, "start": args.start, "last_good": last_good, "stopped": stopped,
+              "cards": results, "levels_ok": levels_ok, "story_ok": story_ok, "render_ok": render_ok,
               "elapsed_s": round(time.time() - started)}
     (showcase / "REPORT.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    log(f"=== 완료 — 누적 {last_good}, 중단={stopped}, 스토리={story_ok}, 렌더={render_ok} → {showcase/'REPORT.json'}")
+    log(f"=== 완료 — 누적 {last_good}, 중단={stopped}, 레벨={levels_ok}, 스토리={story_ok}, 렌더={render_ok} → {showcase/'REPORT.json'}")
     return 0 if (stopped is None) else 1
 
 
