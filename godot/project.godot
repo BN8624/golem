@@ -1,0 +1,12 @@
+; Godot 4 프로젝트 설정 — 에테르노 부대 전술(검증된 squad 룰 이식). Phase 2에서 main.tscn 지정.
+config_version=5
+
+[application]
+
+config/name="eterno-tactics"
+config/features=PackedStringArray("4.3", "Forward Plus")
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=720

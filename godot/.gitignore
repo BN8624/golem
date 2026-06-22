@@ -1,0 +1,5 @@
+# Godot 4 임포트/캐시 산출물
+.godot/
+/android/
+export_presets.cfg
+*.translation

@@ -1,0 +1,2249 @@
+[
+  {
+    "name": "1. V1-E01. 성문 돌파",
+    "category": "solution",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 4,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            1
+          ],
+          "range": 2
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 5,
+          "pos": [
+            2,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 4,
+          "pos": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 15,
+              "atk": 5,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 7,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 6,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 11,
+              "atk": 5,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 7,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 2
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 7,
+              "atk": 5,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 7,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 3
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 3,
+              "atk": 5,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 7,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 4
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -1,
+              "atk": 5,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 7,
+              "atk": 4,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 5
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -1,
+              "atk": 5,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 3,
+              "atk": 4,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 6
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -1,
+              "atk": 5,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 4,
+              "pos": [
+                0,
+                2
+              ]
+            }
+          ],
+          "turn": 7
+        },
+        "status": "VICTORY"
+      }
+    ]
+  },
+  {
+    "name": "2. V1-E02. 하수구 진입",
+    "category": "solution",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 4,
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 8,
+          "atk": 3,
+          "pos": [
+            0,
+            1
+          ],
+          "range": 3
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 8,
+          "atk": 6,
+          "pos": [
+            3,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 8,
+          "atk": 6,
+          "pos": [
+            3,
+            1
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 6,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 6,
+              "pos": [
+                2,
+                1
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "move",
+          "dir": [
+            0,
+            1
+          ]
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 6,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 6,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 2
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 4,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 4,
+              "atk": 6,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 3
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 0,
+              "atk": 6,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 4
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 0,
+              "atk": 6,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 5
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                2
+              ],
+              "range": 3
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 0,
+              "atk": 6,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "turn": 6
+        },
+        "status": "VICTORY"
+      }
+    ]
+  },
+  {
+    "name": "3. V1-E03. 미궁의 제단",
+    "category": "solution",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 4,
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 2,
+          "pos": [
+            2,
+            0
+          ],
+          "reflect_dmg": 3
+        },
+        {
+          "id": 2,
+          "hp": 8,
+          "atk": 4,
+          "pos": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 12,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": 8,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 6,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": 5,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 2
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 8,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 3
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 6,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 4
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 1,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 6,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 5
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 2,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 2,
+              "atk": 2,
+              "pos": [
+                0,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 6
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 4,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 3,
+              "pos": [
+                0,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -1,
+              "atk": 2,
+              "pos": [
+                0,
+                0
+              ],
+              "reflect_dmg": 3
+            },
+            {
+              "id": 2,
+              "hp": -1,
+              "atk": 4,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 7
+        },
+        "status": "VICTORY"
+      }
+    ]
+  },
+  {
+    "name": "4. V1-E04. 왕가의 각성",
+    "category": "solution",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 15,
+          "atk": 6,
+          "pos": [
+            0,
+            1
+          ],
+          "range": 2
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            3,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            3,
+            1
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 20,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 15,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                2,
+                1
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 20,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 15,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 4,
+              "atk": 3,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 2
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 12,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 4,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 4,
+              "atk": 3,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 3
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 9,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 4,
+              "atk": 3,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 4
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 2,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 6,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            },
+            {
+              "id": 2,
+              "hp": 9,
+              "atk": 6,
+              "pos": [
+                0,
+                1
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": -2,
+              "atk": 3,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "turn": 5
+        },
+        "status": "VICTORY"
+      }
+    ]
+  },
+  {
+    "name": "oob_move",
+    "category": "invalid",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 9,
+          "atk": 2,
+          "pos": [
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "move",
+          "dir": [
+            -1,
+            0
+          ]
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                1,
+                2
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      },
+      {
+        "action": {
+          "unit": 1,
+          "type": "move",
+          "dir": [
+            0,
+            -1
+          ]
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                0,
+                2
+              ]
+            }
+          ],
+          "turn": 2
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "occupied_move",
+    "category": "invalid",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 9,
+          "atk": 2,
+          "pos": [
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "move",
+          "dir": [
+            1,
+            0
+          ]
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                1,
+                2
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "attack_out_of_range",
+    "category": "invalid",
+    "initialState": {
+      "gridSize": 4,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 9,
+          "atk": 2,
+          "pos": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 4,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 2,
+              "pos": [
+                2,
+                3
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "enemy_chase_attack",
+    "category": "enemy_turn",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 4,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 6,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 4,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "enemy_death_victory",
+    "category": "win_loss",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 10,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 5,
+          "atk": 2,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 10,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": -5,
+              "atk": 2,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "VICTORY"
+      }
+    ]
+  },
+  {
+    "name": "ally_death_defeat",
+    "category": "win_loss",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 3,
+          "atk": 1,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 5,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": -2,
+              "atk": 1,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 19,
+              "atk": 5,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "DEFEAT"
+      }
+    ]
+  },
+  {
+    "name": "knockback",
+    "category": "card",
+    "initialState": {
+      "gridSize": 4,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 1,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 4,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "knockback": true
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 1,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "reflect",
+    "category": "card",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 1,
+          "pos": [
+            1,
+            0
+          ],
+          "reflect_dmg": 2
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 7,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 1,
+              "pos": [
+                1,
+                0
+              ],
+              "reflect_dmg": 2
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "range_attack",
+    "category": "card",
+    "initialState": {
+      "gridSize": 4,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ],
+          "range": 2
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 1,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 4,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 10,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "range": 2
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 17,
+              "atk": 1,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  },
+  {
+    "name": "flank_bonus",
+    "category": "card",
+    "initialState": {
+      "gridSize": 3,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 3,
+          "pos": [
+            0,
+            0
+          ],
+          "flank_bonus": 2
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 1,
+          "pos": [
+            1,
+            1
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 1,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    "steps": [
+      {
+        "action": {
+          "unit": 1,
+          "type": "attack"
+        },
+        "state_after": {
+          "gridSize": 3,
+          "allies": [
+            {
+              "id": 1,
+              "hp": 9,
+              "atk": 3,
+              "pos": [
+                0,
+                0
+              ],
+              "flank_bonus": 2
+            },
+            {
+              "id": 2,
+              "hp": 10,
+              "atk": 1,
+              "pos": [
+                1,
+                1
+              ]
+            }
+          ],
+          "enemies": [
+            {
+              "id": 1,
+              "hp": 15,
+              "atk": 1,
+              "pos": [
+                1,
+                0
+              ]
+            }
+          ],
+          "turn": 1
+        },
+        "status": "PLAYING"
+      }
+    ]
+  }
+]
