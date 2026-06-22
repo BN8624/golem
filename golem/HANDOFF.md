@@ -6,7 +6,8 @@
 - **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
 - **서사 브리지**: 아웃라인 전제→`gen_tactics_levelstory --family squad` → squad 캠페인 서사가 실제 에테르노(카엘5·리아3·조각8·발타자르3 언급). 산출 squad_levelstory.json.
 - **카드 브리지(★ 정수)**: element 씨앗→`propose_cards --ref` → 골렘이 소설 메커니즘 카드 제안(변칙적 불균형 일격·심박 호흡·기하학적 방패) → `driver_autocard --ideas-file --setting <전제>` 무인 빌드 → **l7·l8 동결**(gate 10/10·합의1.0·33세계 oracle일치·검증 PASS). REQ-017 phalanx_defense(마력방패 EL-02)·REQ-018 asymmetric_strike(외팔 변칙검술 EL-03/04) = **소설 드라마가 검증된 게임 카드**. squad 카드 8장.
-- **★ 다음(남은 한 조각)**: 20 event objective → **미션 레벨 매핑**. propose_levels에 미션목표를 먹이는 작은 보강(--missions <objectives>) 필요 → 그러면 20이벤트=20레벨 캠페인이 무인. 그 외 뷰어가 squad_levels.json+서사 로드(실제 레벨 보기)·직접 플레이.
+- **미션 레벨 매핑 완료(마지막 조각)**: `propose_levels --family squad --missions eterno_outline.json --n N` — 이벤트 objective마다 골렘이 그에 맞는 레벨 설계(MISSION_PROMPT·미션 모드, mission_id 메타). 실연 V1 4이벤트→레벨(성문돌파→knockback·배수로→range·미궁→reflect·탈출→knockback, 전부 비그리디 검증). `--n 20`이면 5권 전체 캠페인 무인.
+- **★ 소설→게임 브리지 전 층 완성**: 세계·서사·카드·레벨 모두 에테르노에서 무인 생성, 골렘 룰 검증 유지. **남은 폴리시**: ① 뷰어(gen_squad_play)가 squad_levels.json+서사 로드해 실제 미션 레벨 재생(현재 계약 데모월드)·솔루션 재생/직접 플레이 ② `--n 20`로 5권 전체 캠페인 ③ levelstory를 미션 레벨에 재정렬(현재 자유 레벨 기준).
 
 **현재 상태 (2026-06-22, G92) — 한 명령 end-to-end 무인 실연 성공. "골렘이 자동·노브는 취향만" 실증.**
 - **노브 정제(사용자 통찰 "노브 줄여야 자동화")**: 노브=개수 아니라 종류. 기계 노브(plumbing) 0, 취향 노브(taste)만. `--start`=최신 동결 base 자동탐지(`latest_level`), `--ideas-file` 없으면 골렘이 `propose_cards` 자동 호출 → **진짜 한 줄**. 메모리 [[golem-automate-all-few-knobs]] 정제 박음.
