@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G93) — 소설(에테르노 5권)→게임 브리지 닫힘. 서사·카드 둘 다 소설에서 무인 생성.**
+- **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
+- **서사 브리지**: 아웃라인 전제→`gen_tactics_levelstory --family squad` → squad 캠페인 서사가 실제 에테르노(카엘5·리아3·조각8·발타자르3 언급). 산출 squad_levelstory.json.
+- **카드 브리지(★ 정수)**: element 씨앗→`propose_cards --ref` → 골렘이 소설 메커니즘 카드 제안(변칙적 불균형 일격·심박 호흡·기하학적 방패) → `driver_autocard --ideas-file --setting <전제>` 무인 빌드 → **l7·l8 동결**(gate 10/10·합의1.0·33세계 oracle일치·검증 PASS). REQ-017 phalanx_defense(마력방패 EL-02)·REQ-018 asymmetric_strike(외팔 변칙검술 EL-03/04) = **소설 드라마가 검증된 게임 카드**. squad 카드 8장.
+- **★ 다음(남은 한 조각)**: 20 event objective → **미션 레벨 매핑**. propose_levels에 미션목표를 먹이는 작은 보강(--missions <objectives>) 필요 → 그러면 20이벤트=20레벨 캠페인이 무인. 그 외 뷰어가 squad_levels.json+서사 로드(실제 레벨 보기)·직접 플레이.
+
 **현재 상태 (2026-06-22, G92) — 한 명령 end-to-end 무인 실연 성공. "골렘이 자동·노브는 취향만" 실증.**
 - **노브 정제(사용자 통찰 "노브 줄여야 자동화")**: 노브=개수 아니라 종류. 기계 노브(plumbing) 0, 취향 노브(taste)만. `--start`=최신 동결 base 자동탐지(`latest_level`), `--ideas-file` 없으면 골렘이 `propose_cards` 자동 호출 → **진짜 한 줄**. 메모리 [[golem-automate-all-few-knobs]] 정제 박음.
 - **★ 한 명령 실연**: `driver_autocard --family squad --max-cards 2 --setting "..."` 한 줄로 골렘이 손번역 0으로: 카드 제안→l5·l6 자율 빌드(gate 11/11·합의 1.0·27세계 oracle 일치, 골렘이 새 메커닉 aura_shield 발명)→동결→레벨 5개(난이도 3→8·전부 greedy=PLAYING 거저풀림 거부)→서사("철문의 귀환" 5장면)→렌더(squad.html). REPORT 전 단계 True. l6 base 검증 PASS(27세계 골든0·결정적).

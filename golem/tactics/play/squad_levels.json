@@ -1,8 +1,8 @@
 [
   {
-    "name": "1. 첫 번째 교전",
-    "desc": "기본적인 이동과 공격을 통해 적을 처치하세요.",
-    "teaches": "Movement & Basic Attack",
+    "name": "1. 사거리의 기초",
+    "desc": "적의 강력한 공격 범위를 피해 원거리에서 공격하세요.",
+    "teaches": "range",
     "initialState": {
       "gridSize": 6,
       "allies": [
@@ -13,53 +13,16 @@
           "pos": [
             0,
             0
-          ]
-        }
-      ],
-      "enemies": [
-        {
-          "id": 1,
-          "hp": 6,
-          "atk": 3,
-          "pos": [
-            2,
-            0
-          ]
-        }
-      ]
-    },
-    "_signals": {
-      "solvable": true,
-      "min_turns": 3,
-      "greedy": "PLAYING",
-      "card_fields": [],
-      "min_turns_no_card": null
-    }
-  },
-  {
-    "name": "2. 밀쳐내기",
-    "desc": "적을 밀쳐내어 아군 딜러가 안전하게 공격할 시간을 버세요.",
-    "teaches": "Knockback",
-    "initialState": {
-      "gridSize": 6,
-      "allies": [
-        {
-          "id": 1,
-          "hp": 10,
-          "atk": 2,
-          "pos": [
-            1,
-            0
           ],
-          "knockback": true
+          "range": 2
         },
         {
           "id": 2,
-          "hp": 6,
-          "atk": 6,
+          "hp": 20,
+          "atk": 2,
           "pos": [
             0,
-            0
+            1
           ]
         }
       ],
@@ -80,46 +43,95 @@
       "min_turns": 3,
       "greedy": "PLAYING",
       "card_fields": [
-        "knockback"
+        "range"
       ],
-      "min_turns_no_card": 3
+      "min_turns_no_card": 4
     }
   },
   {
-    "name": "3. 거리 유지",
-    "desc": "사거리 이점을 이용해 피해를 최소화하며 공격하십시오.",
-    "teaches": "range",
+    "name": "2. 가시 돋친 갑옷",
+    "desc": "반사 피해를 고려하여 공격 유닛을 신중하게 선택하세요.",
+    "teaches": "reflect_dmg",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
-          "hp": 10,
-          "atk": 3,
+          "hp": 15,
+          "atk": 5,
           "pos": [
             0,
             0
-          ],
-          "range": 2
+          ]
         },
         {
           "id": 2,
-          "hp": 20,
-          "atk": 1,
+          "hp": 8,
+          "atk": 2,
           "pos": [
-            1,
-            0
+            0,
+            1
           ]
         }
       ],
       "enemies": [
         {
           "id": 1,
-          "hp": 12,
-          "atk": 6,
+          "hp": 10,
+          "atk": 2,
           "pos": [
             2,
             0
+          ],
+          "reflect_dmg": 3
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 3,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "reflect_dmg"
+      ],
+      "min_turns_no_card": 3
+    }
+  },
+  {
+    "name": "3. 거리 조절",
+    "desc": "밀쳐내기를 통해 적의 접근을 막고 아군을 보호하세요.",
+    "teaches": "knockback",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 3,
+          "pos": [
+            1,
+            1
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 12,
+          "atk": 3,
+          "pos": [
+            1,
+            2
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 5,
+          "pos": [
+            2,
+            1
           ]
         }
       ]
@@ -129,94 +141,85 @@
       "min_turns": 4,
       "greedy": "PLAYING",
       "card_fields": [
-        "range"
+        "knockback"
       ],
-      "min_turns_no_card": null
+      "min_turns_no_card": 5
     }
   },
   {
-    "name": "4. 보호의 오라",
-    "desc": "아군을 보호하는 오라를 활용해 생존력을 높이십시오.",
-    "teaches": "aura_shield",
+    "name": "4. 난공불락의 요새",
+    "desc": "오라 쉴드로 버티며 움직이지 않는 거대 적을 공략하세요.",
+    "teaches": "aura_shield + unmovable + phalanx_defense",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
-          "hp": 10,
-          "atk": 2,
+          "hp": 20,
+          "atk": 4,
           "pos": [
             0,
             0
           ],
-          "aura_shield": 2
+          "aura_shield": 3
         },
         {
           "id": 2,
-          "hp": 13,
-          "atk": 4,
+          "hp": 15,
+          "atk": 5,
           "pos": [
-            1,
-            0
+            0,
+            1
           ]
         }
       ],
       "enemies": [
         {
           "id": 1,
-          "hp": 20,
-          "atk": 5,
+          "hp": 15,
+          "atk": 7,
           "pos": [
             2,
             0
-          ]
+          ],
+          "unmovable": true,
+          "phalanx_defense": 2
         }
       ]
     },
     "_signals": {
       "solvable": true,
-      "min_turns": 5,
+      "min_turns": 4,
       "greedy": "PLAYING",
       "card_fields": [],
       "min_turns_no_card": null
     }
   },
   {
-    "name": "5. 최후의 요새",
-    "desc": "모든 메커니즘을 활용해 불요성 적들을 격파하세요.",
-    "teaches": "Combination of all mechanics",
+    "name": "5. 협공의 기초",
+    "desc": "두 아군이 적을 포위하여 flank_bonus 데미지를 유도하세요.",
+    "teaches": "flank_bonus",
     "initialState": {
       "gridSize": 6,
       "allies": [
         {
           "id": 1,
-          "hp": 15,
+          "hp": 12,
           "atk": 3,
           "pos": [
             0,
-            0
+            2
           ],
-          "knockback": true
+          "flank_bonus": 3
         },
         {
           "id": 2,
-          "hp": 10,
-          "atk": 6,
+          "hp": 12,
+          "atk": 3,
           "pos": [
-            0,
-            1
-          ],
-          "range": 2
-        },
-        {
-          "id": 3,
-          "hp": 20,
-          "atk": 2,
-          "pos": [
-            1,
-            1
-          ],
-          "aura_shield": 2
+            5,
+            2
+          ]
         }
       ],
       "enemies": [
@@ -224,26 +227,6 @@
           "id": 1,
           "hp": 15,
           "atk": 4,
-          "pos": [
-            3,
-            0
-          ],
-          "unmovable": true
-        },
-        {
-          "id": 2,
-          "hp": 10,
-          "atk": 3,
-          "pos": [
-            3,
-            1
-          ],
-          "reflect_dmg": 3
-        },
-        {
-          "id": 3,
-          "hp": 10,
-          "atk": 3,
           "pos": [
             3,
             2
@@ -253,14 +236,12 @@
     },
     "_signals": {
       "solvable": true,
-      "min_turns": 8,
+      "min_turns": 6,
       "greedy": "PLAYING",
       "card_fields": [
-        "knockback",
-        "range",
-        "reflect_dmg"
+        "flank_bonus"
       ],
-      "min_turns_no_card": null
+      "min_turns_no_card": 7
     }
   }
 ]
