@@ -1,5 +1,5 @@
-# Godot 4 임포트/캐시 산출물
+# Godot 4 임포트/캐시·빌드 산출물
 .godot/
+build_web/
 /android/
-export_presets.cfg
 *.translation
