@@ -35,7 +35,30 @@ def _renumber(levels):
 HERE = Path(__file__).resolve().parent
 MODEL_31 = "gemma-4-31b-it"
 
-PROMPT = """You are a LEVEL DESIGNER for a deterministic, hero-only tactical-grid SRPG. The engine and rules are
+# 패밀리별 게임 묘사·레벨 initialState 스키마(영웅/부대)
+FAMILY = {
+    "tactics": {
+        "game": "deterministic, hero-only tactical-grid SRPG",
+        "actor": "hero",
+        "schema": ("  hero: {hp, atk, pos:[x,y], mana?, anomaly_dmg?, corrosion?:{dmg,duration}, execute?}  "
+                   "(optional fields = that card on)\n"
+                   "  enemies: [{id, hp, atk, pos:[x,y], unit_type?: 'Hardened'|'Glass'|'Resonant'}]\n"
+                   "  terrain?: {\"x,y\": \"Wall\"|\"Conductive\"}"),
+        "example": '{ "hero": {...}, "enemies": [...], "terrain": {...} }',
+    },
+    "squad": {
+        "game": "deterministic, squad (multiple ally units vs AI-controlled enemies) tactical-grid SRPG",
+        "actor": "squad of ally units",
+        "schema": ("  gridSize: <integer, e.g. 6>\n"
+                   "  allies: [{id:<int>, hp, atk, pos:[x,y], range?, knockback?, flank_bonus?, reflect_dmg?, armor?}]  "
+                   "(2~3 allies; optional fields = that card on; ids ascending from 1)\n"
+                   "  enemies: [{id:<int>, hp, atk, pos:[x,y]}]  (1~3 enemies; ids ascending from 1). "
+                   "Enemies move/attack via fixed AI; you only place units & stats."),
+        "example": '{ "gridSize": 6, "allies": [...], "enemies": [...] }',
+    },
+}
+
+PROMPT = """You are a LEVEL DESIGNER for a {game}. The engine and rules are
 FIXED (below). Design playable single-battle levels as DATA only (initialState) — never change rules.
 
 CARDS/RULES IN THE ENGINE (mechanics you can build encounters around):
@@ -43,28 +66,27 @@ CARDS/RULES IN THE ENGINE (mechanics you can build encounters around):
 
 INVARIANTS: {invariants}
 
-STATE SCHEMA for each level's initialState (small grid, min coord 0; keep coords 0..4, enemies 1~3 for tractable
-checking):
-  hero: {{hp, atk, pos:[x,y], mana?, anomaly_dmg?, corrosion?:{{dmg,duration}}, execute?}}  (optional fields = that card on)
-  enemies: [{{id, hp, atk, pos:[x,y], unit_type?: 'Hardened'|'Glass'|'Resonant'}}]
-  terrain?: {{"x,y": "Wall"|"Conductive"}}
+STATE SCHEMA for each level's initialState (small grid, min coord 0; keep coords 0..5 for tractable checking):
+{schema}
 
 GENRE REFERENCES — adapt PATTERNS (do NOT clone): {refs}
 
 Design {batch} levels forming an ESCALATING curve: early ones teach ONE mechanic, later ones COMBINE mechanics
-(introduce-then-combine). Each level must be SOLVABLE and take roughly {tmin}..{tmax} hero actions to win (not a
-1-action auto-win, not unwinnable). Make the taught mechanic MATTER (the level should be much harder/unsolvable
-without it). Give the hero enough stats to win with the right play. Vary mechanics AND difficulty across the batch.
+(introduce-then-combine). Each level must be SOLVABLE and take roughly {tmin}..{tmax} actions to win (not a
+1-action auto-win, not unwinnable), and must NOT be beatable by mindless greedy play (advance + attack nearest) —
+positioning/card use should MATTER (the level should be much harder/unsolvable without it). Give the {actor}
+enough stats to win with the right play. Vary mechanics AND difficulty across the batch.
 {feedback}
 Output ONE JSON object EXACTLY, no prose, no markdown fences:
 {{ "levels": [ {{ "name": "<번호. 이름>", "desc": "<한 줄 한국어 안내>", "teaches": "<이 레벨이 가르치는 메커니즘>",
-  "initialState": {{ "hero": {{...}}, "enemies": [...], "terrain": {{...}} }} }} ] }}
+  "initialState": {example} }} ] }}
 "levels" must have EXACTLY {batch} entries. Return only the JSON."""
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", default="l9", help="엔진/카드 레벨(이 계약·참조 사용)")
+    ap.add_argument("--family", default="tactics", help="tactics(영웅)|squad(부대)")
     ap.add_argument("--n", type=int, default=5, help="목표 레벨 총수(볼륨 노브 — 1시간 분량이면 ~18)")
     ap.add_argument("--batch", type=int, default=6, help="한 ★키 생성당 요청 레벨 수(모델 친화적 작게)")
     ap.add_argument("--min-turns", type=int, default=3, help="목표 최소턴 하한(노브)")
@@ -82,8 +104,10 @@ def main(argv=None):
     from planning import _extract_json
     from play_signals import compute_signals
     pc = import_module("propose_cards")
-    gl = import_module(f"gen_tactics_{args.prev}_golden").REF_GAME_LOGIC
-    cards = pc.card_summary(args.prev)
+    fam = args.family
+    fcfg = FAMILY[fam]
+    gl = import_module(f"gen_{fam}_{args.prev}_golden").REF_GAME_LOGIC
+    cards = pc.card_summary(args.prev, fam)
     refs = args.ref or pc.DEFAULT_REFS
 
     def gen(p):
@@ -103,6 +127,12 @@ def main(argv=None):
             return False, f"원샷(min_turns={mt})"
         if mt < args.min_turns or mt > args.max_turns:
             return False, f"min_turns {mt} 범위밖[{args.min_turns},{args.max_turns}]"
+        # 그리디로 거저 풀리면 깊이 얕음 — 거부(사용자 핵심 레버: 진짜 선택 강제)
+        if "greedy" in s:
+            if s["greedy"] == "VICTORY":
+                return False, "그리디로 거저 승리(깊이 얕음)"
+        elif s.get("greedy_melee") == "VICTORY" and s.get("greedy_ranged") == "VICTORY":
+            return False, "지배전략 둘 다 거저 승리(깊이 얕음)"
         return True, f"OK min_turns={mt}"
 
     # 변별 누적: attempt마다 batch개 생성 → 게이트 통과분을 (메커니즘×최소턴) 중복제거 + 난이도 구간 cap로 누적.
@@ -120,8 +150,9 @@ def main(argv=None):
         print(f"[LEVELS] 시도 {attempt}/{args.cap} — 골렘 {args.batch}개 생성"
               f"{' (replay)' if args.replay else ' (★키)'} | 누적 {len(accepted)}/{args.n}"
               + (" [피드백]" if feedback else ""))
-        prompt = PROMPT.format(cards=cards, invariants=pc.INVARIANTS, refs=refs, batch=args.batch,
-                               tmin=args.min_turns, tmax=args.max_turns,
+        prompt = PROMPT.format(game=fcfg["game"], actor=fcfg["actor"], schema=fcfg["schema"],
+                               example=fcfg["example"], cards=cards, invariants=pc.FAMILY[fam]["invariants"],
+                               refs=refs, batch=args.batch, tmin=args.min_turns, tmax=args.max_turns,
                                feedback=("\n" + feedback + "\n") if feedback else "")
         try:
             d = _extract_json(gen(prompt))
@@ -129,23 +160,22 @@ def main(argv=None):
         except Exception as e:  # noqa: BLE001
             feedback = f"직전 시도 JSON 파싱 실패({e}). JSON 오브젝트만 출력."
             print(f"  파싱 실패: {e}"); continue
-        sigs = compute_signals(levels, gl)
+        sigs = compute_signals(levels, gl, fam)
         misses = []
         for lv, s in zip(levels, sigs):
             ok, why = gate(lv, s)
             if not ok:
                 misses.append(f"{lv.get('name','?')[:18]}={why}")
                 print(f"  ✗ {lv.get('name','?')[:30]} — {why}"); continue
-            lv["_signals"] = {"min_turns": s["min_turns"], "greedy_melee": s["greedy_melee"],
-                              "greedy_ranged": s["greedy_ranged"], "card_fields": s["card_fields"],
-                              "min_turns_no_card": s["min_turns_no_card"]}
+            lv["_signals"] = {k: s[k] for k in s if k != "name"}
             if _sig(lv) in {_sig(a) for a in accepted}:
                 print(f"  ~ {lv.get('name','?')[:30]} — 중복(메커니즘×난이도 {_sig(lv)})"); continue
             if sum(1 for a in accepted if a["_signals"]["min_turns"] == s["min_turns"]) >= per_turn_cap:
                 print(f"  ~ {lv.get('name','?')[:30]} — {s['min_turns']}수 정원초과(cap {per_turn_cap})"); continue
             accepted.append(lv)
+            gtxt = f"greedy={s['greedy'][:3]}" if "greedy" in s else f"greedy(멜{s.get('greedy_melee','')[:3]}/사{s.get('greedy_ranged','')[:3]})"
             print(f"  ✓ {lv.get('name','?')[:30]} [{lv.get('teaches','')[:16]}] min_turns={s['min_turns']} "
-                  f"greedy(멜레{s['greedy_melee'][:3]}/사거리{s['greedy_ranged'][:3]}) | 누적 {len(accepted)}/{args.n}")
+                  f"{gtxt} | 누적 {len(accepted)}/{args.n}")
             if len(accepted) >= args.n:
                 break
         # 커버리지 피드백: 이미 채운 (메커니즘,최소턴)과 아직 빈 난이도 구간을 알려 보완 생성을 유도(중복 줄임).
@@ -161,15 +191,15 @@ def main(argv=None):
         idx = sorted({round(i * (len(accepted) - 1) / (args.n - 1)) for i in range(args.n)}) if args.n > 1 else [0]
         accepted = [accepted[i] for i in idx]
     _renumber(accepted)  # 난이도순 1..N 순번(batch-로컬 중복번호 제거)
-    out = BUILD_RUNS / "proposals" / "tactics_levels.json"
+    out = BUILD_RUNS / "proposals" / f"{fam}_levels.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(accepted, ensure_ascii=False, indent=2), encoding="utf-8")
-    # 충분히 채웠으면 라이브 레벨팩으로 승격(인터랙티브가 이걸 우선 로드). 손편집 없이 노브 재실행으로 교체.
+    # 충분히 채웠으면 라이브 레벨팩으로 승격(렌더러가 우선 로드). 손편집 없이 노브 재실행으로 교체.
     if len(accepted) >= args.n:
-        live = PLAY / "levels.json"
+        live = PLAY / ("levels.json" if fam == "tactics" else f"{fam}_levels.json")
         live.parent.mkdir(parents=True, exist_ok=True)
         live.write_text(json.dumps(accepted, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"  라이브 승격 → {live} (gen_tactics_interactive가 이걸 로드)")
+        print(f"  라이브 승격 → {live}")
     print(f"\n채택 {len(accepted)}/{args.n} (난이도 커브=최소턴 오름차순) → {out}")
     for lv in accepted:
         print(f"  · {lv['name']} (min_turns={lv['_signals']['min_turns']}, teaches={lv.get('teaches','')})")

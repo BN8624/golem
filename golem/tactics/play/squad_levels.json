@@ -1,0 +1,270 @@
+[
+  {
+    "name": "1. Reflecting Danger",
+    "desc": "반사 피해를 주는 적을 밀어내고 다른 적부터 제거하세요.",
+    "teaches": "reflect_dmg + knockback",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 5,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 20,
+          "atk": 5,
+          "pos": [
+            1,
+            0
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 5,
+          "pos": [
+            0,
+            1
+          ],
+          "reflect_dmg": 5
+        },
+        {
+          "id": 2,
+          "hp": 5,
+          "atk": 5,
+          "pos": [
+            0,
+            2
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 3,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "knockback",
+        "reflect_dmg"
+      ],
+      "min_turns_no_card": 3
+    }
+  },
+  {
+    "name": "2. 기초 전술",
+    "desc": "기본 이동과 공격을 통해 적을 처치하세요.",
+    "teaches": "Basic movement and distance",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 5,
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 5,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 12,
+          "atk": 3,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 4,
+      "greedy": "PLAYING",
+      "card_fields": [],
+      "min_turns_no_card": null
+    }
+  },
+  {
+    "name": "3. 반격과 거리",
+    "desc": "피해 반사와 원거리 공격을 조합해 강력한 적을 상대하세요.",
+    "teaches": "reflect_dmg + range",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 2,
+          "pos": [
+            0,
+            0
+          ],
+          "reflect_dmg": 4
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 5,
+          "pos": [
+            1,
+            1
+          ],
+          "range": 2
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 20,
+          "atk": 8,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 4,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "reflect_dmg",
+        "range"
+      ],
+      "min_turns_no_card": 5
+    }
+  },
+  {
+    "name": "4. 원거리의 이점",
+    "desc": "사거리를 이용하여 피해를 최소화하며 공격하세요.",
+    "teaches": "range",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 10,
+          "atk": 4,
+          "pos": [
+            0,
+            0
+          ],
+          "range": 2
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 4,
+          "pos": [
+            0,
+            1
+          ]
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 6,
+          "pos": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 5,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "range"
+      ],
+      "min_turns_no_card": 5
+    }
+  },
+  {
+    "name": "5. 전술의 완성",
+    "desc": "방어력을 가진 적을 밀어내고 측면 보너스로 공략하세요.",
+    "teaches": "armor + flank_bonus + knockback",
+    "initialState": {
+      "gridSize": 6,
+      "allies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 5,
+          "pos": [
+            0,
+            0
+          ],
+          "knockback": true
+        },
+        {
+          "id": 2,
+          "hp": 15,
+          "atk": 5,
+          "pos": [
+            0,
+            1
+          ],
+          "flank_bonus": 3
+        }
+      ],
+      "enemies": [
+        {
+          "id": 1,
+          "hp": 15,
+          "atk": 4,
+          "pos": [
+            2,
+            0
+          ],
+          "armor": 2
+        },
+        {
+          "id": 2,
+          "hp": 10,
+          "atk": 6,
+          "pos": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "_signals": {
+      "solvable": true,
+      "min_turns": 6,
+      "greedy": "PLAYING",
+      "card_fields": [
+        "knockback",
+        "flank_bonus",
+        "armor"
+      ],
+      "min_turns_no_card": 6
+    }
+  }
+]

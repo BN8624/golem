@@ -29,11 +29,11 @@ PROMPT = """You are the story lead (StoryForge) for a deterministic tactical-gri
 FIXED and you MUST NOT change them — you only author narrative TEXT (a display-only layer).
 
 The game is a sequence of {n} playable LEVELS in ascending difficulty (a campaign the player works through). Each
-level below lists what it TEACHES (a mechanic the hero wields), its foes (id, hp, any trait), and terrain — write a
-scene for EACH level, in order, that fits those foes and that mechanic.
+level below lists what it TEACHES (a mechanic the {actor} wields), its foes (id, hp, any trait), and terrain — write
+a scene for EACH level, in order, that fits those foes and that mechanic.
 
-CRAFT (continuity over flavor): give the hero a NAME and use it; carry one through-line (a goal/stake set in the
-prologue) and let tension ESCALATE level by level toward the finale; let later scenes call back to earlier ones so
+CRAFT (continuity over flavor): give the {actor} a NAME/identity and use it; carry one through-line (a goal/stake set
+in the prologue) and let tension ESCALATE level by level toward the finale; let later scenes call back to earlier so
 it reads as one journey, not {n} separate blurbs. Reflect each level's taught mechanic and actual foe trait in its
 scene (an armored foe feels impenetrable, a glass one brittle, a newly-learned technique feels earned, etc.).
 Evocative but concise (intro 1-2 sentences). Write all prose in Korean; end Korean sentences with a period, not a
@@ -53,13 +53,18 @@ Output ONE JSON object EXACTLY, no prose, no markdown fences:
 }}
 "scenes" MUST have EXACTLY {n} entries, one per level in order. Every field non-empty. Return only the JSON."""
 
-# 영웅 opt-in 카드 필드 → 사람이 읽는 메커니즘 이름(서사 힌트용).
-_CARD_LABEL = {"mana": "마나방패/파열", "anomaly_dmg": "파열(ANOMALY)", "corrosion": "부식",
-               "execute": "처형"}
+# 패밀리별 actor·opt-in 카드 필드→메커니즘 이름·라이브 레벨팩 파일(서사 힌트용)
+FAMILY = {
+    "tactics": {"actor": "hero", "levels_file": "levels.json",
+                "cards": {"mana": "마나방패/파열", "anomaly_dmg": "파열(ANOMALY)", "corrosion": "부식", "execute": "처형"}},
+    "squad": {"actor": "squad of allies", "levels_file": "squad_levels.json",
+              "cards": {"range": "사거리", "knockback": "충격파", "flank_bonus": "협공", "reflect_dmg": "가시갑옷", "armor": "강철피부"}},
+}
 
 
-def level_descriptors(levels):
-    """levels.json(난이도순) → 레벨별 적·지형·가르침·영웅 카드 서술자."""
+def level_descriptors(levels, family="tactics"):
+    """레벨팩(난이도순) → 레벨별 적·지형·가르침·아군 카드 서술자(패밀리별 상태형)."""
+    cfg = FAMILY[family]
     lines = []
     for i, lv in enumerate(levels, 1):
         init = lv["initialState"]
@@ -68,12 +73,17 @@ def level_descriptors(levels):
             for e in init["enemies"])
         terr = ""
         if init.get("terrain"):
-            kinds = sorted(set(init["terrain"].values()))
-            terr = f" | terrain: {', '.join(kinds)}"
-        cards = [lbl for f, lbl in _CARD_LABEL.items() if f in init["hero"]]
-        cardtxt = f" | hero wields: {', '.join(cards)}" if cards else ""
+            terr = f" | terrain: {', '.join(sorted(set(init['terrain'].values())))}"
+        if family == "squad":   # 카드는 아군 유닛들에 분산된 opt-in 필드
+            present = {f for u in init.get("allies", []) for f in cfg["cards"] if f in u}
+            cards = [cfg["cards"][f] for f in cfg["cards"] if f in present]
+            actor_note = f" | allies: {len(init.get('allies', []))}"
+        else:
+            cards = [lbl for f, lbl in cfg["cards"].items() if f in init.get("hero", {})]
+            actor_note = ""
+        cardtxt = f" | wields: {', '.join(cards)}" if cards else ""
         teaches = lv.get("teaches", "") or "기본"
-        lines.append(f"  Level {i}: [{teaches}] {foes}{terr}{cardtxt}")
+        lines.append(f"  Level {i}: [{teaches}] {foes}{terr}{cardtxt}{actor_note}")
     return len(levels), "\n".join(lines)
 
 
@@ -92,20 +102,23 @@ def validate(story, n):
     return errs
 
 
-def _load_levels():
-    """gen_tactics_interactive와 같은 로딩 — 라이브 팩이 있으면 그걸, 없으면 빌트인."""
-    pack = PLAY / "levels.json"
+def _load_levels(family="tactics"):
+    """라이브 레벨팩(패밀리별 파일) 로드. tactics는 없으면 빌트인, squad는 없으면 빈 리스트."""
+    pack = PLAY / FAMILY[family]["levels_file"]
     if pack.exists():
         lv = json.loads(pack.read_text(encoding="utf-8"))
         if lv:
             return lv
-    from gen_tactics_interactive import _BUILTIN_LEVELS
-    return _BUILTIN_LEVELS
+    if family == "tactics":
+        from gen_tactics_interactive import _BUILTIN_LEVELS
+        return _BUILTIN_LEVELS
+    return []
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--idea", required=True, help="세계관/설정 한 줄")
+    ap.add_argument("--family", default="tactics", help="tactics(영웅)|squad(부대)")
     ap.add_argument("--cap", type=int, default=2, help="생성 시도 수(첫 구조통과본 채택)")
     ap.add_argument("--replay", default=None, help="응답 텍스트 파일로 키 없이 재생(디버그)")
     args = ap.parse_args(argv)
@@ -120,9 +133,12 @@ def main(argv=None):
     force_utf8_stdout()
     from planning import _extract_json
 
-    levels = _load_levels()
-    n, level_lines = level_descriptors(levels)
-    prompt = PROMPT.format(n=n, idea=args.idea, levels=level_lines)
+    levels = _load_levels(args.family)
+    if not levels:
+        print(f"  레벨팩 없음({FAMILY[args.family]['levels_file']}) — 먼저 propose_levels --family {args.family}로 생성하라.")
+        return 1
+    n, level_lines = level_descriptors(levels, args.family)
+    prompt = PROMPT.format(n=n, idea=args.idea, levels=level_lines, actor=FAMILY[args.family]["actor"])
 
     def gen():
         if args.replay:
@@ -147,7 +163,7 @@ def main(argv=None):
         out = {"title": story["title"], "prologue": story["prologue"],
                "epilogue": story["epilogue"],
                "scenes": [{"name": s["name"], "intro": s["intro"], "clear": s["clear"]} for s in story["scenes"]]}
-        dst = PLAY / "levelstory.json"
+        dst = PLAY / ("levelstory.json" if args.family == "tactics" else f"{args.family}_levelstory.json")
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  채택 — 구조 검증 통과(장면 {n}/{n}·키 채움). → {dst}")
