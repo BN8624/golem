@@ -220,6 +220,14 @@ console.log('enemies: ' + JSON.stringify(state.enemies.map(e => ({ id: e.id, hp:
 
 OUTPUT_KEYS = ["status", "turn", "allies", "enemies"]
 
+# ★ 동결 squad_base가 정본 계약(updateState=mutable+status 반환). 위 REF_* 문자열은 골든 역산용 독립
+# 참조였으나 base와 game_logic 계약이 달라(immutable) 카드 체인서 어긋난다. card_delta가 확장할
+# prev_ref·graft가 쓸 참조는 반드시 동결 base의 실모듈이어야 한다 → base 실모듈로 덮어쓴다.
+_SQUAD_BASE = BASES / "squad_base"
+REF_GAME_LOGIC = (_SQUAD_BASE / "src" / "game_logic.js").read_text(encoding="utf-8")
+REF_ENGINE = (_SQUAD_BASE / "src" / "engine.js").read_text(encoding="utf-8")
+REF_MAIN = (_SQUAD_BASE / "main.js").read_text(encoding="utf-8")
+
 
 def run(workdir, idx):
     r = subprocess.run(["node", "main.js", "--scenario", str(idx)], cwd=str(workdir),

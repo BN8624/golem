@@ -336,6 +336,7 @@ P1 (다음 실험 전):
 - [x] build_graded (★키, 2회) — 죽은유닛 유지 핀 후 합의 vs oracle 전부일치
 - [x] squad_base 동결 (검증 PASS·결정적, golden_diff 0)
 - [ ] multiunit_base·squad_base 키0 검증 편입(verify)
-- [ ] 카드 재축적(방패·사거리·지형을 squad_base 위에 patch)
+- [x] 카드 도구 family 일반화 + 첫 카드(사거리) 자율빌드·동결(squad_base_l1, 합의1.0)
+- [ ] 카드 더 누적(지형·상태이상, --prev l1)
 - [ ] 렌더 allies 출력 대응 + 직접 플레이
 - [ ] 에테르노 서사 B겹

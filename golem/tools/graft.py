@@ -26,8 +26,15 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-BASE = BASES / "tactics_kernel_base"
-OUTPUT_KEYS = ["status", "turn", "hero_hp", "hero_pos", "enemies"]
+
+# base 패밀리별 동결 base·출력키 — 카드 재축적을 영웅(tactics)/부대(squad) 양쪽에 일반화
+FAMILIES = {
+    "tactics": {"base": "tactics_kernel_base", "keys": ["status", "turn", "hero_hp", "hero_pos", "enemies"]},
+    "squad": {"base": "squad_base", "keys": ["status", "turn", "allies", "enemies"]},
+}
+# 호환: 기존 호출부가 참조하는 모듈 레벨 기본값(tactics)
+BASE = BASES / FAMILIES["tactics"]["base"]
+OUTPUT_KEYS = FAMILIES["tactics"]["keys"]
 
 
 def _run(workdir, idx):
@@ -39,28 +46,28 @@ def _run(workdir, idx):
 
 
 def _parse(stdout):
+    """출력 5필드를 파싱 — 패밀리 무관(JSON 배열/객체는 json, 정수는 int, 나머지 str)."""
     exp = {}
     for line in stdout.splitlines():
         if ":" not in line:
             continue
         k, _, v = line.partition(":")
         k, v = k.strip(), v.strip()
-        if k == "turn":
-            exp[k] = int(v)
-        elif k in ("hero_pos", "enemies"):
+        if v[:1] in ("[", "{"):
             exp[k] = json.loads(v)
-        elif k == "hero_hp":
-            exp[k] = int(v)
         else:
-            exp[k] = v
+            try:
+                exp[k] = int(v)
+            except ValueError:
+                exp[k] = v
     return exp
 
 
-def _build_ref(name, game_logic_src, scenarios_js):
+def _build_ref(base, name, game_logic_src, scenarios_js):
     ref = HERE / name
     if ref.exists():
         shutil.rmtree(ref)
-    shutil.copytree(BASE, ref)
+    shutil.copytree(base, ref)
     (ref / "module_manifest.json").unlink(missing_ok=True)
     (ref / "src" / "game_logic.js").write_text(game_logic_src, encoding="utf-8")
     (ref / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
@@ -79,8 +86,8 @@ def assemble_contract(prev_contract, new_req, new_state, new_worlds):
 
 
 def graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_src,
-          packet_dir=None, write=True):
-    """카드 델타로 lN 패킷 조립 + 키0 검증. 반환=(contract, specqa, ok)."""
+          packet_dir=None, write=True, family="tactics"):
+    """카드 델타로 lN 패킷 조립 + 키0 검증. 반환=(contract, specqa, ok). family=tactics(영웅)|squad(부대)."""
     sys.path.insert(0, str(HERE.parent))
     sys.path.insert(0, str(HERE))
     try:
@@ -90,17 +97,19 @@ def graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_s
         pass
     import build_graded as bg
 
-    prev_pkt = PACKETS / f"planning_packet_tactics_{prev_level}"
+    base = BASES / FAMILIES[family]["base"]
+    output_keys = FAMILIES[family]["keys"]
+    prev_pkt = PACKETS / f"planning_packet_{family}_{prev_level}"
     prev_contract = json.loads((prev_pkt / "contract.json").read_text(encoding="utf-8"))
     prev_n = len(prev_contract["data_contract"]["scenario_data"])
 
     contract = assemble_contract(prev_contract, new_req, new_state, new_worlds)
     scenario_data = contract["data_contract"]["scenario_data"]
-    manifest = json.loads((BASE / "module_manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((base / "module_manifest.json").read_text(encoding="utf-8"))
     scenarios_js = bg._gen_scenarios_module(scenario_data)
 
-    refN = _build_ref(f"_graft_ref_{level}_tmp", ref_src, scenarios_js)
-    refP = _build_ref(f"_graft_refprev_{level}_tmp", prev_ref_src, scenarios_js)
+    refN = _build_ref(base, f"_graft_ref_{level}_tmp", ref_src, scenarios_js)
+    refP = _build_ref(base, f"_graft_refprev_{level}_tmp", prev_ref_src, scenarios_js)
 
     specqa = []
     regression_ok = True
@@ -123,14 +132,14 @@ def graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_s
     ws = BUILD_RUNS / f"_graft_{level}" / "workspace"
     if ws.parent.exists():
         shutil.rmtree(ws.parent)
-    shutil.copytree(BASE, ws)
+    shutil.copytree(base, ws)
     (ws / "module_manifest.json").unlink(missing_ok=True)
     (ws / "src" / "game_logic.js").write_text(ref_src, encoding="utf-8")
     (ws / "src" / "scenarios.js").write_text(scenarios_js, encoding="utf-8")
     g1, reason, out1 = bg.gate_and_run(ws, {"schema_version": "0.1", "module_format": "commonjs", **manifest}, specqa)
     golden_ok = g1 and all(
         bg._canon(dict(out1.get(s["id"], ())).get(k)) == bg._canon(s["expected"][k])
-        for s in specqa for k in OUTPUT_KEYS if k in s["expected"])
+        for s in specqa for k in output_keys if k in s["expected"])
     g2, _, out2 = bg.gate_and_run(ws, {"schema_version": "0.1", "module_format": "commonjs", **manifest}, specqa)
     det_ok = g2 and out1 == out2
 
@@ -144,8 +153,8 @@ def graft(level, prev_level, new_req, new_state, new_worlds, ref_src, prev_ref_s
         print(f"    GATE: {reason}")
 
     if write and ok:
-        pkt = packet_dir or (PACKETS / f"planning_packet_tactics_{level}")
-        spq = PACKETS / f"specqa_packet_tactics_{level}"
+        pkt = packet_dir or (PACKETS / f"planning_packet_{family}_{level}")
+        spq = PACKETS / f"specqa_packet_{family}_{level}"
         pkt.mkdir(parents=True, exist_ok=True)
         spq.mkdir(parents=True, exist_ok=True)
         (pkt / "contract.json").write_text(json.dumps(contract, ensure_ascii=False, indent=2), encoding="utf-8")

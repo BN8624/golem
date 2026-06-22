@@ -2,6 +2,12 @@
 
 ## ▶ 새 세션 여기부터
 
+**현재 상태 (2026-06-22, G89) — 부대 base 위 첫 카드(사거리) 자율 빌드·동결. 카드 도구 영웅/부대 일반화.**
+- **카드 도구 일반화**: `card_delta`·`graft`에 `--family`(tactics/squad) 추가 — base·출력키·패킷 네이밍·프롬프트(불변식·출력계약·status·id) 패밀리별 분리. tactics 경로 무결 확인(`graft` _demo_l7 OK).
+- **★ 근본 버그 발견·교정**: 내 `gen_squad_kernel_golden` REF가 **immutable**(clone 후 새 state 반환)인데 동결 squad_base(모델)는 **mutable**(updateState가 state in-place 변경+status 반환). card_delta가 골렘에 immutable REF를 줘 카드가 base 엔진에 안 먹혀 0/3 발동·turn0. 회귀는 ref·prev_ref 둘 다 immutable이라 동일하게 깨져 통과(가짜 그린). **규칙 확립: prev_ref는 반드시 동결 base의 실제 game_logic** → `gen_squad_kernel_golden.REF_*`를 squad_base 실모듈로 교체.
+- **첫 카드(사거리) 자율 빌드**: `card_delta --family squad`(★키) 1시도 채택(회귀무결·신규발동 3/3·교차검산·키0). → `build_graded --base squad_base --inject-modules src/game_logic.js --patch`(★키) **gate 9/9·합의 1.0(12세계)·합의 vs oracle 전부일치** → `tactics/bases/squad_base_l1` 동결(검증 PASS·결정적).
+- **★ 다음 액션**: ② 카드 더 누적(지형·상태이상을 squad_base_l1 위에 `card_delta --family squad --prev l1`) / ③ 렌더를 allies 출력 대응(`gen_tactics_*`) + 직접 플레이 / ④ 에테르노 서사. (주의: 같은 immutable/mutable 이슈가 `gen_multiunit_kernel_golden`에도 있음 — multiunit 카드 갈 거면 동일 교정 필요. squad가 본선.)
+
 **현재 상태 (2026-06-22, G88) — 다중 아군(squad) 커널 빌드·동결 완료. 영웅1 → 부대 전술.**
 - **일반화**: 적 AI를 "가장 가까운 **아군**을 목표로(거리 동률은 아군 id 작은 쪽)"로 일반화. 상태 `hero`(단일)→`allies`(리스트), 액션은 `{unit: 아군id, type}`로 어느 아군이 행동하는지 지정. 새 base(`squad_base`).
 - **골렘 설계(★키 planning)**: CONTRACT_STATUS **FROZEN**. 키0 REF 골든(`gen_squad_kernel_golden.py`) 9세계 — 적 목표선택(SCN-001 더 가까운 아군 추격·SCN-004 두 적이 각자 다른 아군 추격·SCN-005 동률 id타이브레이크)·협공 처치(SCN-002 VICTORY)·부대 패배(SCN-003 DEFEAT)·3아군 부대전(SCN-007) 결정적 확인.

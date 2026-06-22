@@ -25,16 +25,41 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-INVARIANTS = (
-    "HERO-ONLY INVARIANTS (MUST NOT CHANGE): there is NO enemy turn, NO enemy AI, NO enemy movement, "
-    "NO enemy mana. The ONLY actor is the hero; the only actions are hero move/attack/ranged_attack from a "
-    "fixed list; turn increments by 1 per hero action. The CLI output is FIXED: exactly status/turn/hero_hp/"
-    "hero_pos/enemies, each enemy EXACTLY {id,hp,pos}. Do NOT change engine.js / main.js / scenarios.js — only "
-    "src/game_logic.js. The new card MUST be purely ADDITIVE: when no new field/data is present, every prior "
-    "world is byte-for-byte unchanged."
-)
+# 패밀리별 카드 설계 컨텍스트(영웅/부대) — 프롬프트가 잘못된 불변식을 주면 골렘이 엉뚱하게 설계함
+FAMILY_CFG = {
+    "tactics": {
+        "game": "hero-only tactical-grid combat",
+        "invariants": (
+            "HERO-ONLY INVARIANTS (MUST NOT CHANGE): there is NO enemy turn, NO enemy AI, NO enemy movement, "
+            "NO enemy mana. The ONLY actor is the hero; actions are hero move/attack/ranged_attack from a fixed "
+            "list; turn increments by 1 per hero action. Output is FIXED: exactly status/turn/hero_hp/hero_pos/"
+            "enemies, each enemy EXACTLY {id,hp,pos}. Only src/game_logic.js changes; additive."),
+        "conventions": ("status READY/VICTORY/DEFEAT/FINISHED, string enemy ids, integer hp that may be negative, "
+                        "opt-in optional fields on hero/enemy that default to the no-op value so absence = unchanged"),
+        "expected_schema": '{"status":..,"turn":..,"hero_hp":..,"hero_pos":[..],"enemies":[{"id":..,"hp":..,"pos":[..]}]}',
+        "ids_note": "Keep enemy ids like 'E1'.",
+        "never_status": "READY (READY is internal pre-run only)",
+    },
+    "squad": {
+        "game": "squad tactical-grid combat: multiple ALLY units (allies list) vs multiple AI-controlled ENEMY units",
+        "invariants": (
+            "SQUAD INVARIANTS (MUST NOT CHANGE): there ARE multiple ally units and multiple enemy units; enemies act "
+            "every turn via deterministic AI (each enemy targets the nearest living ally, attacks if adjacent else "
+            "moves toward it, in ascending id with fixed tie-breaks) — DO NOT change the enemy AI or the turn "
+            "structure. Each action names which ally acts: {unit: <allyId>, type}. Output is FIXED: exactly "
+            "status/turn/allies/enemies, each unit EXACTLY {id,hp,pos} in ascending id INCLUDING dead units (hp<=0). "
+            "Only src/game_logic.js changes; additive."),
+        "conventions": ("status PLAYING/VICTORY/DEFEAT/FINISHED (PLAYING is internal pre-run only), INTEGER unit ids, "
+                        "integer hp that may be negative, opt-in optional fields on ally/enemy units that default to "
+                        "the no-op value so absence = unchanged; allies and enemies arrays ALWAYS list every unit "
+                        "(even dead, hp<=0) in ascending id"),
+        "expected_schema": '{"status":..,"turn":..,"allies":[{"id":..,"hp":..,"pos":[..]}],"enemies":[{"id":..,"hp":..,"pos":[..]}]}',
+        "ids_note": "Keep unit ids as integers. Each action is {unit: <allyId>, type: \"move\"|\"attack\"|...}.",
+        "never_status": "PLAYING (PLAYING is internal pre-run only)",
+    },
+}
 
-PROMPT = """You extend a deterministic, hero-only tactical-grid combat game by ONE additive card.
+PROMPT = """You extend a deterministic {game} game by ONE additive card.
 
 === FROZEN CONTRACT (rules REQ-001..{lastreq}, carried verbatim — DO NOT restate or edit them) ===
 {rules}
@@ -50,24 +75,23 @@ PROMPT = """You extend a deterministic, hero-only tactical-grid combat game by O
 === NEW CARD IDEA ===
 {idea}
 
-Design this card yourself, deterministically, in the SAME conventions as the contract above (status READY/VICTORY/
-DEFEAT/FINISHED, string enemy ids, integer hp that may be negative, opt-in optional fields on hero/enemy that
-default to the no-op value so absence = unchanged). Output ONLY a single JSON object (no prose, no markdown fence)
-with EXACTLY these keys:
+Design this card yourself, deterministically, in the SAME conventions as the contract above ({conventions}).
+Output ONLY a single JSON object (no prose, no markdown fence) with EXACTLY these keys:
 {{
   "new_req": "REQ-{nextreq}: <one self-contained rule describing the card, base conventions, additive>",
   "new_state": {{ "<optional new state_shape field(s)>": "<description>" }},
   "new_worlds": [
-    {{ "id": "SCN-{firstworld}", "initialState": {{...}}, "actions": [...], "expected": {{"status":..,"turn":..,"hero_hp":..,"hero_pos":[..],"enemies":[{{"id":..,"hp":..,"pos":[..]}}]}} }}
+    {{ "id": "SCN-{firstworld}", "initialState": {{...}}, "actions": [...], "expected": {expected_schema} }}
   ],
   "game_logic": "<the COMPLETE updated src/game_logic.js as one string — current reference PLUS your additive change>"
 }}
-Provide 3 new worlds that exercise the card (each with the EXACT 5-field expected you compute by hand). Each new world MUST actually TRIGGER the card — its 5-field result must differ from what the SAME world would
-produce without the card (e.g. for an execute/threshold card, the target must be one that SURVIVES the plain
-attack but dies to the card; do not pick a target that already dies from the normal hit). Keep enemy ids like 'E1'.
-The PRINTED status is one of VICTORY | DEFEAT | FINISHED — NEVER 'READY' (READY is internal pre-run only). A world
-whose actions run out without reaching VICTORY/DEFEAT prints status 'FINISHED'. Compute each expected.turn as the
-number of actions actually executed. Double-check your expected against your own game_logic before answering.
+Provide 3 new worlds that exercise the card (each with the EXACT expected you compute by hand). Each new world MUST
+actually TRIGGER the card — its result must differ from what the SAME world would produce without the card (e.g. for
+an execute/threshold card, the target must SURVIVE the plain attack but die to the card; do not pick a target that
+already dies from the normal hit). {ids_note}
+The PRINTED status is one of VICTORY | DEFEAT | FINISHED — NEVER '{never_status}'. A world whose actions run out
+without reaching VICTORY/DEFEAT prints status 'FINISHED'. Compute each expected.turn as the number of actions
+actually executed. Double-check your expected against your own game_logic before answering.
 Do not include 'expected' anywhere except inside new_worlds. Return only the JSON object."""
 
 
@@ -103,8 +127,9 @@ def _extract_json(text):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", required=True, help="새 레벨 이름(예: l8)")
-    ap.add_argument("--prev", required=True, help="이전 레벨(예: l7)")
+    ap.add_argument("--prev", required=True, help="이전 레벨(예: l7, 첫 카드면 kernel)")
     ap.add_argument("--idea", required=True, help="카드 한 줄 아이디어")
+    ap.add_argument("--family", default="tactics", help="base 패밀리: tactics(영웅)|squad(부대)")
     ap.add_argument("--cap", type=int, default=1, help="델타 생성 시도 수(첫 검증 통과본 채택)")
     ap.add_argument("--replay", default=None, help="응답 텍스트 파일로 키 없이 재생(디버그)")
     args = ap.parse_args(argv)
@@ -120,16 +145,18 @@ def main(argv=None):
     import graft as G
     from importlib import import_module
 
-    prev_pkt = json.loads((PACKETS / f"planning_packet_tactics_{args.prev}" / "contract.json").read_text(encoding="utf-8"))
+    prev_pkt = json.loads((PACKETS / f"planning_packet_{args.family}_{args.prev}" / "contract.json").read_text(encoding="utf-8"))
     dc = prev_pkt["data_contract"]
-    prev_ref = import_module(f"gen_tactics_{args.prev}_golden").REF_GAME_LOGIC
+    prev_ref = import_module(f"gen_{args.family}_{args.prev}_golden").REF_GAME_LOGIC
     prev_n = len(dc["scenario_data"])
     nextreq = f"{len(dc['rules']) + 1:03d}"
+    cfg = FAMILY_CFG[args.family]
     prompt = PROMPT.format(
-        lastreq=f"{len(dc['rules']):03d}", rules="\n".join(dc["rules"]),
+        game=cfg["game"], lastreq=f"{len(dc['rules']):03d}", rules="\n".join(dc["rules"]),
         output=json.dumps(dc["output_contract"], ensure_ascii=False),
-        game_logic=prev_ref, invariants=INVARIANTS, idea=args.idea,
-        nextreq=nextreq, firstworld=f"{prev_n + 1:03d}")
+        game_logic=prev_ref, invariants=cfg["invariants"], conventions=cfg["conventions"],
+        expected_schema=cfg["expected_schema"], ids_note=cfg["ids_note"], never_status=cfg["never_status"],
+        idea=args.idea, nextreq=nextreq, firstworld=f"{prev_n + 1:03d}")
 
     def gen(p=prompt):
         if args.replay:
@@ -161,17 +188,18 @@ def main(argv=None):
         game_logic = d["game_logic"]
 
         contract, specqa, ok = G.graft(args.level, args.prev, new_req, new_state, new_worlds,
-                                       game_logic, prev_ref, write=False)
+                                       game_logic, prev_ref, write=False, family=args.family)
         # 교차검산: 골렘 expected(이해) vs 참조 실행(코드)
         ref_exp = {s["id"]: s["expected"] for s in specqa}
         cross = {}
+        out_keys = G.FAMILIES[args.family]["keys"]
         for wid, ce in claimed.items():
             if wid not in ref_exp:
                 continue
             if ce is None:
                 cross[wid] = "expected 누락"
                 continue
-            diff = {k: (ce.get(k), ref_exp[wid].get(k)) for k in G.OUTPUT_KEYS
+            diff = {k: (ce.get(k), ref_exp[wid].get(k)) for k in out_keys
                     if k in ref_exp[wid] and bg._canon(ce.get(k)) != bg._canon(ref_exp[wid].get(k))}
             if diff:
                 cross[wid] = diff
@@ -190,16 +218,17 @@ def main(argv=None):
             continue
 
         # 통과 — 패킷·specqa·참조 gen 작성
-        G.graft(args.level, args.prev, new_req, new_state, new_worlds, game_logic, prev_ref, write=True)
-        (TACTICS / f"gen_tactics_{args.level}_golden.py").write_text(
+        G.graft(args.level, args.prev, new_req, new_state, new_worlds, game_logic, prev_ref, write=True, family=args.family)
+        (TACTICS / f"gen_{args.family}_{args.level}_golden.py").write_text(
             f'# {args.level} 참조 game_logic(골렘 base-델타 산출, card_delta.py) — graft 체인용\nREF_GAME_LOGIC = '
             + 'r"""' + "\n" + game_logic + '\n"""\n', encoding="utf-8")
-        (PACKETS / f"planning_packet_tactics_{args.level}" / "concept.md").write_text(
-            f"전술 커널 {args.prev} 위 가산 카드({args.level}) — 골렘 base-델타 자율 설계: {args.idea}\n", encoding="utf-8")
+        (PACKETS / f"planning_packet_{args.family}_{args.level}" / "concept.md").write_text(
+            f"{args.family} 커널 {args.prev} 위 가산 카드({args.level}) — 골렘 base-델타 자율 설계: {args.idea}\n", encoding="utf-8")
+        base_name = G.FAMILIES[args.family]["base"]
         print(f"  채택 — 패킷/specqa/참조 작성. 교차검산·키0 검증 통과. 다음=★키 빌드.")
-        print(f"  build: python golem/core/build_graded.py --base golem/tactics/bases/tactics_kernel_base "
-              f"--packet golem/tactics/packets/planning_packet_tactics_{args.level} "
-              f"--specqa golem/tactics/packets/specqa_packet_tactics_{args.level} --inject-modules src/game_logic.js --reconcile")
+        print(f"  build: python golem/core/build_graded.py --base golem/tactics/bases/{base_name} "
+              f"--packet golem/tactics/packets/planning_packet_{args.family}_{args.level} "
+              f"--specqa golem/tactics/packets/specqa_packet_{args.family}_{args.level} --inject-modules src/game_logic.js --reconcile")
         return 0
 
     print(f"[CARD-DELTA {args.level}] 모든 시도 실패 — 프롬프트/아이디어 조이거나 재시도.")
