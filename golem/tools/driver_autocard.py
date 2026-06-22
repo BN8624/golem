@@ -89,6 +89,7 @@ def main(argv=None):
     ap.add_argument("--ideas-file", default=None,
                     help="propose_cards.py 산출(tactics_ideas.json) 경로. 주면 그 아이디어들로 PLAN 자동 구성(선별 퍼널).")
     ap.add_argument("--max-cards", type=int, default=0, help="ideas-file에서 누적할 카드 수 상한(0=전부)")
+    ap.add_argument("--no-select", action="store_true", help="선별기(★키 의미 비평가) 끄기 — 제안 카드 전부 빌드")
     args = ap.parse_args(argv)
 
     sys.path.insert(0, str(HERE)); sys.path.insert(0, str(ROOT))
@@ -113,6 +114,24 @@ def main(argv=None):
              "--prev", args.start, "--n", str(n_ideas)], MAX_SECONDS)
         ideas_path = BUILD_RUNS / "proposals" / f"{args.family}_ideas.json"
     ideas = json.loads(ideas_path.read_text(encoding="utf-8"))
+
+    # 선별기(★키 의미 비평가): 기존 카드 대비 역할겹침·얕음을 골렘이 평가해 약한 후보 자동 탈락.
+    # 빌드 전 단계라 ★키 낭비 전에 거른다. 실패(키/파싱)면 fail-open으로 전부 통과(파이프라인 안 막음).
+    if not args.no_select:
+        try:
+            from propose_cards import critique_ideas
+            before = len(ideas)
+            ideas, reviews = critique_ideas(ideas, prev=args.start, family=args.family)
+            for r in reviews:
+                if r.get("verdict") == "drop":
+                    log(f"  선별 DROP[{r.get('role','?')}]: {r.get('name')} — {r.get('reason','')}")
+            log(f"선별기: {before}개 중 {len(ideas)}개 채택, {before - len(ideas)}개 탈락")
+        except Exception as e:  # noqa: BLE001
+            log(f"선별기 건너뜀(fail-open): {e}")
+    if not ideas:
+        log("빌드할 카드 없음(선별기가 전부 탈락 or 빈 아이디어)")
+        return 1
+
     if args.max_cards > 0:
         ideas = ideas[:args.max_cards]
     plan, prev = [], args.start

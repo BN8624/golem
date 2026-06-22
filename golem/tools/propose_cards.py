@@ -73,6 +73,54 @@ Output ONE JSON object EXACTLY, no prose, no markdown fences:
 "ideas" must have EXACTLY {n} entries. Return only the JSON."""
 
 
+# 선별기(★키 의미 비평가) — 제안 카드를 기존 카드 대비 역할겹침·재미기여로 평가해 약한 후보 탈락
+CRITIC_PROMPT = """You are a STRICT GAME DESIGN REVIEWER curating the next cards for a {game}.
+The engine is FIXED; cards are additive opt-in mechanics. Your job is to REJECT weak candidates,
+not to be nice. REJECT a candidate if ANY of these holds:
+  - ROLE OVERLAP: its effect duplicates the role of an EXISTING card on the same axis
+    (damage / range / defense / positioning / tempo / resource) without a genuinely new decision.
+  - SHALLOW: it only scales numbers (bigger hit, more hp, longer range) and adds no new *choice* for the player.
+  - INFEASIBLE: it needs enemy turns, RNG, or output-format changes, or cannot be a pure additive opt-in field.
+KEEP a candidate only if it adds a DISTINCT, observable new decision that synergizes with — but does not
+replace — the existing cards. Be strict: when in doubt between two similar cards, drop the weaker.
+
+EXISTING CARDS (roles already covered):
+{cards}
+
+CANDIDATE IDEAS (evaluate every one):
+{ideas}
+
+Output ONE JSON object EXACTLY, no prose, no markdown fences:
+{{ "reviews": [ {{ "name": "<카드 이름>", "verdict": "keep"|"drop", "role": "<한 단어 역할축>", "reason": "<왜 keep/drop, 한 줄 한국어>" }} ] }}
+"reviews" must cover EVERY candidate by exact name. Return only the JSON."""
+
+
+def critique_ideas(ideas, prev="l9", family="tactics", replay=None):
+    """골렘 의미 비평가(★키): 제안 카드들을 기존 카드 대비 역할겹침·얕음·실현성으로 평가해 keep/drop.
+    반환=(kept_ideas, reviews). 비평가가 빠뜨린 카드는 fail-open으로 keep(좋은 후보 유실 방지).
+    replay=응답파일 경로면 키 없이 재생(테스트·디버그)."""
+    from planning import _extract_json
+    cfg = FAMILY[family]
+    ideas_txt = "\n".join(
+        f"  - {x.get('name','?')}: {x.get('mechanic','')} (관측: {x.get('observable','')})" for x in ideas)
+    prompt = CRITIC_PROMPT.format(game=cfg["game"], cards=card_summary(prev, family), ideas=ideas_txt)
+    if replay:
+        d = _extract_json(Path(replay).read_text(encoding="utf-8"))
+    else:
+        import os
+        os.environ["GENERATOR_MODEL"] = MODEL_31
+        os.environ["CRITIC_MODEL"] = MODEL_31
+        from config import get_api_keys
+        from llm import KeyPool, LLMClient
+        pool = KeyPool(get_api_keys(), models=[MODEL_31])
+        with pool.checkout() as key:
+            d = _extract_json(LLMClient(api_key=key).generate("critic", prompt))
+    reviews = d.get("reviews") or []
+    by_name = {r.get("name"): r for r in reviews}
+    kept = [x for x in ideas if by_name.get(x.get("name"), {}).get("verdict", "keep") != "drop"]
+    return kept, reviews
+
+
 def card_summary(prev, family="tactics"):
     """직전 패킷 계약에서 REQ 목록(앞 줄)을 카드 요약으로."""
     c = json.loads((PACKETS / f"planning_packet_{family}_{prev}" / "contract.json").read_text(encoding="utf-8"))
