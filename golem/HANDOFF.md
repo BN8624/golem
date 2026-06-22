@@ -4,7 +4,8 @@
 
 **▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 뷰어가 실제 미션 레벨을 보이게 한다.** 완결후보(엔진+카드8+에테르노 미션레벨+서사)는 다 있는데 `gen_squad_play.py` 뷰어는 **검증 데모월드(계약 scenario_data)만 재생**한다 — 사용자가 만든 에테르노 레벨을 못 본다. 사용자 역할="재미있나" 판단인데 그러려면 **봐야** 한다. → 뷰어가 `tactics/play/squad_levels.json`을 로드하되 레벨엔 액션 스크립트가 없으니 **`play_signals` BFS가 솔루션 경로를 반환하게 보강**해 그 솔루션을 턴재생(또는 직접 플레이). "보고 판단"의 마지막 갭.
 - (대안) 5권 전체 캠페인부터: `python golem/tools/propose_levels.py --family squad --prev l8 --missions golem/build_runs/proposals/eterno_outline.json --n 20 --min-turns 3 --max-turns 9`(★키, 길다) → 20미션. 그담 levelstory 미션 재정렬.
-- **세션 상태: 작업트리 클린·origin/main 푸시됨(34c6816)·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만).
+- **세션 상태: 작업트리 클린·origin/main 푸시됨(44401e8)·CI keyless 그린·로컬 verify_tactics ALL PASS.** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만).
+- **CI 교훈(G91 레이아웃 마이그레이션 후속 버그 2건, 푸시 후 keyless 실패로 발견)**: ① replay FIXTURES 이중중첩(`HERE/"fixtures"`→`FIXTURES/"fixtures"` 라우팅 오류, 로컬 0개 진공통과) ② replay가 gitignore된 build_runs에 쓰는데 신선 체크아웃엔 그 디렉토리 없음(mkdir 추가). **둘 다 로컬 통과·CI만 실패** — 로컬엔 잔재폴더·gitignore 디렉토리가 있어 가려졌다. **규칙: 대규모 경로 마이그레이션 뒤엔 신선 체크아웃 모사(gitignore 디렉토리 비우고 run_keyless)로 검증해야 한다.** [[fresh-checkout-after-path-migration]]
 
 **현재 상태 (2026-06-22, G93) — 소설(에테르노 5권)→게임 브리지 닫힘. 서사·카드 둘 다 소설에서 무인 생성.**
 - **forge_ingest.py(키0)**: `C:/Users/USER/forge/runs/world-backups/<ts>/`의 구조화 서사(story/series.json+events 20개+elements)를 `eterno_outline.json`(전제·테마·인물 카엘/리아·이벤트 20 미션objective·element 카드씨앗 5)으로 압축. 소설=스킨/씨앗, 골렘=검증된 룰 분리 유지.
