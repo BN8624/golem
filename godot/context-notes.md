@@ -74,3 +74,10 @@
 - **공격 화살표(G96 병행 증분, ★키)**: 한 재생성=한 기능. SCENE_SPEC v8만 활성, 사거리 영역은 보류 유지. 화살표는 effects 배열 표시 전용(state 0영향)이라 입력/fixture/자동/골든/퍼징 전부 불변 — 그래서 board 재생성이 안전했고 1시도 통과. 근접 draw_line·원거리 draw_polyline 포물선(PackedVector2Array append, '+' 금지 함정 준수). Phase 1-2의 fixture 게이트가 이 재생성을 더 안전하게 받쳐줌(입력 회귀 자동 차단).
 - **시각 스냅샷(Phase 5) — 보수적 범위**: 자동전투·이펙트·트윈이 도는 PLAYING/RESULT는 프레임 비결정이라 픽셀 비교 부적합 → 정적 MENU·BRIEFING만 대상. 환경별 baseline 분리(Playwright 플랫폼 접미사 -win32/-linux). 로컬 win32만 커밋, CI linux는 비차단으로 생성·artifact → 사람이 채택(문서의 "동일환경 기준이미지·명시적 갱신" 원칙 정합). 하드게이트 전환은 linux baseline 커밋 + --update-snapshots 제거 한 줄.
 - **판단**: 외부 리뷰 요청은 G97+G98로 사실상 완결(완료기준 섹션10 전부·CI green). 시각만 "비차단→채택 시 게이트"로 단계 남김(외형이 아직 증분 중이라 의도적).
+
+## G99 — 시각 하드게이트 채택 + 사거리영역 v9 + 브리핑 회귀/게이트갭 (2026-06-23)
+- **시각 하드게이트**: linux 기준이미지(CI artifact)를 커밋하고 godot.yml 시각 스텝에서 --update-snapshots 제거 → 픽셀 회귀 비교 게이트. 첫 CI 런에서 통과 확인.
+- **사거리 영역 v9(★키)**: 선택 아군의 공격 reach 전체를 옅은 빨강 반투명 fill. 표시 전용(state 불변). 골렘 1시도 통과.
+- **★ 브리핑 회귀 — 게이트 갭 발견**: 사거리영역 재생성이 BRIEFING을 메뉴로 그리는 회귀를 냈다. 로컬 게이트(스모크·입력프로브·fixture·자동·렌더캡처)는 **브리핑을 안 봤다** — load_mission(0)이 메뉴/브리핑을 우회하고, capture_attack.gd도 MENU+공격만 캡처. 그래서 회귀가 게이트를 통과해 커밋·푸시됐고, **시각 CI 게이트(briefing 12% diff)만 잡았다**. 채택한 첫 하드게이트가 바로 값을 했다.
+- **수습(게이트 갭 영구 차단)**: capture_attack.gd가 MENU→탭→BRIEFING을 캡처하고 두 화면 픽셀 차이율(BRIEFING_DIFF_RATIO)을 출력. godot_port_scene.run_render가 ratio<0.03이면(브리핑이 메뉴와 거의 동일=브리핑 안 그림) 게이트 실패. 개선 게이트로 재롤 → 브리핑 복원(diff 0.32, 반투명 박스+본문+탭하여 시작)·CI 완전 green.
+- **교훈**: ① GOLEM 풀 재생성은 명시 안 한 화면도 바꿀 수 있다 → 게이트는 모든 화면(_draw)을 봐야 한다(헤드리스 프로브는 load_mission 우회라 메뉴/브리핑 _draw를 영영 못 본다 — 렌더 캡처가 유일한 눈). ② 시각 하드게이트는 board가 자주 재생성되는 동안 의도적 외형 변경 시 기준이미지 갱신을 요구하지만(menu/briefing이 톨러런스 내면 통과), 그 대가로 _draw 회귀를 잡아준다 — 이번처럼.
