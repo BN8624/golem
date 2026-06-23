@@ -2,21 +2,26 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 덱 편성 단계 1차 슬라이스 = 완료 (2026-06-23, G100) — "선택→자동전투" 루프 닫힘. CI green.
+### ★ 덱 편성 = 2슬라이스 완료 (2026-06-23, G100 SQUAD_SELECT + G101 코스트 예산). "선택→자동전투" 루프 닫힘·트레이드오프 생김. CI green.
 
-**무엇**: BRIEFING→**SQUAD_SELECT**(덱 편성)→PLAYING. 로스터(`godot/data/roster.json` 6명)에서 squad_size(=미션 아군 수)명을 토글 선택→"출전"→`start_battle_with(ids)`가 고른 유닛을 **id 1..N 정수 재부여·0열 배치**해 `state.allies`로 넣고 PLAYING. **rules.gd·골든 불변**(36/36), `load_mission(idx)` 동작·시그니처 불변(미션 고정 allies로 PLAYING 직행 — 프로브/fixture/test_bridge 의존).
+**G101(코스트 예산, 이번)**: 유닛마다 `cost`, 미션 공통 `cost_budget`(7). 편성 규칙 = squad_size명 + cost 합 ≤ budget. "아무나 N명"이 트레이드오프로(예산7·squad2면 kael4+ria4=8 막힘 → 협공 vire2가 프리미엄 끼우는 인에이블러). SQUAD_SELECT가 유닛별 Cost·"코스트 N/한도"(초과 빨강) 표시, 출전 게이트에 cost 조건. **rules.gd·골든 불변**(cost는 편성 메타, 룰 미사용).
+
+**G100 베이스**: BRIEFING→**SQUAD_SELECT**→PLAYING. 로스터 6명서 골라 `start_battle_with(ids)`가 id 1..N 정수 재부여·0열 배치해 `state.allies`로. `load_mission(idx)` 불변(프로브/fixture/test_bridge 의존).
 
 **▶ 다음 세션 첫 동작 = 다음 슬라이스(택1, 사용자 취향)**:
-- **A. 코스트/슬롯 제약** — 유닛에 cost 필드(roster.json) + SQUAD_SELECT에 코스트 한도. "버릴 줄 아는" 선택압. SCENE_SPEC v10에 cost 게이트 추가→★키 재생성.
-- **B. 로스터 영속·언락** — 미션 클리어로 유닛 해금, 로컬저장. (영속은 web localStorage 배관 필요 — 새 트랙.)
-- **C. SQUAD_SELECT 외형 폴리시** — 유닛 카드에 스프라이트·역할 아이콘(현재 텍스트 카드). 시각 하드게이트가 squad-linux 기준 받침.
-- **D. opposing-sides 레이아웃**(고잠 — 골든 재추출+프로브 move-then-attack 선행).
+- **B. 로스터 영속·언락** — 미션 클리어로 유닛 해금, 로컬저장(web localStorage 배관 = 새 트랙).
+- **C. SQUAD_SELECT 외형 폴리시** — 유닛 카드에 스프라이트·역할 아이콘(현재 텍스트 카드). **반드시 `--incr` 모드로**(아래 교훈).
+- **D. 미션별 예산/배치 선택** — cost_budget를 미션마다(squad_levels.json 메타) + 시작 칸을 플레이어가 고르게(현재 0열 고정).
+- **E. opposing-sides 레이아웃**(고잠 — 골든 재추출+프로브 move-then-attack 선행).
+추천 = **C(외형)** 또는 **B(영속)**. 메커니즘(선택압)은 섰으니 다음은 "보기 좋게/계속 모으게".
 
-추천 = **A(코스트)**. 선택이 "아무나 N명"에서 "트레이드오프"로 바뀌어야 재미게이트가 진짜 의미. 작은 데이터+사양 슬라이스라 증분 원칙에 맞음.
+**★ G101 핵심 교훈 — 씬 증분은 `--incr` 모드로**: 풀 scratch 재생성(`godot_port_scene.py --cap N`)은 board 전체를 매번 새로 써서 **이미 검증된 PLAYING 로직(선택/이동/RESULT 전환)을 자꾸 회귀**시킨다(실측: scratch 9시도 중 PLAYING 회귀 다발). 해법 = **`--incr`**: 검증된 현재 board.gd를 base로 프롬프트에 넣고 "새 기능만 최소 변경, 나머지 byte-identical 유지" 지시(omc 증분분해 코드화). 실측: incr 4/4가 PLAYING 보존. **board에 기능 더할 땐 무조건 `git restore`로 검증본 두고 `--incr --cap 4`.** [[golem-one-increment-per-regen]] [[godot-gates-no-pixel-coupling]]
 
-**G100 교훈(중요)**: 하네스가 **메뉴 버튼 픽셀 좌표(320,175)에 결합**돼 있어서, 골렘이 board 재생성 때 버튼 좌표를 바꾸자 캡처·시각·E2E 셋 다 빗나가 false-fail. **수습=모든 게이트를 화면 직접 세팅(`pending_idx`/`screen`·브리지 `window.GOLEM_NAV`)으로 디커플** → 골렘 레이아웃 자유, 게이트는 "화면이 크래시 없이·서로 다르게 그려지나"만 본다. 실제 터치→셀 판정은 헤드리스 입력 프로브(cell_to_screen 왕복)가 결정적으로 보증, 실기기 조작감은 사람(verdict). **규칙 확립: 게이트는 골렘이 자유롭게 정하는 픽셀 좌표에 절대 결합하지 마라.**
+**★ 알려진 플레이키 — 윈도 렌더 게이트**: `run_render`(windowed Godot 캡처)가 배치 4연속 실행 시 SQUAD_BATTLE_OK를 false로 잘못 내는 false-negative가 잦다(G100·G101 모두). **같은 board를 단독 수동 실행하면 통과.** 1회 재시도를 넣었지만 배치 경합은 여전. → **board 채택 판정은 개별 수동 게이트로**(스모크·입력프로브·fixture·자동·골든 + 수동 캡처 1회). 배치 EXIT=1이어도 디스크 board가 개별 통과하면 정상.
 
-**G100 산출/검증**: roster.json·SCENE_SPEC ★v10·pending_idx 계약 / board.gd ★키 재생성(1풀 — 스모크·입력프로브0·fixture6/6·자동전투 DEFEAT5 2회·골든36/36·렌더 BRIEFING0.44·SQUAD0.46·SQUAD_BATTLE_OK) / 캡처+시각+E2E 디커플 / win32·linux 시각 기준 갱신(briefing·squad) / **CI green(run 28007912598 update→28008034629 hardgate)**. 커밋 a2cf04a·4780ae6·d316141·4a15076·b8378f9·37237a6.
+**G101 산출/검증**: roster cost+budget·SCENE_SPEC v10 cost / board.gd `--incr` 재생성(개별 수동: 스모크·입력프로브0·fixture6/6·자동·골든36/36·rules.gd불변·렌더 SQUAD_BATTLE_OK·diff0.46) / 하네스 `--incr`+diagnose함정2개+캡처 예산내쌍 / 시각 기준 갱신 불필요(cost 텍스트 델타가 임계 2% 안, win32 비교게이트 3/3). 커밋 7c67b31·7c982a7·463ef59.
+
+**G100 교훈(게이트 픽셀 디커플)**: 하네스가 메뉴 버튼 좌표(320,175)에 매직탭 결합돼 board 재생성 때 셋 다 false-fail. 수습=화면 직접세팅(`pending_idx`/`screen`)·브리지 `window.GOLEM_NAV`로 디커플. **게이트는 골렘 픽셀 좌표에 결합 금지.** [[godot-gates-no-pixel-coupling]]
 
 ---
 

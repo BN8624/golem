@@ -91,3 +91,12 @@
 - **squad_size**: levels[pending_idx].initialState.allies.size()(현재 전부 2)만큼 정확히 고르게. 밸런스를 미션이 기대한 아군 수에 맞춤.
 - **공통 마감 헬퍼 제안**: load_mission과 start_battle_with가 state 마감(turn=0/status/selected null/auto 리셋/screen=PLAYING)을 공유하므로 `_enter_battle(init)` 헬퍼로 빼되 load_mission 외부 동작은 불변.
 - **남은 것(다음)**: ③ board.gd ★키 재생성(SQUAD_SELECT 화면 추가) → ④ 검증(골든·프로브·fixture·퍼징 전부 그대로 통과 확인)·SQUAD_SELECT 화면 캡처 게이트·시각 기준이미지 갱신·커밋.
+
+## G101 — SQUAD_SELECT 코스트 예산 + 씬 증분 모드(--incr) (2026-06-23, 클로드 키0 사양/하네스 + 골렘 ★키 board)
+- **코스트 메커니즘**: 유닛 cost(roster.json) + 미션 공통 cost_budget(7). 편성 = squad_size명 + cost합 ≤ budget. 강한 유닛이 비싸 트레이드오프(kael4+ria4=8 막힘, 협공 vire2가 인에이블러). cost는 편성 메타라 룰·골든 불변.
+- **★ 핵심 교훈 — 풀 scratch 재생성의 회귀**: cost를 풀 scratch(`--cap`)로 두 번 시도(cap4, cap5) 했더니 9시도 중 대부분이 cost와 무관한 PLAYING 로직(선택null·이동 후 선택해제·VICTORY/DEFEAT→RESULT 전환 누락·pos!=Vector2 함정)을 회귀시켰다. 골렘이 board 전체를 매번 새로 쓰니 이미 통과한 부분이 흔들린다(G99 브리핑 회귀와 동형, 더 심함).
+- **수습 = `--incr` 증분 모드(godot_port_scene.py)**: 검증된 현재 board.gd를 프롬프트에 base로 넣고 "새 기능만 최소 변경, 나머지(선택/이동/execute_action/load_mission/start_battle_with/RESULT 전환) byte-identical 유지" 지시. 실측: incr 4/4가 PLAYING 보존하고 cost만 추가. omc 증분분해를 코드화한 것. **규칙: board에 기능 더할 땐 git restore로 검증본 두고 --incr.**
+- **diagnose 함정 2개 추가**: "already declared in this scope"(변수 중복, tw/th 같은 임시변수 충돌) · "Invalid operands Array Vector2"(pos를 Vector2와 직접 비교).
+- **캡처 SQUAD_BATTLE_OK 수정**: 로스터 앞 2개(kael+ria=8>budget)를 쓰면, 모델이 start_battle_with 안에 예산검사를 넣은 경우 거부당해 false-fail. cost 오름차순 2명(예산 내)으로 바꿔 어느 구현이든 통과하게.
+- **★ 윈도 렌더 게이트 플레이키(미해결)**: run_render(windowed) 배치 실행이 SQUAD_BATTLE_OK를 false로 잘못 냄 — 같은 board 단독 수동 실행은 통과. G100·G101 둘 다. 1회 재시도 넣었지만 배치 경합 여전. board 채택은 개별 수동 게이트로 판정(이번에도 그렇게 확정·채택).
+- **시각 기준 갱신 불필요**: cost 텍스트 추가분이 시각 임계(maxDiffPixelRatio 0.02) 안 → win32 비교게이트 3/3 통과, squad-win32.png 무변경. linux도 CI 하드게이트로 확인.

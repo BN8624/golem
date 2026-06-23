@@ -70,7 +70,9 @@
   - [x] (골렘 ★키) board.gd 재생성 — SQUAD_SELECT 화면. 1풀 채택(스모크·입력프로브0·fixture6/6·자동전투·골든36/36·렌더 BRIEFING/SQUAD diff·SQUAD_BATTLE_OK)
   - [x] (클로드 키0) **게이트 메뉴좌표 디커플** — 캡처(pending_idx/screen 직접세팅)·시각/E2E(브리지 GOLEM_NAV)·렌더 1회 재시도. 골렘 픽셀 좌표 결합 영구 제거
   - [x] (클로드 키0) win32·linux 시각 기준이미지 갱신(briefing·squad, menu 불변) + 비교 하드게이트 원복. CI green(run 28007912598→28008034629)
-  - [ ] (다음 슬라이스, 택1) A.코스트/슬롯 제약(추천) / B.로스터 영속·언락 / C.SQUAD_SELECT 외형 폴리시 / D.opposing-sides(고잠)
+  - [x] (G101 = 코스트 예산, --incr) 유닛 cost + cost_budget(7), 편성=squad_size명+cost합≤budget. "아무나 N명"→트레이드오프. board.gd `--incr` 증분 재생성(PLAYING 회귀 0). 룰·골든 불변. 시각 델타 임계 안(기준 갱신 불필요)
+  - [x] (하네스 G101) `--incr` 증분 모드(검증 board base+최소변경) + diagnose 함정2개(변수중복·pos비교) + 캡처 예산내 최저가쌍
+  - [ ] (다음 슬라이스, 택1) B.로스터 영속·언락 / C.SQUAD_SELECT 외형 폴리시(추천, --incr 필수) / D.미션별 예산·시작칸 선택 / E.opposing-sides(고잠)
   - (보류) opposing-sides(고잠·골든재추출 선행) / 외형 폴리시(적 화살표 등)는 덱 편성 뒤
 
 ## Phase 4 — 확장(선택)
