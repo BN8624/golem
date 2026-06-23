@@ -72,7 +72,8 @@
   - [x] (클로드 키0) win32·linux 시각 기준이미지 갱신(briefing·squad, menu 불변) + 비교 하드게이트 원복. CI green(run 28007912598→28008034629)
   - [x] (G101 = 코스트 예산, --incr) 유닛 cost + cost_budget(7), 편성=squad_size명+cost합≤budget. "아무나 N명"→트레이드오프. board.gd `--incr` 증분 재생성(PLAYING 회귀 0). 룰·골든 불변. 시각 델타 임계 안(기준 갱신 불필요)
   - [x] (하네스 G101) `--incr` 증분 모드(검증 board base+최소변경) + diagnose 함정2개(변수중복·pos비교) + 캡처 예산내 최저가쌍
-  - [ ] (다음 슬라이스, 택1) B.로스터 영속·언락 / C.SQUAD_SELECT 외형 폴리시(추천, --incr 필수) / D.미션별 예산·시작칸 선택 / E.opposing-sides(고잠)
+  - [x] (G102 = SQUAD_SELECT 스프라이트 카드, --incr) 유닛 카드에 스프라이트 썸네일(range>1 mage/else knight 32x32). 텍스트→그림 카드. 룰·골든·PLAYING 좌표 불변. 시각 델타 임계 안. 하네스 echo 거부 보강(약한 모델이 base echo하던 것 차단)
+  - [ ] (다음 슬라이스, 택1) B.로스터 영속·언락(추천) / D.미션별 예산·시작칸 선택(추천) / F.SQUAD_SELECT 외형 더 / E.opposing-sides(고잠). 전부 --incr
   - (보류) opposing-sides(고잠·골든재추출 선행) / 외형 폴리시(적 화살표 등)는 덱 편성 뒤
 
 ## Phase 4 — 확장(선택)

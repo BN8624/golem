@@ -2,20 +2,22 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 덱 편성 = 2슬라이스 완료 (2026-06-23, G100 SQUAD_SELECT + G101 코스트 예산). "선택→자동전투" 루프 닫힘·트레이드오프 생김. CI green.
+### ★ 덱 편성 = 3슬라이스 완료 (2026-06-23, G100 SQUAD_SELECT + G101 코스트 + G102 스프라이트 카드). "선택→자동전투" 루프 닫힘·트레이드오프·외형. CI green.
 
-**G101(코스트 예산, 이번)**: 유닛마다 `cost`, 미션 공통 `cost_budget`(7). 편성 규칙 = squad_size명 + cost 합 ≤ budget. "아무나 N명"이 트레이드오프로(예산7·squad2면 kael4+ria4=8 막힘 → 협공 vire2가 프리미엄 끼우는 인에이블러). SQUAD_SELECT가 유닛별 Cost·"코스트 N/한도"(초과 빨강) 표시, 출전 게이트에 cost 조건. **rules.gd·골든 불변**(cost는 편성 메타, 룰 미사용).
+**G102(스프라이트 카드, 이번)**: SQUAD_SELECT 유닛 카드 왼쪽에 스프라이트 썸네일(range>1 mage/else knight, 32x32). 텍스트 카드 → 그림 카드. `--incr`로 board 재생성, 룰·골든·PLAYING 좌표 불변. 시각 델타가 임계(2%) 안이라 기준이미지 갱신 불필요.
+
+**G101(코스트 예산)**: 유닛 `cost` + 미션 공통 `cost_budget`(7). 편성 = squad_size명 + cost합 ≤ budget. "아무나 N명"이 트레이드오프로(kael4+ria4=8 막힘 → 협공 vire2가 인에이블러). cost는 편성 메타(룰 미사용).
 
 **G100 베이스**: BRIEFING→**SQUAD_SELECT**→PLAYING. 로스터 6명서 골라 `start_battle_with(ids)`가 id 1..N 정수 재부여·0열 배치해 `state.allies`로. `load_mission(idx)` 불변(프로브/fixture/test_bridge 의존).
 
 **▶ 다음 세션 첫 동작 = 다음 슬라이스(택1, 사용자 취향)**:
 - **B. 로스터 영속·언락** — 미션 클리어로 유닛 해금, 로컬저장(web localStorage 배관 = 새 트랙).
-- **C. SQUAD_SELECT 외형 폴리시** — 유닛 카드에 스프라이트·역할 아이콘(현재 텍스트 카드). **반드시 `--incr` 모드로**(아래 교훈).
 - **D. 미션별 예산/배치 선택** — cost_budget를 미션마다(squad_levels.json 메타) + 시작 칸을 플레이어가 고르게(현재 0열 고정).
+- **F. SQUAD_SELECT 외형 더** — 역할 아이콘/cost 배지/선택 체크마크 등(G102 위에 `--incr`).
 - **E. opposing-sides 레이아웃**(고잠 — 골든 재추출+프로브 move-then-attack 선행).
-추천 = **C(외형)** 또는 **B(영속)**. 메커니즘(선택압)은 섰으니 다음은 "보기 좋게/계속 모으게".
+추천 = **B(영속)** 또는 **D(미션별 예산·시작칸)**. 외형 1차(G102) 섰으니 다음은 깊이(영속/배치).
 
-**★ G101 핵심 교훈 — 씬 증분은 `--incr` 모드로**: 풀 scratch 재생성(`godot_port_scene.py --cap N`)은 board 전체를 매번 새로 써서 **이미 검증된 PLAYING 로직(선택/이동/RESULT 전환)을 자꾸 회귀**시킨다(실측: scratch 9시도 중 PLAYING 회귀 다발). 해법 = **`--incr`**: 검증된 현재 board.gd를 base로 프롬프트에 넣고 "새 기능만 최소 변경, 나머지 byte-identical 유지" 지시(omc 증분분해 코드화). 실측: incr 4/4가 PLAYING 보존. **board에 기능 더할 땐 무조건 `git restore`로 검증본 두고 `--incr --cap 4`.** [[golem-one-increment-per-regen]] [[godot-gates-no-pixel-coupling]]
+**★ 핵심 교훈 — 씬 증분은 `--incr` 모드로**: 풀 scratch 재생성은 board 전체를 매번 새로 써서 **검증된 PLAYING 로직을 자꾸 회귀**시킨다(G101 scratch 9시도 회귀 다발). 해법 = **`--incr`**: 검증된 현재 board를 base로 주고 "새 기능만 추가, 무관 로직 보존". **board에 기능 더할 땐 `git restore`로 검증본 두고 `--incr --cap 4`.** ⚠ **단 echo 함정**: 약한 모델은 base를 그대로 반환해 새 기능을 0줄 추가하기도 함(G102) → 하네스가 "생성물==base면 거부·되먹임" + BASE_BLOCK "동일=실패, 반드시 추가" + 사양에 구체 draw 코드 힌트를 넣어야 실제로 구현된다. [[golem-one-increment-per-regen]] [[godot-gates-no-pixel-coupling]]
 
 **★ 알려진 플레이키 — 윈도 렌더 게이트**: `run_render`(windowed Godot 캡처)가 배치 4연속 실행 시 SQUAD_BATTLE_OK를 false로 잘못 내는 false-negative가 잦다(G100·G101 모두). **같은 board를 단독 수동 실행하면 통과.** 1회 재시도를 넣었지만 배치 경합은 여전. → **board 채택 판정은 개별 수동 게이트로**(스모크·입력프로브·fixture·자동·골든 + 수동 캡처 1회). 배치 EXIT=1이어도 디스크 board가 개별 통과하면 정상.
 

@@ -100,3 +100,10 @@
 - **캡처 SQUAD_BATTLE_OK 수정**: 로스터 앞 2개(kael+ria=8>budget)를 쓰면, 모델이 start_battle_with 안에 예산검사를 넣은 경우 거부당해 false-fail. cost 오름차순 2명(예산 내)으로 바꿔 어느 구현이든 통과하게.
 - **★ 윈도 렌더 게이트 플레이키(미해결)**: run_render(windowed) 배치 실행이 SQUAD_BATTLE_OK를 false로 잘못 냄 — 같은 board 단독 수동 실행은 통과. G100·G101 둘 다. 1회 재시도 넣었지만 배치 경합 여전. board 채택은 개별 수동 게이트로 판정(이번에도 그렇게 확정·채택).
 - **시각 기준 갱신 불필요**: cost 텍스트 추가분이 시각 임계(maxDiffPixelRatio 0.02) 안 → win32 비교게이트 3/3 통과, squad-win32.png 무변경. linux도 CI 하드게이트로 확인.
+
+## G102 — SQUAD_SELECT 스프라이트 카드 + --incr echo 차단 (2026-06-23)
+- **외형**: 유닛 카드 왼쪽에 스프라이트 썸네일(range>1 tex_mage/else tex_knight, 32x32 draw_texture_rect), 텍스트 우측 이동. PLAYING과 동일 스프라이트 규칙. 룰·골든·PLAYING 좌표 불변.
+- **★ --incr echo 함정**: --incr로 두 번(스프라이트) 돌렸더니 모델이 base를 byte-identical로 그대로 반환 — 새 기능 0줄. "최소 변경/byte-identical 유지" 지시가 너무 강해 "아무것도 안 바꿈"으로 흘렀다. 게이트는 통과(SQUAD diff는 BRIEFING 대비라 squad-vs-이전-squad는 안 봄)라 안 걸림.
+- **수습 3종(키0)**: ① 하네스가 생성물.strip()==base면 게이트 전에 거부·되먹임("동일 파일=실패"). ② BASE_BLOCK을 "반드시 새 기능 추가, 무관 로직만 보존"으로 재균형. ③ 사양에 draw_texture_rect 구체 코드 힌트. → 3번째 시도에서 스프라이트 실제 추가됨.
+- **부수 변경(수용)**: 모델이 죽은 변수 TILE_W/origin 제거(project가 인라인 600/gridSize 계산이라 무영향) + 메뉴 제목 x 220→320 재중앙. 둘 다 시각 임계(2%) 안이라 기준이미지 무변경.
+- **시각 기준 갱신 불필요**: 스프라이트(6장 32x32)+메뉴 제목 이동이 maxDiffPixelRatio 0.02 안. win32 비교게이트 3/3·git 기준 무변경. CI 하드게이트로 linux 확인.
