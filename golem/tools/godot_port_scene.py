@@ -69,14 +69,26 @@ def run_smoke(godot):
 
 
 def run_probe(godot):
-    # 입력 프로브 — load_mission(0)으로 메뉴 우회 후 선택·이동·공격을 결정적 검증(스모크가 못 잡는 무반응 잡기)
+    # 입력 프로브(미션0 통합) — 선택·이동·공격을 구조화 비교. 문자열이 아니라 종료코드로 PASS 판정(불일치 시 quit(1)).
     r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
                         "--script", "res://test/run_input_probe.gd"],
                        capture_output=True, text=True, encoding="utf-8", timeout=120)
     out = (r.stdout or "") + (r.stderr or "")
-    ok = ("입력 로직 동작함" in out) and ("공격 동작함" in out)
+    ok = r.returncode == 0
     lines = "\n".join(l for l in out.splitlines()
                       if "PROBE" in l or any(m in l for m in ERR_MARKERS))
+    return ok, lines
+
+
+def run_fixture(godot):
+    # fixture 프로브 — 미션0과 무관한 기능 단위 계약(select/move/attack/victory/defeat/edge). 종료코드로 판정.
+    r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
+                        "--script", "res://test/run_fixture_probe.gd"],
+                       capture_output=True, text=True, encoding="utf-8", timeout=120)
+    out = (r.stdout or "") + (r.stderr or "")
+    ok = r.returncode == 0
+    lines = "\n".join(l for l in out.splitlines()
+                      if "FIXTURE" in l or any(m in l for m in ERR_MARKERS))
     return ok, lines
 
 
@@ -151,10 +163,13 @@ def main(argv=None):
         OUT.write_text(Path(args.replay).read_text(encoding="utf-8"), encoding="utf-8")
         ok, out, _ = run_smoke(args.godot)
         pok, plines = run_probe(args.godot) if ok else (False, "(스모크 실패로 프로브 생략)")
+        fok, flines = run_fixture(args.godot) if (ok and pok) else (False, "(이전 단계 실패로 fixture 생략)")
         print(out.strip()[-1200:])
         print(plines)
-        print("스모크:", "OK" if ok else "FAIL", "| 프로브:", "OK" if pok else "FAIL")
-        return 0 if (ok and pok) else 1
+        print(flines)
+        print("스모크:", "OK" if ok else "FAIL", "| 입력프로브:", "OK" if pok else "FAIL",
+              "| fixture:", "OK" if fok else "FAIL")
+        return 0 if (ok and pok and fok) else 1
 
     from config import get_api_keys
     from llm import KeyPool, LLMClient
@@ -178,10 +193,17 @@ def main(argv=None):
             continue
         pok, plines = run_probe(args.godot)
         if not pok:
-            print("  ✗ 입력 프로브 실패(클릭/공격 무반응):\n" + "\n".join("    " + l for l in plines.splitlines()[:10]))
-            feedback = ("스모크는 통과했으나 입력 프로브 실패. load_mission(0) 후 클릭이 무반응이다. "
+            print("  ✗ 입력 프로브 실패(선택/이동/공격 계약 불일치):\n" + "\n".join("    " + l for l in plines.splitlines()[:10]))
+            feedback = ("스모크는 통과했으나 입력 프로브 실패. load_mission(0) 후 선택·이동·공격 중 계약이 어긋났다. "
+                        "PROBE_JSON 의 expected vs actual 을 보고 차이를 고쳐라. "
                         "자동 검증 계약(state/selected_unit_id/load_mission/_unhandled_input)과 "
                         "좌표 비교 함정(pos[0]==gx and pos[1]==gy)을 다시 확인하라. 프로브 출력:\n" + plines[:1500])
+            continue
+        fok, flines = run_fixture(args.godot)
+        if not fok:
+            print("  ✗ fixture 프로브 실패(기능 단위 계약 불일치):\n" + "\n".join("    " + l for l in flines.splitlines()[:12]))
+            feedback = ("스모크·입력프로브는 통과했으나 fixture 계약 실패. test/fixtures/*.json 의 기능 하나가 어긋났다. "
+                        "FIXTURE_JSON 의 mismatches(got/want)를 보고 board.gd 의 입력 처리를 고쳐라. fixture 출력:\n" + flines[:1500])
             continue
         aok, alines = run_auto(args.godot)
         if not aok:

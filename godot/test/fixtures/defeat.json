@@ -1,0 +1,24 @@
+{
+  "name": "defeat",
+  "desc": "공격 후 적 반격으로 마지막 아군 전멸 → DEFEAT, RESULT 화면",
+  "initialState": {
+    "gridSize": 6,
+    "allies": [
+      { "id": 1, "hp": 2, "atk": 1, "pos": [1, 1] }
+    ],
+    "enemies": [
+      { "id": 1, "hp": 99, "atk": 5, "pos": [2, 1] }
+    ]
+  },
+  "clicks": [[1, 1], [2, 1]],
+  "expect": {
+    "turn": 1,
+    "status": "DEFEAT",
+    "screen": "RESULT",
+    "units": {
+      "a1": { "hp": -3 },
+      "e1": { "hp": 98 }
+    }
+  },
+  "story": { "briefing": "fixture", "victory": "fixture", "defeat": "fixture" }
+}

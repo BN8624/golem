@@ -1,0 +1,27 @@
+{
+  "name": "select",
+  "desc": "아군 칸 탭 → 선택만 되고 턴/위치는 불변",
+  "initialState": {
+    "gridSize": 6,
+    "allies": [
+      { "id": 1, "hp": 10, "atk": 3, "pos": [1, 1] },
+      { "id": 2, "hp": 10, "atk": 3, "pos": [1, 3] }
+    ],
+    "enemies": [
+      { "id": 1, "hp": 99, "atk": 1, "pos": [4, 4] }
+    ]
+  },
+  "clicks": [[1, 1]],
+  "expect": {
+    "selected_unit_id": 1,
+    "turn": 0,
+    "status": "PLAYING",
+    "screen": "PLAYING",
+    "units": {
+      "a1": { "pos": [1, 1] },
+      "a2": { "pos": [1, 3] },
+      "e1": { "pos": [4, 4] }
+    }
+  },
+  "story": { "briefing": "fixture", "victory": "fixture", "defeat": "fixture" }
+}

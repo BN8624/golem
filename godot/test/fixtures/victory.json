@@ -1,0 +1,23 @@
+{
+  "name": "victory",
+  "desc": "한 번의 공격으로 마지막 적 처치 → VICTORY, RESULT 화면",
+  "initialState": {
+    "gridSize": 6,
+    "allies": [
+      { "id": 1, "hp": 10, "atk": 20, "pos": [1, 1] }
+    ],
+    "enemies": [
+      { "id": 1, "hp": 5, "atk": 1, "pos": [2, 1] }
+    ]
+  },
+  "clicks": [[1, 1], [2, 1]],
+  "expect": {
+    "turn": 1,
+    "status": "VICTORY",
+    "screen": "RESULT",
+    "units": {
+      "e1": { "hp": -15 }
+    }
+  },
+  "story": { "briefing": "fixture", "victory": "fixture", "defeat": "fixture" }
+}

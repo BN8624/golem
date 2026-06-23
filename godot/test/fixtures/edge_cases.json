@@ -1,0 +1,26 @@
+{
+  "name": "edge_cases",
+  "desc": "무효 입력(원거리 빈칸 탭)은 턴/위치를 바꾸지 않고, 다른 아군 탭은 재선택만 한다",
+  "initialState": {
+    "gridSize": 6,
+    "allies": [
+      { "id": 1, "hp": 10, "atk": 1, "pos": [0, 0] },
+      { "id": 2, "hp": 10, "atk": 1, "pos": [0, 1] }
+    ],
+    "enemies": [
+      { "id": 1, "hp": 99, "atk": 1, "pos": [4, 4] }
+    ]
+  },
+  "clicks": [[0, 0], [3, 3], [0, 1]],
+  "expect": {
+    "selected_unit_id": 2,
+    "turn": 0,
+    "status": "PLAYING",
+    "screen": "PLAYING",
+    "units": {
+      "a1": { "pos": [0, 0] },
+      "a2": { "pos": [0, 1] }
+    }
+  },
+  "story": { "briefing": "fixture", "victory": "fixture", "defeat": "fixture" }
+}

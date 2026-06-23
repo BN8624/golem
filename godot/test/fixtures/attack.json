@@ -1,0 +1,24 @@
+{
+  "name": "attack",
+  "desc": "사거리 내 적 탭 → 적 HP가 공격력만큼 감소, turn+1",
+  "initialState": {
+    "gridSize": 6,
+    "allies": [
+      { "id": 1, "hp": 10, "atk": 4, "pos": [1, 1] }
+    ],
+    "enemies": [
+      { "id": 1, "hp": 10, "atk": 1, "pos": [2, 1] }
+    ]
+  },
+  "clicks": [[1, 1], [2, 1]],
+  "expect": {
+    "selected_unit_id": 1,
+    "turn": 1,
+    "status": "PLAYING",
+    "screen": "PLAYING",
+    "units": {
+      "e1": { "hp": 6 }
+    }
+  },
+  "story": { "briefing": "fixture", "victory": "fixture", "defeat": "fixture" }
+}
