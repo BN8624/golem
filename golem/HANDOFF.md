@@ -2,9 +2,22 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 활성 트랙 = Godot 이식 — 아이소 2.5D + 자동 전투 (2026-06-24, G96). squad 재미 임계값(G94, 아래)은 보류 트랙.
+### ★ 활성 트랙 = Godot 검증 하네스 강화 (2026-06-23, G97). 외부 리뷰 Phase 1·2·3·6 완료. 다음 갈림길 = Phase 4(Playwright). 씬 증분(G96, 아래)은 병행 트랙.
 
-**▶▶ 다음 세션 첫 동작: 다음 증분 하나를 골라 ★키 재생성한다.** 후보 — ① 공격 화살표(v6: 근접 직선/원거리 포물선) ② 사거리 영역 타일 표시(v5: 선택 시 공격 reach 빨강) ③ 자동전투 아이폰 export(웹 빌드가 옛판이라 필요) ④ opposing-sides 레이아웃. **규칙(이번 세션 확립): 한 재생성=새 기능 1개.** SCENE_SPEC에서 나머지는 `※ 다음 증분`으로 보류하고 하나만 활성화 → `python golem/tools/godot_port_scene.py --cap 6`(스모크+입력프로브+자동프로브+렌더 게이트, **함정 자동주입+diagnose 진단피드백 내장**) → 캡처 검증 → 통과본 커밋 → 다음 증분. v5/v6 사양은 SCENE_SPEC에 이미 보류 상태로 들어있음. [[golem-one-increment-per-regen]]
+**▶▶ G97 완료(이번 세션, 클로드 하네스 키0·골렘/저자분리 유지)**: 외부 리뷰("Web/iPhone 경로가 자동 보호 안 됨, 입력 프로브가 느슨")를 대조→수용. 지적 6건 전부 코드와 일치 확인 후 처리.
+- **Phase 1**: `run_input_probe.gd` 정밀화 — 선택·이동·공격을 각각 구조화 비교(PROBE_JSON expected vs actual), 불일치 시 **quit(1)**. 옛 `if selected!=null or turn!=before`(선택만 성공해도 통과)·문자열 grep 제거.
+- **Phase 2**: `run_fixture_probe.gd` + `godot/test/fixtures/*.json`(select/move/attack/victory/defeat/edge_cases) — 미션0 비의존 기능 단위 계약. **board.levels 주입**이라 board.gd(골렘 저작) 미수정. 음성테스트로 exit 1 확인.
+- **Phase 3**: `.github/workflows/godot.yml` 신설(keyless.yml과 분리) — import→골든36/36→입력프로브→fixture→Web export→필수파일(index.html/js/pck/wasm) 검증. godot/** 경로 게이트.
+- **Phase 6**: `GolemStudioMode.md` "아트·음악·UI 폼은 사람 몫"→4자 분리로 정합(충돌 해소).
+- 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6). 검증=골든36/36·입력프로브 PASS·fixture 6/6·하네스 replay OK·keyless ALL PASS(전부 키0, Godot 4.7 로컬).
+- **▶ 다음 갈림길(Phase 4, 사용자 결정)**: Playwright WebKit/iPhone E2E. ① npm 설치 필요(환경 액션) ② `window.GOLEM_TEST` 읽기전용 상태노출은 board.gd 변경=**골렘 ★키 SCENE_SPEC 경유** vs JS 브리지 — 저자분리상 클로드가 board.gd 직접 못 고침. 결정 후 진행. (Phase 5 시각스냅샷·Phase 6-퍼징은 더 뒤.)
+- **⚠ godot.yml 미검증**: Godot 4.7 linux 다운로드 URL은 첫 CI 런에서 확정. 자산명 다르면 env GODOT_RELEASE만 조정.
+
+---
+
+### (병행 트랙) Godot 씬 증분 — 아이소 2.5D + 자동 전투 (2026-06-24, G96).
+
+**▶▶ 씬 증분 첫 동작: 다음 증분 하나를 골라 ★키 재생성한다.** 후보 — ① 공격 화살표(v6: 근접 직선/원거리 포물선) ② 사거리 영역 타일 표시(v5: 선택 시 공격 reach 빨강) ③ 자동전투 아이폰 export(웹 빌드가 옛판이라 필요) ④ opposing-sides 레이아웃. **규칙(이번 세션 확립): 한 재생성=새 기능 1개.** SCENE_SPEC에서 나머지는 `※ 다음 증분`으로 보류하고 하나만 활성화 → `python golem/tools/godot_port_scene.py --cap 6`(스모크+입력프로브+자동프로브+렌더 게이트, **함정 자동주입+diagnose 진단피드백 내장**) → 캡처 검증 → 통과본 커밋 → 다음 증분. v5/v6 사양은 SCENE_SPEC에 이미 보류 상태로 들어있음. [[golem-one-increment-per-regen]]
 
 - **현재 위치(G96)**: 아이소 2.5D(다이아몬드 격자·빌보드+납작 그림자·머리위 HP바·정수 데미지·세로중앙정렬) + **자동 전투(v7)** 채택. `auto_step()` 그리디 정책으로 아군 자동 구동, `update_state`로 턴 진행, 결정적 종료(2회 재현 프로브). board.gd 게이트 통과·커밋(8b87178→ec9b661). 좌표는 `cell_to_screen(gx,gy)` 단일 진실원천(아이소 투영, 하네스 분리).
 - **방향(사용자 G96)**: 브라운더스트2/트릭컬식 **덱 편성→자동 전투**(모바일). 자동전투 모드 먼저(이번 채택), 다음 큰 그림은 **덱 편성 단계**. 재미가 "퍼즐 풀이→덱 구성"으로 이동 → 골렘 재미게이트 의미가 바뀜(추후 정렬).

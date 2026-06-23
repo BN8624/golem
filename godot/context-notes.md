@@ -52,3 +52,12 @@
 - **#1 증분 분해(team-plan/Ralph)**: 한 재생성=새 기능 1개. 3기능(사거리영역+화살표+자동전투) 동시는 12회 실패, 자동전투 하나로 줄이자 1시도 통과. 나머지는 "※ 다음 증분"으로 보류 표시. 메모리 [[golem-one-increment-per-regen]].
 - **#3 진단→수정 피드백(UltraQA)**: 게이트 실패 에러를 분류해 위반 함정을 콕 집어 되먹임(다음 작업).
 - **자동전투(v7) 채택**: 위 #1로 자동전투만 재생성 → 1시도 통과. auto_step() 그리디 정책으로 아군 자동 구동, update_state로 턴 진행, 결정적 종료(2회 재현 일치 프로브). 사거리영역(v5)·화살표(v6)는 다음 증분.
+
+## 검증 하네스 강화 (2026-06-23, G97) — 외부 리뷰 수용, 클로드 하네스 키0
+- **배경**: 외부 리뷰 = "룰 골든은 강하나 최종 산출물 Web/iPhone 경로가 자동 보호 안 됨, 입력 프로브가 느슨". 멀티에이전트 프레임워크는 도입 X(자체 하네스 유지), 검증·선별만 강화. 지적 6건 전부 코드와 대조해 일치 확인 후 처리.
+- **Phase 1 — 입력 프로브 정밀화**: 옛 `run_input_probe.gd`는 `if selected_unit_id != null or turn != before_turn`이라 선택만 성공해도 통과했고, 실패해도 `quit()`=exit 0이라 non-zero 종료가 없었다. 하네스도 문자열("입력 로직 동작함")만 grep. → 선택·이동·공격을 각각 구조화 비교(PROBE_JSON expected vs actual), 불일치 시 quit(1). 기대값은 런타임 도출(atk/pos에서 계산)이라 미션 데이터 값 변화에 강함.
+- **Phase 2 — fixture 분리**: 프로브가 미션0 배치(ally2 range2→enemy2 사거리쌍)에 의존하던 문제. `test/fixtures/*.json` 6종(기능 하나씩, 룰엔진 시뮬레이션으로 결정적 기대값). 핵심 설계 = **board.levels=[fixture] 주입 후 load_mission(0)** → board.gd(골렘 저작) 미수정으로 임의 상태 로드. 저자분리 유지. 적 AI가 아군 턴마다 도는 엔진이라 "다른 유닛 불변"은 불가 → expect에 명시한 필드만 검증(focused). 음성테스트(틀린 fixture→exit 1)로 게이트 실효성 확인.
+- **게이트 배선**: `godot_port_scene.py`가 문자열 grep→**종료코드** 판정, run_fixture 단계 편입(스모크→입력프로브→fixture→자동→렌더). 실패 시 PROBE_JSON/FIXTURE_JSON의 got/want을 골렘에 되먹임.
+- **Phase 3 — Godot CI**: keyless.yml은 Python·Node만, Godot 0건이라 rules.gd 파싱·board 런타임·Web export 고장이 main에 그대로 들어갈 수 있었다. `godot.yml` 분리 신설(godot/** 경로 게이트). windowed 렌더 캡처는 디스플레이 필요라 CI 제외(로컬 게이트 유지). Godot 4.7 linux URL은 첫 런에서 확정.
+- **Phase 6 — 역할정의**: GolemStudioMode.md "아트·음악·UI 폼은 사람 몫"이 HANDOFF "외형도 골렘이"와 충돌 → 4자 분리(원본에셋=사람/Claude, 배치·화면·UI·이펙트 저작=GOLEM, 사양·계약·하네스·증거=Claude, 미관·조작감·재미 판정=사용자).
+- **다음 갈림길(Phase 4)**: Playwright WebKit E2E. `window.GOLEM_TEST` 읽기전용 상태노출이 board.gd 변경을 요구 → 골렘 ★키(SCENE_SPEC 경유) vs JS 브리지. 저자분리상 클로드가 board.gd 직접 못 고치므로 사용자 결정 필요. npm 설치도 환경 액션이라 go 전제.

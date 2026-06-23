@@ -50,5 +50,16 @@
 - [ ] (다음 증분, 하나씩) 공격 화살표 v6 / 사거리 영역 v5 / 자동전투 아이폰 export / opposing-sides 레이아웃(+골든 재추출·프로브 move-then-attack 보강)
 - [ ] (큰 그림) 덱 편성 단계 — 브라운더스트2/트릭컬식. 자동전투 위에 전투 전 유닛 선택·배치
 
+## Phase 3.8 — 검증 하네스 강화 (외부 리뷰 수용, 2026-06-23, 클로드 하네스 키0)
+- [x] (대조) 외부 리뷰 5.1/5.2/5.3/5.4/5.5/6 지적이 전부 현재 코드와 일치 확인
+- [x] (Phase 1) `run_input_probe.gd` 정밀화 — 선택·이동·공격 구조화 비교(expected vs actual JSON), 불일치 시 quit(1). 느슨한 OR 조건·문자열 grep 제거. 미션0 통합 테스트로 유지
+- [x] (Phase 2) `run_fixture_probe.gd` + `test/fixtures/{select,move,attack,victory,defeat,edge_cases}.json` — 미션0 비의존 기능 단위 계약. board.levels 주입이라 board.gd(골렘) 미수정
+- [x] (Phase 1/2 게이트) `godot_port_scene.py`가 종료코드로 PASS 판정 + fixture 단계 편입. 음성테스트(틀린 fixture→exit 1) 확인. replay 게이트·keyless ALL PASS
+- [x] (Phase 3) `.github/workflows/godot.yml` — Godot 4.7 import→골든→입력프로브→fixture→Web export→필수파일 검증. keyless.yml과 분리, godot/** 경로 게이트
+- [x] (Phase 6) GolemStudioMode.md 외형 저작 역할 정의를 Godot 트랙과 정합(충돌 해소)
+- [ ] (Phase 4, 갈림길) Playwright WebKit/iPhone E2E — npm 설치 필요. `window.GOLEM_TEST` 읽기전용 상태노출은 board.gd 변경=골렘 ★키 SCENE_SPEC 경유 vs JS 브리지 결정 필요(저자분리)
+- [ ] (Phase 5) 시각 스냅샷(화면 구조 안정 후, 동일 환경 기준이미지)
+- [ ] (Phase 6-퍼징) fast-check JS↔GDScript 차등 퍼징(카드·룰 증가 후)
+
 ## Phase 4 — 확장(선택)
 - [ ] 고도+골렘 루프로 카드/레벨 확장, 재미 게이트 적용 검토
