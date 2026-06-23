@@ -121,7 +121,7 @@
 
 1. **바닥 = 절차적 다이아몬드(타일 폐기)**: 각 칸을 `cell_to_screen(gx,gy)` 중심의 마름모로 그린다. 네 꼭짓점 =
    `c+Vector2(0,-TILE_H/2)`(위), `c+Vector2(TILE_W/2,0)`(오른), `c+Vector2(0,TILE_H/2)`(아래), `c+Vector2(-TILE_W/2,0)`(왼).
-   `draw_colored_polygon(pts, fill)`로 채우고 `draw_polyline(pts+[pts[0]], 격자선색, 1.0)`로 마름모 테두리(=그리드). **갈색 막대 변주 금지** — fill은 미션 톤(`tones[current_mission_idx%n]`) 기반, 칸별 미세 명도 변화는 `(gx*7+gy*13)%5`로 ±0.04 정도만(바닥 결, 튀지 않게). 격자선은 은은하게(알파 ~0.15).
+   `draw_colored_polygon(pts, fill)`로 채우고, 테두리(=그리드)는 **닫힌 점 배열을 직접 만들어** `draw_polyline`한다 — `draw_polyline(PackedVector2Array([top, right, bottom, left, top]), 격자선색, 1.0)`(첫 점을 끝에 한 번 더). ⚠ **`pts + [pts[0]]`처럼 PackedVector2Array에 Array를 `+`로 붙이지 마라(GDScript 에러 `Invalid operands ... operator '+'`, 2026-06-24 실제 4회 실패).** **갈색 막대 변주 금지** — fill은 미션 톤(`tones[current_mission_idx%n]`) 기반, 칸별 미세 명도 변화는 `(gx*7+gy*13)%5`로 ±0.04 정도만(바닥 결, 튀지 않게). 격자선은 은은하게(알파 ~0.15).
 2. **깊이 정렬(필수)**: 유닛·이펙트는 **뒤→앞**으로 그린다. `gx+gy`(=화면 아래로 내려갈수록 큰 값) 오름차순 정렬 후 그려, 앞 칸 유닛이 뒤 칸 유닛/타일을 가린다. 바닥 전체를 먼저 다 깔고, 그 위에 정렬된 유닛.
 3. **유닛 = 빌보드 + 그림자(2.5D 핵심)**: 스프라이트는 눕히지 말고 **똑바로 세운다**. **밑변 중앙이 칸 중심 `c`에 닿게** 위로 올려 그린다(`Rect2(c.x - w/2, c.y - h, w, h)`, **w ≈ TILE_W*1.1**(타일보다 약간 크게 — 작으면 그림자에 묻힌다), h는 텍스처 비율 유지).
    - ⚠ **그림자는 작고 납작하고 은은하게 — 큰 어두운 원 절대 금지(2026-06-24 캡처 실측: 유닛이 어두운 구덩이에 빠진 것처럼 보였다).** 칸 중심 `c`에 **납작한 타원**: 가로 반지름 `rx ≈ TILE_W*0.22`, 세로 반지름 `ry ≈ TILE_H*0.18`(폭의 ~1/3로 눌린 타원), 색 `Color(0,0,0,0.22)`. 그림자는 스프라이트보다 작아야 한다.
@@ -135,30 +135,21 @@
      ```
      `draw_circle`(정원이라 안 눌림)도, **`draw_set_transform`(시그니처 함정 — 2026-06-24 그림자에 쓰려다 5회 연속 스모크 실패의 원인. `draw_set_transform(pos:Vector2, rot, scale:Vector2)`라 인자 수·타입을 계속 틀렸다)**도 쓰지 마라.
 4. **HP 바**: v3의 "셀 하단 바"를 **빌보드 머리 위 가는 바**로 옮긴다(스프라이트 top 위 ~4px). 어두운 배경 + 비율 채움(아군 초록/적 빨강), hp<=0는 빈 바+✕. maxhp 스냅샷은 v3대로.
-5. **하이라이트(선택 시 — 이동/공격 사거리 분리 표시)**: v3 정사각 대신 그 칸의 **다이아몬드**로 칠한다. 선택 아군 기준:
-   - **이동 가능 칸**(`dist==1` 빈 칸): 초록 반투명 마름모 **fill**(`draw_colored_polygon`).
-   - **공격 사거리 칸**(`1 <= dist <= range`, range 없으면 1): **빨강 테두리 마름모**(`draw_polyline`로 마름모 외곽). `range>1`(마법사)이면 **2칸까지 빈 칸도 전부** 테두리가 떠 reach가 보인다 — 이게 '공격 사거리 타일 표시'의 핵심(2026-06-24 사용자 요청).
-   - **사거리 안에 적이 올라간 칸**: 더 진한 빨강(테두리 두껍게 + fill 살짝)으로 때릴 수 있는 적 강조.
-   - 선택 아군 자기 칸: 노랑 테두리 마름모.
-   - ⚠ **이동(초록 fill) vs 공격사거리(빨강 테두리)가 색·표현으로 구분**돼야 한다(겹치는 인접칸은 둘 다 보이게).
+5. **하이라이트(이동/사거리)**: v3 정사각 대신 그 칸의 **다이아몬드**를 칠한다 — 이동 가능 빈 인접칸=초록 반투명 마름모(fill), 사거리 내 적 칸=빨강 테두리 마름모. 선택 아군 칸도 노랑 테두리 마름모. (※ **사거리 영역 전체 표시는 자동전투 다음 증분**에서 추가 — 지금은 이 기본형 유지.)
 6. **트윈·데미지텍스트·죽은유닛**: v3의 5·4·6 그대로 유지하되 좌표만 `cell_to_screen` 기반(트윈은 직전칸 `cell_to_screen`→현재칸 `cell_to_screen` 픽셀 보간). 플로팅 텍스트는 칸 중심 위쪽에서 떠오른다. **데미지 숫자는 정수로 표시**(`str(int(round(diff)))` — hp가 JSON float라 "-3.0"으로 나오면 안 된다, "-3").
 7. **HUD 띠**: v3의 상단 반투명 띠 + "미션명 · 턴" 유지(아이소 보드는 origin.y만큼 내려가 있어 더 안전).
-8. **공격 화살표(2026-06-24 사용자 요청 — 근접 직선 / 원거리 포물선)**: 공격 액션 시(`execute_action`의 attack 분기) 공격자 칸→대상 칸으로 **짧게 날아가는 화살표** 이펙트(시간 기반, `_process` 수명 감소, state 불건드림).
-   - 멤버 `attack_fx` 배열: `{from: Vector2, to: Vector2, ranged: bool, life: float}`(from/to는 `cell_to_screen`, 수명 ~0.3s, 만료 제거).
-   - **근접(range<=1): 직선** — `from`→`to` `draw_line` + 끝에 화살촉(작은 삼각형 `draw_colored_polygon`).
-   - **원거리(range>=2): 포물선 호** — 2차 베지어. 제어점 `ctrl = (from+to)/2 + Vector2(0, -호높이)`(호높이 ≈ `from.distance_to(to)*0.3`, 위로 솟게). `t`를 0..1로 ~12등분 `p = (1-t)*(1-t)*from + 2*(1-t)*t*ctrl + t*t*to` 점들을 `draw_polyline`로 잇고 끝점에 화살촉.
-   - 화살표는 깊이정렬된 유닛보다 **위**(최상단 오버레이). 잘 보이게 노랑/흰 + 외곽선. **`draw_set_transform` 쓰지 마라**(베지어·삼각형은 점 계산으로). 표시 전용 — 룰/상태·프로브에 영향 없음.
+8. **공격 화살표(근접 직선/원거리 포물선)** — ※ **자동전투 다음 증분에서 추가.** 지금 board.gd엔 넣지 마라(한 번에 너무 많으면 골렘이 못 짠다 — 2026-06-24 3기능 동시 6회 실패). 자동전투가 먼저 통과한 뒤 별도 사양·재생성으로 얹는다.
 
 ## ★ v7 자동 전투 모드 (AUTO — 2026-06-24 사용자 요청, 브라운더스트2/트릭컬식)
-플레이어가 매 턴 안 누른다. 아군도 정책이 자동 구동되고, 사람은 관전한다(사거리·화살표·트윈으로 보임). **수동 조작(`_unhandled_input`·`cell_to_screen`)은 그대로 유지**한다 — 검증·향후 덱 편성에 쓴다. AUTO는 그 위에 자동 진행만 얹는다.
+플레이어가 매 턴 안 누른다. 아군도 정책이 자동 구동되고, 사람은 관전한다(이동 트윈·HP 변화·데미지 텍스트로 보임). **수동 조작(`_unhandled_input`·`cell_to_screen`)은 그대로 유지**한다 — 검증·향후 덱 편성에 쓴다. AUTO는 그 위에 자동 진행만 얹는다.
 
 - **멤버**: `var auto_mode = true`(기본 on), `var auto_ally_idx = 0`(라운드로빈 커서), `var auto_accum = 0.0`(틱 누적시간).
-- **`func auto_step() -> void`(공개·필수)**: `screen!="PLAYING"`이면 즉시 return. 아니면 **아군 1명**을 골라 그 액션 1개를 만들어 `state.status = rules.update_state(state, action)` 1회 호출. 데미지/플로터/플래시/화살표 fx는 manual `execute_action`과 동일하게 생성(hp 스냅샷 비교). status가 PLAYING이 아니면 `screen="RESULT"`. **`selected_unit_id`는 안 건드린다(수동과 독립).**
+- **`func auto_step() -> void`(공개·필수)**: `screen!="PLAYING"`이면 즉시 return. 아니면 **아군 1명**을 골라 그 액션 1개를 만들어 `state.status = rules.update_state(state, action)` 1회 호출. 데미지/플로터/플래시 fx는 manual `execute_action`과 동일하게 생성(hp 스냅샷 비교). status가 PLAYING이 아니면 `screen="RESULT"`. **`selected_unit_id`는 안 건드린다(수동과 독립).**
 - **아군 선택(라운드로빈·결정적)**: 살아있는 아군을 id 오름차순 리스트로 만들고 `auto_ally_idx % 산 아군수`로 한 명 고른 뒤 `auto_ally_idx += 1`. (산 아군이 없으면 return — 곧 DEFEAT 처리됨.)
 - **그리디 정책(결정적·RNG 금지)**: 고른 아군 `u`에 대해
   1. **공격 우선**: 사거리(`1 <= dist <= u.range`, range 없으면 1) 안에 살아있는 적이 있으면 **가장 가까운(동률은 낮은 id)** 적을 향해 `{"unit":u.id,"type":"attack"}`.
   2. **없으면 이동**: 가장 가까운 적(동률 낮은 id) 쪽으로 맨해튼 거리를 줄이는 **직교 한 칸**으로 `{"unit":u.id,"type":"move","dir":[dx,dy]}`. 후보 방향 우선순위 고정(예: 가로 먼저[적이 x로 더 멀면 ±x], 그다음 세로), **빈 칸·격자 안**일 때만. 막혔으면 다른 축으로, 그래도 막혔으면 그 아군은 패스(아무 액션 안 하고 return — 다음 틱에 다른 아군).
-- **타이머(관전 속도)**: `_process(delta)`에서 `if auto_mode and screen=="PLAYING": auto_accum += delta; if auto_accum >= 0.6: auto_accum = 0; auto_step()`. (0.6s/틱. 이동 트윈·화살표가 그 사이 보인다.)
+- **타이머(관전 속도)**: `_process(delta)`에서 `if auto_mode and screen=="PLAYING": auto_accum += delta; if auto_accum >= 0.6: auto_accum = 0; auto_step()`. (0.6s/틱. 이동 트윈이 그 사이 보인다.)
 - **종료**: status가 VICTORY/DEFEAT면 `screen="RESULT"`(기존 RESULT 화면·버튼 그대로). RESULT에서 자동 진행 멈춤.
 - ⚠ **결정성**: 같은 미션을 두 번 자동 플레이하면 **턴 수·결과가 동일**해야 한다(RNG·시간의존 분기 금지 — 정책은 state만 보고 결정). 프로브가 2회 돌려 일치를 검증한다.
 - **수동과의 공존**: load_mission은 기존 계약대로(수동 가능)에 더해 **`auto_ally_idx=0`·`auto_accum=0`도 리셋**한다(미션 재시작 시 자동 전투가 동일하게 재현되게). 입력 프로브는 `load_mission` 직후 `auto_mode=false`로 꺼 수동을 깨끗이 검증한다. 자동 프로브는 `auto_step()`을 직접 반복 호출(타이머 무관)하고, 같은 미션을 2회 돌려 턴 수·결과 일치를 본다.
