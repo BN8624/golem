@@ -1,4 +1,4 @@
-# 테스트 전용 읽기전용 상태 브리지 — web export에서 ?test=1 일 때만 board 상태를 window.GOLEM_TEST로 노출(증거 수집용, board.gd·룰 미변경)
+# 테스트 전용 상태 브리지 — web export ?test=1 에서만 board 상태를 window.GOLEM_TEST로 노출(증거 수집) + window.GOLEM_NAV로 화면 직접 전환(시각 게이트가 메뉴 버튼 좌표에 결합 안 되게). board.gd·룰 미변경
 extends Node
 
 var _enabled := false
@@ -24,7 +24,18 @@ func _process(_d) -> void:
 	if board == null:
 		return
 
-	# 전부 읽기 전용 — board 상태를 절대 수정하지 않는다.
+	# 테스트 전용 화면 네비게이션 — 시각 게이트가 메뉴 버튼 픽셀 좌표(골렘 자유)에 결합되지 않게 화면을 직접 띄운다.
+	# 형식: window.GOLEM_NAV = "BRIEFING" 또는 "SQUAD_SELECT" (미션0 고정). 적용 후 비운다. PLAYING 진입은 안 한다(load_mission 계약 불변).
+	var nav = str(JavaScriptBridge.eval("window.GOLEM_NAV || ''", true))
+	if nav == "BRIEFING" or nav == "SQUAD_SELECT":
+		JavaScriptBridge.eval("window.GOLEM_NAV = '';", true)
+		board.set("pending_idx", 0)
+		if nav == "SQUAD_SELECT":
+			board.set("picked_ids", [])
+		board.set("screen", nav)
+		board.queue_redraw()
+
+	# 아래는 전부 읽기 전용 — board 상태를 수정하지 않는다.
 	var payload := {}
 	payload["screen"] = board.get("screen")
 	payload["selectedUnitId"] = board.get("selected_unit_id")
