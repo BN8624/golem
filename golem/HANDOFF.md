@@ -2,7 +2,18 @@
 
 ## ▶ 새 세션 여기부터
 
-**▶▶ 다음 세션 첫 동작(★ 추천 한 가지): 재미 임계값을 사람이 보정한다.** 뷰어 갭은 닫혔다(G94 ⑦ — `/squad`에서 에테르노 4미션 솔루션 재생 가능). 이제 사람이 그 4미션을 실제로 보고/플레이해 ⑤⑥의 `B+=50`이 맞는 바인지 판단한다 → 맞으면 그대로, 아니면 `play_signals.fun_score` 가중치/임계 손보고 `propose_levels --min-fun` 기본값 조정. **이게 "보고 판단"의 실행이고, 그동안 "미보정"이라 단 단서를 닫는 자리.** 아이폰 = 서버 켜고(`node golem/tactics/play/server.js`) `http://<테일스케일IP>:8770/squad`.
+### ★ 활성 트랙 = Godot 이식 (2026-06-23, G95). squad 재미 임계값(G94, 아래)은 보류 트랙.
+
+**▶▶ 다음 세션 첫 동작: 사용자가 아이폰에서 4미션 플레이하고 피드백.** 접속 = `https://node.tail3e9e21.ts.net/`(IP 아님·HTTPS 필수). 서버 먼저 `python godot/serve_web.py 8771`(tailscale serve는 --bg라 유지·재부팅만 재실행). 피드백 뒤 **다음 다듬기**(맨 윗줄 hp라벨 화면밖 잘림·바닥 변주 가로띠·이동/넉백 트윈·hp 바)를 **골렘에 넘긴다** — `godot/SCENE_SPEC.md` 보강 → `python golem/tools/godot_port_scene.py --cap 5`(★키, board 외형 재생성, 스모크+입력프로브+렌더캡처 게이트) → 캡처 검증 → `--export-release Web`.
+
+- **현재 위치**: Phase 0~3.5 완료, origin/main 푸시(521fa0b). board = 미션선택+브리핑+서사+플레이+결과, Tiny Dungeon 스프라이트(기사·마법사 vs 초록 몬스터)·미션별 맵 톤·데미지 텍스트·타격 플래시. 골든 36/36·입력프로브·렌더캡처 통과. 아이폰 HTTPS(tailscale serve --https=443) + 나눔고딕(OFL) 임베드.
+- **분업(엔진 바꿔도 유지)**: 룰 포팅·씬·**외형(스프라이트·맵·이펙트·`_draw`)** 전부 골렘 ★키 저자. 클로드는 골든다리·하네스·에셋/폰트 준비·SCENE_SPEC 사양·렌더 게이트만. 클로드가 _draw 직접 짠 건 위반(G95 사용자 지적, G83 재발) → 교정 [[godot-does-the-art-too]].
+- **검증 교훈**: 헤드리스 스모크/입력프로브는 `_draw`를 호출 안 해 렌더 버그(draw_string·draw_set_transform 시그니처·폰트·텍스처) 못 잡음 → 게이트에 windowed **렌더 캡처** 추가. 단 게이트도 미관·미세버그(빨강 id충돌·고정cell·바닥 띠)는 못 잡으니 클로드가 캡처 보고 SCENE_SPEC 보강·되먹임 필수(이번 board 외형 3회 되먹임으로 채택).
+- **결정 이유 정본**: `godot/context-notes.md`. 진행 체크: `godot/checklist.md`.
+
+---
+
+**(보류 트랙) ▶▶ squad 재미 임계값(G94): 재미 임계값을 사람이 보정한다.** 뷰어 갭은 닫혔다(G94 ⑦ — `/squad`에서 에테르노 4미션 솔루션 재생 가능). 이제 사람이 그 4미션을 실제로 보고/플레이해 ⑤⑥의 `B+=50`이 맞는 바인지 판단한다 → 맞으면 그대로, 아니면 `play_signals.fun_score` 가중치/임계 손보고 `propose_levels --min-fun` 기본값 조정. **이게 "보고 판단"의 실행이고, 그동안 "미보정"이라 단 단서를 닫는 자리.** 아이폰 = 서버 켜고(`node golem/tactics/play/server.js`) `http://<테일스케일IP>:8770/squad`.
 - (대안 B, ★키) **실제 라이브 런으로 선별기+재미게이트 검증**: `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"` — 이번에 박은 ②선별기·⑥재미게이트가 실생성에서 작동하는지 본다(지금까진 replay/키0만). 사용자 go 뒤에만.
 - (대안 C) **squad 재미평가를 실미션에**: `play_signals`를 데모월드 말고 `squad_levels.json`에 돌리게(현 squad fun 숫자는 계약 데모월드 기준이라 실미션 아님).
 - **세션 상태: G94 로컬 커밋 8개(origin보다 앞섬·미푸시)·로컬 verify_tactics ALL PASS·서버 8770 떠있음(/squad).** 무인 한 줄 = `python golem/tools/driver_autocard.py --family squad --setting "<세계관>"`(취향 노브만, 이제 빌드 전 ★키 선별기 1콜 + 레벨 재미게이트 포함).
