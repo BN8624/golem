@@ -5,3 +5,6 @@ build_web/
 *.translation
 test/cap_*.png
 test/cap_*.png.import
+test/_fuzz_cases.json
+test/_fuzz_cases.json.import
+test/_fuzz_fail.json
