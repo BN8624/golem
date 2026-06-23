@@ -11,8 +11,13 @@
 - **Phase 4**: `test/test_bridge.gd`(읽기전용 autoload, web `?test=1`에서만 window.GOLEM_TEST 노출 — **board.gd 미변경·키0**, 사용자가 "GOLEM_TEST 상태훅까지" 선택했으나 ★키 board 재생성 대신 더 안전한 브리지로 동일 목표 달성) + `godot/e2e/`(Playwright iPhone13 WebKit: 부팅→메뉴 탭 MENU→BRIEFING→PLAYING 상태변화→자동전투 종료 정밀검증, proof/ 스크린샷·trace·verdict). godot.yml에 E2E 잡 편입. **로컬 PASS**(실오류 0·양성 GL경고 16 분리·turn 5 DEFEAT).
 - **Phase 6**: `GolemStudioMode.md` "아트·음악·UI 폼은 사람 몫"→4자 분리로 정합(충돌 해소).
 - 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6)·3b41027(P4)·62bc391(docs). 검증=골든36/36·입력프로브·fixture 6/6·E2E·하네스 replay·keyless ALL PASS(전부 키0).
-- **✅ CI 확정(2026-06-23 푸시·런 28001508018)**: godot.yml 첫 런 success 1m35s — Godot 4.7 linux 다운로드 URL 정상·import·골든·프로브·fixture·Web export·**Playwright WebKit E2E까지 ubuntu CI에서 전부 통과**. keyless도 success. 외부 리뷰 완료기준(섹션10) 최소항목 전부 충족.
-- **▶ 다음 후보(문서가 더 뒤로 미룬 것들)**: ① **Phase 5 시각 스냅샷**(proof/ 인프라 깖, 동일환경 기준이미지·GOLEM 외형 재생성시 명시적 갱신) ② **Phase6-퍼징**(fast-check JS↔GDScript 차등, 카드·룰 증가 후) ③ 병행 트랙 씬 증분(아래 G96)으로 복귀. 참고: Node20 deprecation 경고(액션이 Node24로 강제실행, 무해)는 나중에 액션 버전업하면 사라짐.
+- **✅ CI 확정(2026-06-23 푸시·런 28001508018)**: godot.yml 첫 런 success 1m35s — Godot 4.7 linux 다운로드 URL 정상·import·골든·프로브·fixture·Web export·**Playwright WebKit E2E까지 ubuntu CI에서 전부 통과**. keyless도 success.
+
+**▶▶ G98 추가 완료(같은 세션 후속, 사용자 "둘 먼저하고 페이즈5")**: 외부 리뷰 잔여 전부 + 병행 씬 증분 하나.
+- **Phase 6-퍼징(키0, 0cc65e6)**: `godot_fuzz_diff.py`(시드 PRNG·Math.random 금지) + `run_fuzz_diff.gd` — 무작위 유효·엣지 케이스를 JS 엔진(정답)으로 굽고 rules.gd와 0-diff 대조. godot_export_golden TRACE_JS 재사용. godot.yml 300케이스 편입. **검증 4시드×1500=6000케이스 ALL MATCH**(rules.gd ≡ JS 입증).
+- **공격 화살표 증분(★키, 779cb68)**: SCENE_SPEC ★v8 활성(사거리 영역은 보류) → 골렘 board.gd 재생성 **1시도 게이트 통과**. 근접 직선/원거리 포물선(표시 전용 effect). 룰 불변(골든36/36·퍼징 ALL MATCH·캡처서 시안 포물선 확인). cap_after.png 참고.
+- **Phase 5 시각 스냅샷(키0, 74e1361)**: 정적 MENU·BRIEFING만 `toHaveScreenshot`(자동전투/이펙트 화면은 비결정이라 제외). win32 기준이미지 커밋(로컬 게이트). godot.yml 시각 잡은 **비차단**(linux 기준이미지 `--update-snapshots`로 생성·artifact). 채택=artifact의 `*-linux.png` 커밋 후 `--update-snapshots` 제거 → 하드게이트(GOLEM 외형 재생성 시 명시적 갱신).
+- **▶ 다음 후보**: ① **시각 하드게이트 채택**(다음 godot CI 런 artifact의 menu/briefing-linux.png 커밋) ② 병행 씬 증분 계속(사거리 영역 v5 / opposing-sides는 고잠) ③ 덱 편성 단계. Node20 deprecation 경고는 무해(액션 버전업 시 사라짐).
 
 ---
 

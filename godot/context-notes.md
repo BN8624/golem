@@ -68,3 +68,9 @@
 - **E2E 설계**: auto_mode 기본 true라 미션 진입 시 자동전투가 돈다 → 메뉴 탭(MENU→BRIEFING→PLAYING)이 "터치→상태변화" 증거, 이후 자동전투 turn 증가·RESULT 종료를 GOLEM_TEST로 관찰. 수동 move/attack 정밀검증은 이미 헤드리스 프로브/ fixture가 결정적으로 담당 → E2E는 web/브라우저/터치변환/WASM 층만 책임(역할 분리).
 - **좌표 변환**: 게임 논리 640x640(stretch aspect=keep)을 캔버스 boundingBox에 uniform scale·centered로 매핑해 탭. 헤드리스 WebKit(ANGLE) GL 경고(glBlitFramebuffer)는 양성 노이즈라 필터(실 iPhone Safari Metal에선 안 남, 최종은 사람 oracle). verdict.json이 verified(자동) vs human_review_required(미관·조작감·재미) 분리 — 자동이 재미를 통과했다 주장 안 함.
 - **남음**: Phase 5 시각스냅샷(proof/ 인프라 있음)·Phase6-퍼징(fast-check, 카드 증가 후)·godot.yml 첫 CI 런에서 Godot 4.7 다운로드 URL·webkit deps 확정.
+
+## G98 — 차등 퍼징 + 공격 화살표 증분 + 시각 스냅샷 (2026-06-23, "둘 먼저하고 페이즈5")
+- **차등 퍼징(Phase 6)**: 36스텝 골든은 고정 시나리오뿐인데 rules.gd엔 7개+ 상호작용 메커닉이 있어 미검증 조합 공간이 실재. fast-check 대신 **시드 PRNG 파이썬 생성기**(npm·Math.random 없이 결정적 재현 — 프로젝트 ethos 정합)로 무작위 유효+엣지(존재않는 unit·경계·무사거리) 케이스 생성. JS 엔진(squad_base_l8/game_logic.js)이 정답, godot_export_golden의 TRACE_JS 재사용(DRY). run_fuzz_diff.gd가 _fuzz_cases.json(gitignore 스크래치)을 rules.gd로 재생 비교. 6000케이스 ALL MATCH로 포팅 동치 입증.
+- **공격 화살표(G96 병행 증분, ★키)**: 한 재생성=한 기능. SCENE_SPEC v8만 활성, 사거리 영역은 보류 유지. 화살표는 effects 배열 표시 전용(state 0영향)이라 입력/fixture/자동/골든/퍼징 전부 불변 — 그래서 board 재생성이 안전했고 1시도 통과. 근접 draw_line·원거리 draw_polyline 포물선(PackedVector2Array append, '+' 금지 함정 준수). Phase 1-2의 fixture 게이트가 이 재생성을 더 안전하게 받쳐줌(입력 회귀 자동 차단).
+- **시각 스냅샷(Phase 5) — 보수적 범위**: 자동전투·이펙트·트윈이 도는 PLAYING/RESULT는 프레임 비결정이라 픽셀 비교 부적합 → 정적 MENU·BRIEFING만 대상. 환경별 baseline 분리(Playwright 플랫폼 접미사 -win32/-linux). 로컬 win32만 커밋, CI linux는 비차단으로 생성·artifact → 사람이 채택(문서의 "동일환경 기준이미지·명시적 갱신" 원칙 정합). 하드게이트 전환은 linux baseline 커밋 + --update-snapshots 제거 한 줄.
+- **판단**: 외부 리뷰 요청은 G97+G98로 사실상 완결(완료기준 섹션10 전부·CI green). 시각만 "비차단→채택 시 게이트"로 단계 남김(외형이 아직 증분 중이라 의도적).
