@@ -9,11 +9,10 @@ func _initialize():
 	get_root().add_child(board)
 
 func _tap(gx, gy):
-	var cell = 640.0 / board.state["gridSize"]
 	var ev = InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = true
-	ev.position = Vector2(gx * cell + cell / 2, gy * cell + cell / 2)
+	ev.position = board.cell_to_screen(gx, gy)  # 아이소 투영 — board가 단일 진실원천
 	board._unhandled_input(ev)
 
 func _cap(path):

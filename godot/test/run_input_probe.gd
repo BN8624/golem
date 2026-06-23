@@ -15,17 +15,16 @@ func _process(_d):
 	board.load_mission(0)  # v2 계약: 메뉴 우회하고 곧장 플레이 상태로
 	# 여기선 board._ready 가 이미 실행됨(미션0 로드)
 	var grid = board.state["gridSize"]
-	var cell = 640.0 / grid
 	var ally = board.state["allies"][0]
-	var ax = ally["pos"][0]
-	var ay = ally["pos"][1]
-	print("PROBE grid=", grid, " cell=", cell, " ally0=", ally["id"], " pos=", [ax, ay])
+	var ax = int(ally["pos"][0])
+	var ay = int(ally["pos"][1])
+	print("PROBE grid=", grid, " ally0=", ally["id"], " pos=", [ax, ay], " screen=", board.cell_to_screen(ax, ay))
 
-	# 1) 아군 셀 중앙 클릭 → 선택돼야 함
+	# 1) 아군 칸 화면중심(아이소 투영) 클릭 → 선택돼야 함
 	var ev = InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = true
-	ev.position = Vector2(ax * cell + cell / 2, ay * cell + cell / 2)
+	ev.position = board.cell_to_screen(ax, ay)
 	board._unhandled_input(ev)
 	print("PROBE [select] selected_unit_id=", board.selected_unit_id, " (기대=", ally["id"], ")")
 
@@ -50,7 +49,7 @@ func _process(_d):
 	var ev2 = InputEventMouseButton.new()
 	ev2.button_index = MOUSE_BUTTON_LEFT
 	ev2.pressed = true
-	ev2.position = Vector2(tx * cell + cell / 2, ty * cell + cell / 2)
+	ev2.position = board.cell_to_screen(tx, ty)
 	board._unhandled_input(ev2)
 	print("PROBE [move] target=", [tx, ty], " turn ", before_turn, "->", board.state["turn"], " status=", board.state["status"])
 
@@ -78,18 +77,18 @@ func _process(_d):
 	if atk_ally == null:
 		print("PROBE [attack] 첫 턴 사거리 내 쌍 없음(이동 후에만 공격 가능 — 룰상 정상)")
 	else:
-		var ea = atk_ally["pos"][0]
-		var eb = atk_ally["pos"][1]
+		var ea = int(atk_ally["pos"][0])
+		var eb = int(atk_ally["pos"][1])
 		var sel = InputEventMouseButton.new()
 		sel.button_index = MOUSE_BUTTON_LEFT
 		sel.pressed = true
-		sel.position = Vector2(ea * cell + cell / 2, eb * cell + cell / 2)
+		sel.position = board.cell_to_screen(ea, eb)
 		board._unhandled_input(sel)
 		var hp_before = atk_enemy["hp"]
 		var tap = InputEventMouseButton.new()
 		tap.button_index = MOUSE_BUTTON_LEFT
 		tap.pressed = true
-		tap.position = Vector2(atk_enemy["pos"][0] * cell + cell / 2, atk_enemy["pos"][1] * cell + cell / 2)
+		tap.position = board.cell_to_screen(int(atk_enemy["pos"][0]), int(atk_enemy["pos"][1]))
 		board._unhandled_input(tap)
 		print("PROBE [attack] ally=", atk_ally["id"], " range=", atk_ally.get("range", 1),
 			" enemy=", atk_enemy["id"], " hp ", hp_before, "->", atk_enemy["hp"])

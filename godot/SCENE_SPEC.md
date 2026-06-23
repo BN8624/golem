@@ -14,9 +14,12 @@
   (메뉴/브리핑을 거치지 않는다. 프로브가 이걸 직접 호출해 곧장 플레이한다.)
   내부에서 `state = 깊은복제(initialState)`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `screen="PLAYING"`.
 - 메서드 `func _unhandled_input(event)` : `screen=="PLAYING"`일 때 좌클릭으로 아래 [플레이 입력]을 처리.
-- **좌표계(고정·필수)**: PLAYING의 셀 크기는 `cell_size = 640.0 / state.gridSize`, 보드 원점은 화면 `(0,0)`.
-  클릭→셀은 `gx = int(event.position.x / cell_size)`, `gy = int(event.position.y / cell_size)`.
-  프로브가 정확히 이 좌표계(640/grid, 원점 0)로 클릭한다 — **고정 cell(예: 32)이나 offset(예: 100) 금지.** 보드는 640×640을 꽉 채운다.
+- 메서드 `func cell_to_screen(gx:int, gy:int) -> Vector2` (**공개·필수**): 칸 (gx,gy)의 **화면 픽셀 중심**을 아이소 투영으로 반환한다. `_draw`(타일·유닛 배치)와 `_unhandled_input`의 클릭 히트판정이 **이 한 함수를 단일 진실원천으로** 쓴다. 프로브·캡처 하네스가 이 함수를 직접 호출해 클릭 위치를 잡으므로 **시그니처를 절대 바꾸지 마라.**
+- **좌표계(아이소메트릭 2.5D·필수)**: 보드는 다이아몬드 격자다. 투영 =
+  `cell_to_screen(gx,gy) = origin + Vector2((gx-gy)*TILE_W/2.0, (gx+gy)*TILE_H/2.0)` (2:1 아이소 → `TILE_H = TILE_W/2.0`).
+  `TILE_W`·`origin`은 GxG 보드가 가로로 화면 폭(≈600, 좌우 여백 둠)에 맞고 가운데 정렬되게 골렘이 정한다(권장 `TILE_W = 600.0/state.gridSize`, `origin = Vector2(320, 상단 HUD 띠 아래 ~120)`).
+  - **클릭→칸은 위 투영의 정확한 역변환**이어야 한다: `rx=(px-origin.x)/(TILE_W/2.0)`, `ry=(py-origin.y)/(TILE_H/2.0)` → `gx=int(round((rx+ry)/2.0))`, `gy=int(round((ry-rx)/2.0))`. 즉 `cell_to_screen(gx,gy)` 위치를 클릭하면 정확히 칸 (gx,gy)가 잡혀야 한다(프로브가 이 왕복을 검증).
+  - **탑다운 `int(x/cell)` 좌표계 금지.** 고정 cell·고정 offset 금지. origin/TILE_W는 위 식으로 gridSize에서 유도.
 
 ## 화면 모드 (`var screen`)
 `"MENU" → "BRIEFING" → "PLAYING" → "RESULT"`. `_ready()`는 `screen="MENU"`로 시작.
@@ -39,16 +42,13 @@
   `ThemeDB.get_fallback_font()` 금지 — 웹 빌드엔 한글 글리프가 없어 □로 깨진다.
 - **픽셀 필터**: `_ready`에서 `texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST` (16px 타일이 뭉개지지 않게).
 - **타일(Tiny Dungeon, 16x16)** — `res://assets/tinydungeon/Tiles/tile_XXXX.png`:
-  - 바닥: `tile_0048`(흙). 바닥 변주(드물게 섞기): `tile_0049`, `tile_0050`, `tile_0051`.
+  - 바닥: **아이소 2.5D 전환으로 바닥 타일은 안 쓴다 — 바닥은 절차적 다이아몬드로 그린다(아래 ★v4).** `tile_0048~0051` 폐기(탑다운 정사각 타일은 다이아몬드에 안 맞고, 갈색 가로띠 문제도 이로써 사라진다). **유닛 스프라이트(기사/마법사/몬스터)는 그대로 쓴다 — 다이아몬드 위에 빌보드로 세운다.**
   - 아군 근접(range 없음/1): `tile_0096`(은색 기사). 아군 원거리(range>1): `tile_0084`(마법사).
   - 적: `tile_0108`(초록 몬스터).
   - 더 필요하면 `godot/assets/tinydungeon/Tiles/`에서 골라 써도 된다(같은 16x16).
 
 ## 맵·이펙트 요구 (게임답게 — 이번 단계 목표)
-- **맵(미션별 지형 톤)**: 바닥은 `tile_0048`을 깔되 `current_mission_idx`별로 색조(tone)를 다르게
-  (예: 0=기본, 1=청회색, 2=보라어둠, 3=황금). 칸 위치 해시로 변주 타일을 드물게 섞어 단조롭지 않게.
-  - 색조는 **반드시** `draw_texture_rect(tex, rect, false, tone)`의 **4번째 인자**로 준다.
-    `draw_set_transform`은 변환 행렬(pos,rot,scale)용이라 색을 못 준다 — 거기에 Color를 넣지 마라(인자 4개 금지).
+- **맵(미션별 지형 톤)**: 미션별 색조(tone)는 `tones[current_mission_idx%n]`로 다르게(0=기본, 1=청회색, 2=보라어둠, 3=황금). **아이소 전환 후 바닥은 타일이 아니라 절차적 다이아몬드 fill에 이 tone을 준다(★v4 1번).** 즉 `draw_colored_polygon(pts, tone*명도변화)`. (구 탑다운 `draw_texture_rect(tex, rect, false, tone)` 4번째 인자 방식은 바닥엔 폐기 — 단, **유닛 스프라이트 modulate**(플래시·사망 틴트)엔 여전히 `draw_texture_rect`의 4번째 Color 인자를 쓴다.)
 - **이펙트(시간 기반 — `set_process(true)` + `_process(delta)`로 갱신, `queue_redraw`)**:
   - **데미지/회복 플로팅 텍스트**: 액션 후 hp 변화량을 그 유닛 칸 위에 "-N"(빨강)/"+N"(초록)으로 띄우고 위로 떠오르며 페이드아웃.
   - **타격 플래시**: 피해 받은 유닛을 짧게(≈0.2s) 흰/빨강으로 깜빡(modulate).
@@ -78,11 +78,9 @@
 - 공통: 화면 ~640px 기준 좌표.
 - **MENU**: 제목 + 4미션 버튼(사각형 + name/desc 텍스트). 버튼 위치를 `_unhandled_input`의 히트 판정과 동일 좌표로.
 - **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄 wrap) + 하단 "탭하여 시작".
-- **PLAYING**: 모든 그리기가 **같은 좌표계**(cell=640.0/gridSize, 원점 (0,0)). 각 칸 rect는 정확히 `Rect2(x*cell, y*cell, cell, cell)`.
-  - 바닥: 칸마다 바닥 타일을 **그 칸의 정사각 rect**에 `draw_texture_rect`(rect를 화면 폭으로 늘리지 마라 — 한 칸=cell×cell).
-  - 유닛: **원이 아니라 스프라이트**를 칸 중앙에 칸의 ~0.8 크기로. 텍스처 선택은 진영으로 고정 —
-    **아군만 기사(range 없음/1)·마법사(range>1), 적은 무조건 `tex_monster`(tile_0108).** 적에 기사/마법사 텍스처를 쓰면 안 된다.
-  - 유닛 칸에 `"HP %d"`(int) 라벨. hp<=0는 흐리게+✕. 선택 아군 하이라이트, [맵·이펙트]의 이동/사거리 표시도 **같은 cell/원점**. 상단에 "미션명 · 턴".
+- **PLAYING**: **아래 [★v4 아이소메트릭]이 PLAYING 렌더의 정본이다.** 모든 칸·유닛·하이라이트 위치는 `cell_to_screen(gx,gy)`로 잡는다(정사각 `Rect2(x*cell,...)` 격자는 아이소 전환으로 폐기).
+  - 유닛 텍스처 선택은 진영으로 고정 — **아군만 기사(range 없음/1)·마법사(range>1), 적은 무조건 `tex_monster`(tile_0108).** 적에 기사/마법사 텍스처를 쓰면 안 된다.
+  - 상단에 "미션명 · 턴"(최상단 반투명 HUD 띠).
 - **RESULT**: 보드 위 반투명 오버레이 + victory/defeat 본문 + 버튼.
 
 ### ⚠ draw_string 시그니처 함정 (반드시 지킬 것)
@@ -112,6 +110,21 @@
 6. **죽은 유닛**: 회색 반투명 + ✕는 유지하되, 살아있는 유닛과 한눈에 구분되게(틴트를 충분히 어둡게). 사망이 "맞은 직후 빨강 플래시"와 헷갈리지 않게.
 
 > 못 고치는 것(사양 밖, 골렘 레벨 데이터): 유닛이 좌상단에 몰리고 나머지가 빈 보드인 건 `squad_levels.json` 배치·gridSize 문제다. 그리드 라인으로 휑함은 줄지만 근본은 레벨 생성기 몫이다.
+
+## ★ v4 아이소메트릭 2.5D (2026-06-24 — PLAYING 렌더의 정본, 위 좌표계 계약과 한 몸)
+탑다운 정사각 격자를 **아이소 다이아몬드 격자**로 바꾼다. 모든 위치는 `cell_to_screen(gx,gy)`(위 계약)로 잡는다. 룰·검증·입력 의미는 불변 — **순수 표시 변경**이다.
+
+1. **바닥 = 절차적 다이아몬드(타일 폐기)**: 각 칸을 `cell_to_screen(gx,gy)` 중심의 마름모로 그린다. 네 꼭짓점 =
+   `c+Vector2(0,-TILE_H/2)`(위), `c+Vector2(TILE_W/2,0)`(오른), `c+Vector2(0,TILE_H/2)`(아래), `c+Vector2(-TILE_W/2,0)`(왼).
+   `draw_colored_polygon(pts, fill)`로 채우고 `draw_polyline(pts+[pts[0]], 격자선색, 1.0)`로 마름모 테두리(=그리드). **갈색 막대 변주 금지** — fill은 미션 톤(`tones[current_mission_idx%n]`) 기반, 칸별 미세 명도 변화는 `(gx*7+gy*13)%5`로 ±0.04 정도만(바닥 결, 튀지 않게). 격자선은 은은하게(알파 ~0.15).
+2. **깊이 정렬(필수)**: 유닛·이펙트는 **뒤→앞**으로 그린다. `gx+gy`(=화면 아래로 내려갈수록 큰 값) 오름차순 정렬 후 그려, 앞 칸 유닛이 뒤 칸 유닛/타일을 가린다. 바닥 전체를 먼저 다 깔고, 그 위에 정렬된 유닛.
+3. **유닛 = 빌보드 + 그림자(2.5D 핵심)**: 스프라이트는 눕히지 말고 **똑바로 세운다**. 칸 중심 `c` 바로 아래에 납작한 타원 그림자(예: `draw_circle`/스케일 타원, 어둡고 반투명)를 깔고, 스프라이트는 **밑변 중앙이 `c`에 닿게** 위로 `스프라이트높이`만큼 올려 그린다(`Rect2(c.x - w/2, c.y - h, w, h)`, w≈TILE_W*0.8). 이러면 유닛이 타일 위에 서 있는 입체감이 난다.
+4. **HP 바**: v3의 "셀 하단 바"를 **빌보드 머리 위 가는 바**로 옮긴다(스프라이트 top 위 ~4px). 어두운 배경 + 비율 채움(아군 초록/적 빨강), hp<=0는 빈 바+✕. maxhp 스냅샷은 v3대로.
+5. **하이라이트(이동/사거리)**: v3의 정사각 대신 **그 칸의 다이아몬드**를 칠한다 — 이동 가능 빈 인접칸=초록 반투명 마름모, 사거리 내 적 칸=빨강 테두리 마름모. 선택 아군 칸도 노랑 테두리 마름모.
+6. **트윈·데미지텍스트·죽은유닛**: v3의 5·4·6 그대로 유지하되 좌표만 `cell_to_screen` 기반(트윈은 직전칸 `cell_to_screen`→현재칸 `cell_to_screen` 픽셀 보간). 플로팅 텍스트는 칸 중심 위쪽에서 떠오른다.
+7. **HUD 띠**: v3의 상단 반투명 띠 + "미션명 · 턴" 유지(아이소 보드는 origin.y만큼 내려가 있어 더 안전).
+
+> v3 항목과의 관계: v3의 **HP바·데미지외곽선·트윈·죽은유닛·HUD띠는 그대로 유효**하다. v3의 "정사각 그리드라인(3번)"과 "셀 하단 HP바 위치"만 위 v4 1·4번(다이아몬드 격자·머리 위 바)으로 **대체**된다.
 
 ## 검증 (모두 통과해야 채택)
 1. 헤드리스 스모크: `--quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 뜸.
