@@ -138,7 +138,7 @@
 5. **하이라이트(이동/사거리)**: v3 정사각 대신 그 칸의 **다이아몬드**를 칠한다 — 이동 가능 빈 인접칸=초록 반투명 마름모(fill), 사거리 내 적 칸=빨강 테두리 마름모. 선택 아군 칸도 노랑 테두리 마름모. (※ **사거리 영역 전체 표시는 자동전투 다음 증분**에서 추가 — 지금은 이 기본형 유지.)
 6. **트윈·데미지텍스트·죽은유닛**: v3의 5·4·6 그대로 유지하되 좌표만 `cell_to_screen` 기반(트윈은 직전칸 `cell_to_screen`→현재칸 `cell_to_screen` 픽셀 보간). 플로팅 텍스트는 칸 중심 위쪽에서 떠오른다. **데미지 숫자는 정수로 표시**(`str(int(round(diff)))` — hp가 JSON float라 "-3.0"으로 나오면 안 된다, "-3").
 7. **HUD 띠**: v3의 상단 반투명 띠 + "미션명 · 턴" 유지(아이소 보드는 origin.y만큼 내려가 있어 더 안전).
-8. **공격 화살표(근접 직선/원거리 포물선)** — ※ **자동전투 다음 증분에서 추가.** 지금 board.gd엔 넣지 마라(한 번에 너무 많으면 골렘이 못 짠다 — 2026-06-24 3기능 동시 6회 실패). 자동전투가 먼저 통과한 뒤 별도 사양·재생성으로 얹는다.
+8. **공격 화살표(근접 직선/원거리 포물선)** — ✅ **이번 증분(G97). 아래 ★v8 사양대로 추가하라.**
 
 ## ★ v7 자동 전투 모드 (AUTO — 2026-06-24 사용자 요청, 브라운더스트2/트릭컬식)
 플레이어가 매 턴 안 누른다. 아군도 정책이 자동 구동되고, 사람은 관전한다(이동 트윈·HP 변화·데미지 텍스트로 보임). **수동 조작(`_unhandled_input`·`cell_to_screen`)은 그대로 유지**한다 — 검증·향후 덱 편성에 쓴다. AUTO는 그 위에 자동 진행만 얹는다.
@@ -156,11 +156,29 @@
 
 > v3 항목과의 관계: v3의 **HP바·데미지외곽선·트윈·죽은유닛·HUD띠는 그대로 유효**하다. v3의 "정사각 그리드라인(3번)"과 "셀 하단 HP바 위치"만 위 v4 1·4번(다이아몬드 격자·머리 위 바)으로 **대체**된다.
 
+## ★ v8 공격 화살표 (2026-06-23 G97 — 이번 증분, v4·v7 위에 표시만 얹음)
+공격 액션이 적에게 피해를 줄 때, 공격자 칸에서 **피해 입은 적 칸**으로 향하는 화살표를 짧게 띄운다. 근접(range<=1)은 직선, 원거리(range>1)는 포물선. **순수 표시 — state/룰/`selected_unit_id`/turn 불변.** 결정적 검증·프로브·골든·퍼징에 0 영향이어야 한다.
+
+- **발생 시점**: manual `execute_action`·auto `auto_step` 공통. `action.type=="attack"`일 때만. board가 이미 데미지 FX용으로 들고 있는 **공격 전 hp 스냅샷**을 재사용해 **이번 액션에 hp가 준 적**을 target으로 잡고(여럿이면 각각), 공격자(=`action.unit`인 아군)에서 그 적 칸으로 화살표 effect를 spawn한다. **이동 액션엔 화살표 없음.** 적이 0데미지(보호막 등)면 화살표 생략 가능.
+- **range 판정**: 공격자 아군의 `get("range",1)`. `>1`이면 `ranged=true`(포물선), 아니면 직선.
+- **effect 데이터(표시 전용)**: 기존 `effects` 배열에 `{ "type":"arrow", "from_cell":[ax,ay], "to_cell":[ex,ey], "ranged":bool, "life":0.4, "max_life":0.4 }` 추가. `_process(delta)`에서 `life -= delta`, 만료 시 제거(데미지 텍스트와 동일 수명 관리). **state엔 절대 안 박는다.**
+- **그리기(`_draw`, 유닛보다 위 레이어 — 데미지 텍스트 직전쯤)**: 끝점은 `cell_to_screen`로 잡고 유닛 가슴 높이로 올린다.
+  - `var a = cell_to_screen(int(fx["from_cell"][0]), int(fx["from_cell"][1])) + Vector2(0, -TILE_H * 0.4)`
+  - `var b = cell_to_screen(int(fx["to_cell"][0]), int(fx["to_cell"][1])) + Vector2(0, -TILE_H * 0.4)`
+  - `var alpha = clamp(fx["life"] / fx["max_life"], 0.0, 1.0)`
+  - **근접(`ranged==false`)**: `draw_line(a, b, Color(1, 1, 0.3, alpha), 3.0)`.
+  - **원거리(`ranged==true`)**: 포물선. `t`를 0..1로 16분할, 각 점 = `a.lerp(b, t) + Vector2(0, -TILE_H * 1.2 * (4.0 * t * (1.0 - t)))`(위로 솟는 아치). 점들을 `PackedVector2Array`에 **append로** 모아 `draw_polyline(pts, Color(0.6, 0.9, 1, alpha), 3.0)`. ⚠ **PackedVector2Array에 Array를 `+`로 붙이지 마라**(함정 — append만).
+  - **화살촉(옵션·간단)**: `var dir = (b - a).normalized()`; 그 반대 방향으로 좌우 약간 벌린 짧은 선 2개를 `b`에서 그린다. 한 줄 다중변수 선언 금지(`var` 따로따로).
+- ⚠ **함정 재확인**: `draw_set_transform` 금지(점 직접 계산). `var p1, p2 = ...` 다중선언 금지. 색은 `draw_line`/`draw_polyline`의 마지막 인자.
+- **검증 불변(필수)**: 화살표는 `effects`(표시 전용)라 입력 프로브·fixture 프로브·자동 프로브·골든·차등 퍼징이 **전부 그대로 통과**해야 한다. 하나라도 깨지면 화살표가 state를 건드린 것이니 표시 전용으로 되돌려라.
+
 ## 검증 (모두 통과해야 채택)
 1. 헤드리스 스모크: `--quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 뜸.
-2. 입력 프로브: `--script res://test/run_input_probe.gd` 가 `PROBE RESULT: 입력 로직 동작함` + `PROBE ATTACK RESULT: 공격 동작함`.
-   (프로브는 `load_mission(0)`로 메뉴를 우회 → 클릭 선택·이동·공격을 결정적 검증.)
-3. **렌더 캡처(windowed)**: `--script res://test/capture_attack.gd` 가 _draw(MENU+PLAYING)를 실제로 그리며
+2. 입력 프로브: `--script res://test/run_input_probe.gd` 가 **종료코드 0**(미션0 통합 — 선택·이동·공격을 구조화 비교, 불일치 시 `quit(1)`. 출력은 `PROBE_JSON`의 expected vs actual). `load_mission(0)`로 메뉴 우회 후 검증.
+3. fixture 프로브: `--script res://test/run_fixture_probe.gd` 가 **종료코드 0**(미션0 비의존 기능 단위 계약 — `test/fixtures/*.json`, `board.levels=[fixture]` 주입). 불일치 시 `quit(1)`.
+4. 자동 전투 프로브: `--script res://test/run_auto_probe.gd` 가 `자동 전투 동작함`(결정적 종료·2회 재현 일치).
+5. **렌더 캡처(windowed)**: `--script res://test/capture_attack.gd` 가 _draw(MENU+PLAYING)를 실제로 그리며
    SCRIPT ERROR/Parse Error 없이 `test/cap_menu.png`·`test/cap_after.png`를 생성해야 한다.
-   (헤드리스 스모크/프로브가 `_draw`를 호출 안 해 못 잡는 draw_string 시그니처·폰트·텍스처 로드 에러를 여기서 잡는다.)
-4. 최종 미관(예쁜지)과 실제 터치는 사람이 확인(0-diff 범위 밖).
+   (헤드리스 스모크/프로브가 `_draw`를 호출 안 해 못 잡는 draw_string 시그니처·폰트·텍스처 로드 에러를 여기서 잡는다. **v8 화살표의 draw_line/draw_polyline 에러도 여기서 잡힌다.**)
+6. 차등 퍼징: `python golem/tools/godot_fuzz_diff.py` 가 `ALL MATCH`(rules.gd ≡ JS 엔진 — 화살표는 표시 전용이라 영향 0이어야 한다).
+7. 최종 미관(예쁜지)과 실제 터치는 사람이 확인(0-diff 범위 밖).
