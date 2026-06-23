@@ -90,12 +90,11 @@ jobs:
         working-directory: godot/e2e
         run: npx playwright test golem.spec.js
 
-      - name: 시각 스냅샷 (정적 MENU·BRIEFING — 비차단·linux 기준이미지 생성)
+      - name: 시각 스냅샷 (정적 MENU·BRIEFING — 픽셀 회귀 게이트)
         working-directory: godot/e2e
-        continue-on-error: true
-        # linux 기준이미지가 아직 repo에 없으므로 --update-snapshots 로 생성(통과)하고 아래 artifact 로 올린다.
-        # 채택하려면 artifact 의 *-linux.png 를 visual.spec.js-snapshots/ 에 커밋 후 이 줄에서 --update-snapshots 제거 → 픽셀 회귀 게이트.
-        run: npx playwright test visual.spec.js --update-snapshots
+        # linux 기준이미지(visual.spec.js-snapshots/*-linux.png) 채택 완료 → 비교 게이트. maxDiffPixelRatio 0.02 초과 시 실패.
+        # GOLEM 외형을 의도적으로 재생성하면: --update-snapshots 로 갱신 후 *-linux.png 재커밋(명시적 기준이미지 갱신).
+        run: npx playwright test visual.spec.js
 
       - name: Web export + E2E + 시각 증거 업로드
         if: always()
@@ -107,4 +106,5 @@ jobs:
             godot/e2e/proof/
             godot/e2e/visual.spec.js-snapshots/
             godot/e2e/playwright-report/
+            godot/e2e/test-results/
           if-no-files-found: ignore
