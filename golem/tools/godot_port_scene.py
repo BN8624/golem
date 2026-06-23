@@ -109,6 +109,30 @@ def run_render(godot):
     return ok, info
 
 
+def diagnose(text):
+    """[omc UltraQA 차용 #3] 게이트 에러를 함정 시그니처로 분류해 위반한 규칙을 콕 집어 되먹인다.
+    raw 에러만 던지면 골렘이 같은 실수를 반복하므로, 어떤 함정을 어겼는지 한 줄로 지목한다."""
+    t = text or ""
+    hints = []
+    def hit(sig):
+        return sig in t
+    if hit("Expected end of statement after variable declaration") or ('found ","' in t and "variable" in t):
+        hints.append("→ 함정#1 위반: `var a, b = ...` 다중선언 금지. 변수마다 `var` 한 줄씩.")
+    if "PackedVector2Array" in t and "operator '+'" in t:
+        hints.append("→ 함정#2 위반: PackedVector2Array에 Array를 `+`로 붙이지 마라. 닫힌 점배열을 직접 만들어라.")
+    if hit("draw_set_transform"):
+        hints.append("→ 함정#4 위반: draw_set_transform(pos:Vector2, rot, scale:Vector2). 색·인자수 틀림. 타원은 draw_colored_polygon 점계산으로.")
+    if hit("draw_string"):
+        hints.append("→ 함정#3 위반: draw_string(font, pos, text, align, width, size, color) 순서.")
+    if "allies" in t and ("Invalid access" in t or "on a base object of type 'Dictionary'" in t):
+        hints.append("→ 함정#7 위반: MENU에서 state는 {}. state.allies/enemies는 `screen=='PLAYING'` 가드 안에서만.")
+    if hit("same name as a previously declared function"):
+        hints.append("→ 함수 중복 선언. 같은 이름 함수는 하나만.")
+    if hit("not declared in the current scope"):
+        hints.append("→ 변수 스코프: 블록(if/for) 안에서 선언한 변수를 밖에서 쓰지 마라. 필요한 바깥 스코프에 var 선언.")
+    return ("아래 함정을 어겼다 — GDScript 함정 규칙을 다시 보라:\n" + "\n".join(hints) + "\n\n") if hints else ""
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--cap", type=int, default=3)
@@ -150,7 +174,7 @@ def main(argv=None):
         ok, out, errs = run_smoke(args.godot)
         if not ok:
             print("  ✗ 스모크 에러:\n" + "\n".join("    " + l for l in errs.splitlines()[:8]))
-            feedback = errs[:1800]
+            feedback = diagnose(errs) + errs[:1800]
             continue
         pok, plines = run_probe(args.godot)
         if not pok:
@@ -173,7 +197,8 @@ def main(argv=None):
             print("  최종 미관/터치는 사용자가 캡처·F5로 확인.")
             return 0
         print("  ✗ 렌더 캡처 실패(_draw 에러):\n" + "\n".join("    " + l for l in rinfo.splitlines()[:10]))
-        feedback = ("스모크·입력프로브는 통과했으나 _draw 렌더에서 실패. draw_string 시그니처 함정"
+        feedback = (diagnose(rinfo)
+                    + "스모크·입력프로브는 통과했으나 _draw 렌더에서 실패. draw_string 시그니처 함정"
                     "(draw_string(font,pos,text,align,width,size,color))과 폰트/텍스처 load 경로를 확인하라. 렌더 에러:\n"
                     + rinfo[:1500])
     print(f"\n{args.cap}회 내 미통과 — --cap 늘리거나 SCENE_SPEC 보강.")
