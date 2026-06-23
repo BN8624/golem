@@ -2,17 +2,21 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 다음 세션 첫 동작 = 덱 편성 단계 (게임 루프의 빠진 절반 — 사용자 결정 2026-06-23, G99)
+### ★ 덱 편성 단계 1차 슬라이스 = 완료 (2026-06-23, G100) — "선택→자동전투" 루프 닫힘. CI green.
 
-**왜**: 현재 루프 = 미션 탭 → 자동전투 관전 → 승패. **플레이어 결정이 0**(관전 데모). 자동전투 절반은 됐고, 빠진 절반 = **전투 전 유닛 선택·배치**(브라운더스트2/트릭컬식 덱 편성→자동전투 = G96 사용자 본진). 이게 들어가야 "선택→자동전투" 루프가 닫히고 재미게이트·밸런스가 진짜 의미를 가진다(관전이 아니라 플레이어 결정을 평가). 외형 폴리시·opposing-sides보다 가치가 분명히 위(2026-06-23 추천·채택).
+**무엇**: BRIEFING→**SQUAD_SELECT**(덱 편성)→PLAYING. 로스터(`godot/data/roster.json` 6명)에서 squad_size(=미션 아군 수)명을 토글 선택→"출전"→`start_battle_with(ids)`가 고른 유닛을 **id 1..N 정수 재부여·0열 배치**해 `state.allies`로 넣고 PLAYING. **rules.gd·골든 불변**(36/36), `load_mission(idx)` 동작·시그니처 불변(미션 고정 allies로 PLAYING 직행 — 프로브/fixture/test_bridge 의존).
 
-**원칙**: 한 방 ★키 재생성 금지 — 최소 슬라이스부터 [[golem-incremental-small-first]]. **룰·골든·rules.gd 불변**(고른 유닛이 `state.allies`가 될 뿐 — 입력 진입만 바뀐다). 게이트는 모든 `_draw` 화면을 본다(G99에서 닫음) → 새 화면 회귀도 잡힌다.
+**▶ 다음 세션 첫 동작 = 다음 슬라이스(택1, 사용자 취향)**:
+- **A. 코스트/슬롯 제약** — 유닛에 cost 필드(roster.json) + SQUAD_SELECT에 코스트 한도. "버릴 줄 아는" 선택압. SCENE_SPEC v10에 cost 게이트 추가→★키 재생성.
+- **B. 로스터 영속·언락** — 미션 클리어로 유닛 해금, 로컬저장. (영속은 web localStorage 배관 필요 — 새 트랙.)
+- **C. SQUAD_SELECT 외형 폴리시** — 유닛 카드에 스프라이트·역할 아이콘(현재 텍스트 카드). 시각 하드게이트가 squad-linux 기준 받침.
+- **D. opposing-sides 레이아웃**(고잠 — 골든 재추출+프로브 move-then-attack 선행).
 
-**▶ 증분 순서(다음 세션)**:
-1. **(클로드 키0) 유닛 로스터 데이터** `godot/data/roster.json` — 보유 유닛 풀(id·이름·hp·atk·카드필드 range/knockback/reflect/flank 등 기존 재사용). 새 룰 0, 데이터만.
-2. **(클로드 키0) SCENE_SPEC에 새 화면 `SQUAD_SELECT` 계약** — `BRIEFING → SQUAD_SELECT → PLAYING`. 로스터에서 N명 골라 시작칸에 배치 → 그 선택이 battle initialState의 `allies`가 된다(enemies는 미션 고정 유지). **⚠ 검증 정합 필수: `load_mission(idx)`는 기존대로 고정 allies로 PLAYING 직행을 유지하라**(입력 프로브·fixture·test_bridge가 이 계약에 의존). SQUAD_SELECT는 그 위에 얹는 **새 진입 경로**(예: `start_battle_with(selected_allies)`)로, load_mission 시그니처·동작은 절대 불변.
-3. **(골렘 ★키) board.gd 재생성** — SQUAD_SELECT 화면 추가. `godot_port_scene.py --cap 6` 게이트 통과(렌더 게이트에 SQUAD_SELECT 캡처·검사 추가 권장 — G99식 화면별 검사).
-4. **검증·캡처·시각 기준이미지 갱신(새 화면)·커밋.** 이후 슬라이스 = 유닛 더·제약(코스트/슬롯)·언락·로스터 영속.
+추천 = **A(코스트)**. 선택이 "아무나 N명"에서 "트레이드오프"로 바뀌어야 재미게이트가 진짜 의미. 작은 데이터+사양 슬라이스라 증분 원칙에 맞음.
+
+**G100 교훈(중요)**: 하네스가 **메뉴 버튼 픽셀 좌표(320,175)에 결합**돼 있어서, 골렘이 board 재생성 때 버튼 좌표를 바꾸자 캡처·시각·E2E 셋 다 빗나가 false-fail. **수습=모든 게이트를 화면 직접 세팅(`pending_idx`/`screen`·브리지 `window.GOLEM_NAV`)으로 디커플** → 골렘 레이아웃 자유, 게이트는 "화면이 크래시 없이·서로 다르게 그려지나"만 본다. 실제 터치→셀 판정은 헤드리스 입력 프로브(cell_to_screen 왕복)가 결정적으로 보증, 실기기 조작감은 사람(verdict). **규칙 확립: 게이트는 골렘이 자유롭게 정하는 픽셀 좌표에 절대 결합하지 마라.**
+
+**G100 산출/검증**: roster.json·SCENE_SPEC ★v10·pending_idx 계약 / board.gd ★키 재생성(1풀 — 스모크·입력프로브0·fixture6/6·자동전투 DEFEAT5 2회·골든36/36·렌더 BRIEFING0.44·SQUAD0.46·SQUAD_BATTLE_OK) / 캡처+시각+E2E 디커플 / win32·linux 시각 기준 갱신(briefing·squad) / **CI green(run 28007912598 update→28008034629 hardgate)**. 커밋 a2cf04a·4780ae6·d316141·4a15076·b8378f9·37237a6.
 
 ---
 
