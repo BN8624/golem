@@ -1,0 +1,11 @@
+{
+  "name": "golem-godot-e2e",
+  "private": true,
+  "description": "Godot Web export WebKit/iPhone E2E (Playwright) — 자동 사전필터·회귀검증. 최종 조작감/미관/재미는 실 iPhone Safari(사람) 몫.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

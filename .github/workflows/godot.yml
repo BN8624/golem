@@ -20,6 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Godot 4.7 + export 템플릿 설치
         run: |
@@ -71,10 +77,22 @@ jobs:
             echo "OK: build_web/$f ($(stat -c%s build_web/$f) bytes)"
           done
 
-      - name: Web export 산출물 업로드(증거)
+      - name: E2E 의존성 (Playwright + WebKit)
+        working-directory: godot/e2e
+        run: |
+          npm install
+          npx playwright install --with-deps webkit
+
+      - name: Playwright WebKit/iPhone E2E (부팅·터치→상태변화·자동전투 종료·콘솔오류)
+        working-directory: godot/e2e
+        run: npx playwright test
+
+      - name: Web export + E2E 증거 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: web-export
-          path: godot/build_web/
+          name: godot-evidence
+          path: |
+            godot/build_web/
+            godot/e2e/proof/
           if-no-files-found: ignore
