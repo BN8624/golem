@@ -4,6 +4,7 @@ extends Node2D
 var rules
 var levels = []
 var roster = []
+var cost_budget = 0
 var font
 
 var screen = "MENU"
@@ -36,19 +37,24 @@ func _ready():
 	levels = JSON.parse_string(lv_json)
 	
 	var rs_json = FileAccess.open("res://data/roster.json", FileAccess.READ).get_as_text()
-	roster = JSON.parse_string(rs_json)["units"]
+	var rs_data = JSON.parse_string(rs_json)
+	roster = rs_data["units"]
+	cost_budget = rs_data.get("cost_budget", 0)
 	
 	tex_knight = load("res://assets/tinydungeon/Tiles/tile_0096.png")
 	tex_mage = load("res://assets/tinydungeon/Tiles/tile_0084.png")
 	tex_monster = load("res://assets/tinydungeon/Tiles/tile_0108.png")
 
-func cell_to_screen(gx: int, gy: int) -> Vector2:
+func project(pv: Vector2) -> Vector2:
 	if screen != "PLAYING": return Vector2.ZERO
 	var gw = 600.0 / state.gridSize
 	var gh = gw / 2.0
 	var ox = 320
 	var oy = 340 - (state.gridSize - 1) * gh / 2.0
-	return Vector2(ox, oy) + Vector2((gx - gy) * gw / 2.0, (gx + gy) * gh / 2.0)
+	return Vector2(ox, oy) + Vector2((pv.x - pv.y) * gw / 2.0, (pv.x + pv.y) * gh / 2.0)
+
+func cell_to_screen(gx: int, gy: int) -> Vector2:
+	return project(Vector2(gx, gy))
 
 func screen_to_cell(px: float, py: float) -> Vector2:
 	if screen != "PLAYING": return Vector2.ZERO
@@ -64,6 +70,15 @@ func load_mission(idx: int) -> void:
 	pending_idx = idx
 	var init = JSON.parse_string(JSON.stringify(levels[idx].initialState))
 	_enter_battle(init)
+
+func picked_cost() -> int:
+	var total = 0
+	for id in picked_ids:
+		for r in roster:
+			if r.id == id:
+				total += r.get("cost", 0)
+				break
+	return total
 
 func start_battle_with(ids: Array) -> void:
 	var squad_size = levels[pending_idx].initialState.allies.size()
@@ -143,7 +158,7 @@ func _unhandled_input(event):
 						picked_ids.append(roster[i].id)
 					queue_redraw()
 			if mp.x > 220 and mp.x < 420 and mp.y > 540 and mp.y < 590:
-				if picked_ids.size() == squad_size:
+				if picked_ids.size() == squad_size and picked_cost() <= cost_budget:
 					start_battle_with(picked_ids)
 		elif screen == "PLAYING":
 			var cell = screen_to_cell(mp.x, mp.y)
@@ -320,10 +335,14 @@ func _draw():
 			var is_picked = picked_ids.has(u.id)
 			draw_rect(rect, Color(0.3, 0.3, 0.3, 1.0) if not is_picked else Color(0.4, 0.6, 0.4, 1.0), true)
 			if is_picked: draw_rect(rect, Color.YELLOW, false, 2.0)
-			draw_string(font, rect.position + Vector2(10, 30), u.name + " [" + u.role + "] HP:" + str(u.hp) + " ATK:" + str(u.atk), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+			draw_string(font, rect.position + Vector2(10, 30), u.name + " [" + u.role + "] Cost:" + str(u.get("cost",0)) + " HP:" + str(u.hp) + " ATK:" + str(u.atk), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+		
+		var cur_cost = picked_cost()
+		var cost_color = Color.WHITE if cur_cost <= cost_budget else Color.RED
+		draw_string(font, Vector2(320, 520), "코스트: " + str(cur_cost) + " / " + str(cost_budget), HORIZONTAL_ALIGNMENT_CENTER, -1, 20, cost_color)
 		
 		var btn_rect = Rect2(220, 540, 200, 50)
-		var active = picked_ids.size() == squad_size
+		var active = picked_ids.size() == squad_size and cur_cost <= cost_budget
 		draw_rect(btn_rect, Color(0.5, 0.5, 0.5, 1.0) if not active else Color(0.2, 0.8, 0.2, 1.0), true)
 		draw_string(font, btn_rect.position + Vector2(100, 30), "출전", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color.WHITE)
 	
@@ -334,12 +353,13 @@ func _draw():
 		draw_rect(Rect2(0, 0, 640, 36), Color(0, 0, 0, 0.5), true)
 		draw_string(font, Vector2(20, 25), levels[pending_idx].name + " · Turn " + str(state.turn), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
 		
+		var gw = 600.0 / state.gridSize
+		var gh = gw / 2.0
+		
 		for gx in range(state.gridSize):
 			for gy in range(state.gridSize):
 				var c = cell_to_screen(gx, gy)
-				var th = TILE_W/2.0
-				var tw = TILE_W
-				var pts = PackedVector2Array([c + Vector2(0, -th/2), c + Vector2(tw/2, 0), c + Vector2(0, th/2), c + Vector2(-tw/2, 0)])
+				var pts = PackedVector2Array([c + Vector2(0, -gh/2), c + Vector2(gw/2, 0), c + Vector2(0, gh/2), c + Vector2(-gw/2, 0)])
 				var v_tone = tone
 				v_tone.v += (gx * 7 + gy * 13) % 5 * 0.02 - 0.04
 				draw_colored_polygon(pts, v_tone)
@@ -357,7 +377,7 @@ func _draw():
 						var dist = abs(actor.pos[0] - gx) + abs(actor.pos[1] - gy)
 						if dist >= 1 and dist <= rng:
 							var c = cell_to_screen(gx, gy)
-							var pts = PackedVector2Array([c + Vector2(0, -TILE_H/2), c + Vector2(TILE_W/2, 0), c + Vector2(0, TILE_H/2), c + Vector2(-TILE_W/2, 0)])
+							var pts = PackedVector2Array([c + Vector2(0, -gh/2), c + Vector2(gw/2, 0), c + Vector2(0, gh/2), c + Vector2(-gw/2, 0)])
 							draw_colored_polygon(pts, Color(1, 0.3, 0.3, 0.12))
 						
 						if dist == 1:
@@ -368,7 +388,7 @@ func _draw():
 								if e.hp > 0 and int(e.pos[0]) == gx and int(e.pos[1]) == gy: occupied = true; break
 							if not occupied:
 								var c = cell_to_screen(gx, gy)
-								var pts = PackedVector2Array([c + Vector2(0, -TILE_H/2), c + Vector2(TILE_W/2, 0), c + Vector2(0, TILE_H/2), c + Vector2(-TILE_W/2, 0)])
+								var pts = PackedVector2Array([c + Vector2(0, -gh/2), c + Vector2(gw/2, 0), c + Vector2(0, gh/2), c + Vector2(-gw/2, 0)])
 								draw_colored_polygon(pts, Color(0, 1, 0, 0.2))
 								
 							var is_enemy = false
@@ -376,7 +396,7 @@ func _draw():
 								if e.hp > 0 and int(e.pos[0]) == gx and int(e.pos[1]) == gy: is_enemy = true; break
 							if is_enemy and dist <= rng:
 								var c = cell_to_screen(gx, gy)
-								var pts = PackedVector2Array([c + Vector2(0, -TILE_H/2), c + Vector2(TILE_W/2, 0), c + Vector2(0, TILE_H/2), c + Vector2(-TILE_W/2, 0), c + Vector2(0, -TILE_H/2)])
+								var pts = PackedVector2Array([c + Vector2(0, -gh/2), c + Vector2(gw/2, 0), c + Vector2(0, gh/2), c + Vector2(-gw/2, 0), c + Vector2(0, -gh/2)])
 								draw_polyline(pts, Color.RED, 2.0)
 
 		var all_units = []
@@ -393,21 +413,16 @@ func _draw():
 				var tw = unit_twins[key]
 				pos_vec = tw.from.lerp(tw.to, tw.t)
 			
-			var c = cell_to_screen(int(pos_vec.x), int(pos_vec.y)) # approx, strictly the target cell
-			# Actual projection of the lerped pos:
-			var cur_c = origin + Vector2((pos_vec.x - pos_vec.y) * (600.0/state.gridSize) / 2.0, (pos_vec.x + pos_vec.y) * (300.0/state.gridSize) / 2.0)
-			# Adjustment for origin.y:
-			cur_c.y = 340 - (state.gridSize - 1) * (300.0/state.gridSize) / 2.0 + (pos_vec.x + pos_vec.y) * (300.0/state.gridSize) / 2.0
-			cur_c.x = 320 + (pos_vec.x - pos_vec.y) * (600.0/state.gridSize) / 2.0
+			var cur_c = project(pos_vec)
 			
 			var shadow_pts = PackedVector2Array()
 			for i in range(16):
 				var t = TAU * i / 16.0
-				shadow_pts.append(cur_c + Vector2(cos(t) * (600.0/state.gridSize)*0.22, sin(t) * (300.0/state.gridSize)*0.18))
+				shadow_pts.append(cur_c + Vector2(cos(t) * gw * 0.22, sin(t) * gh * 0.18))
 			draw_colored_polygon(shadow_pts, Color(0, 0, 0, 0.22))
 			
 			var tex = tex_monster if side == "e" else (tex_mage if u.get("range", 1) > 1 else tex_knight)
-			var w = (600.0/state.gridSize) * 1.1
+			var w = gw * 1.1
 			var h = tex.get_height() * (w / tex.get_width())
 			var rect = Rect2(cur_c.x - w/2, cur_c.y - h, w, h)
 			var mod = Color.WHITE
@@ -427,13 +442,13 @@ func _draw():
 				draw_string(font, cur_c + Vector2(-5, -h/2), "X", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.RED)
 			
 			if side == "a" and u.id == selected_unit_id:
-				var pts = PackedVector2Array([cur_c + Vector2(0, -TILE_H/2), cur_c + Vector2(TILE_W/2, 0), cur_c + Vector2(0, TILE_H/2), cur_c + Vector2(-TILE_W/2, 0), cur_c + Vector2(0, -TILE_H/2)])
+				var pts = PackedVector2Array([cur_c + Vector2(0, -gh/2), cur_c + Vector2(gw/2, 0), cur_c + Vector2(0, gh/2), cur_c + Vector2(-gw/2, 0), cur_c + Vector2(0, -gh/2)])
 				draw_polyline(pts, Color.YELLOW, 2.0)
 
 		for fx in effects:
 			if fx.type == "arrow":
-				var a = cell_to_screen(int(fx.from_cell[0]), int(fx.from_cell[1])) + Vector2(0, -TILE_H * 0.4)
-				var b = cell_to_screen(int(fx.to_cell[0]), int(fx.to_cell[1])) + Vector2(0, -TILE_H * 0.4)
+				var a = cell_to_screen(int(fx.from_cell[0]), int(fx.from_cell[1])) + Vector2(0, -gh * 0.4)
+				var b = cell_to_screen(int(fx.to_cell[0]), int(fx.to_cell[1])) + Vector2(0, -gh * 0.4)
 				var alpha = clamp(fx.life / fx.max_life, 0.0, 1.0)
 				if not fx.ranged:
 					draw_line(a, b, Color(1, 1, 0.3, alpha), 3.0)
@@ -441,7 +456,7 @@ func _draw():
 					var pts = PackedVector2Array()
 					for i in range(17):
 						var t = i / 16.0
-						pts.append(a.lerp(b, t) + Vector2(0, -TILE_H * 1.2 * (4.0 * t * (1.0 - t))))
+						pts.append(a.lerp(b, t) + Vector2(0, -gh * 1.2 * (4.0 * t * (1.0 - t))))
 					draw_polyline(pts, Color(0.6, 0.9, 1, alpha), 3.0)
 			elif fx.type == "text":
 				var c = cell_to_screen(int(fx.pos.x), int(fx.pos.y))
