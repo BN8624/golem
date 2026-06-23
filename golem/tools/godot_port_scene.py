@@ -106,8 +106,9 @@ def run_auto(godot):
 
 def run_render(godot):
     # 렌더 캡처(windowed) — _draw 를 실제로 그려 헤드리스가 못 잡는 draw_string 시그니처/폰트/텍스처 에러를 잡는다.
+    # + BRIEFING이 MENU와 다른 화면인지 검사(브리핑이 메뉴를 그리는 회귀 차단 — 헤드리스 프로브가 못 잡는 갭).
     win = godot.replace("_console.exe", ".exe")  # 콘솔판→윈도판(실제 렌더 컨텍스트 필요)
-    caps = [GODOT_DIR / "test" / "cap_menu.png", GODOT_DIR / "test" / "cap_after.png"]
+    caps = [GODOT_DIR / "test" / "cap_menu.png", GODOT_DIR / "test" / "cap_briefing.png", GODOT_DIR / "test" / "cap_after.png"]
     for p in caps:
         if p.exists():
             p.unlink()
@@ -116,9 +117,20 @@ def run_render(godot):
     out = (r.stdout or "") + (r.stderr or "")
     errs = "\n".join(l for l in out.splitlines() if any(m in l for m in ERR_MARKERS))
     made = all(p.exists() for p in caps)
-    ok = errs == "" and made
-    info = errs if errs else ("" if made else "캡처 PNG 미생성(_draw 가 안 그려짐)")
-    return ok, info
+    if errs != "" or not made:
+        return False, (errs if errs else "캡처 PNG 미생성(_draw 가 안 그려짐)")
+    # BRIEFING_DIFF_RATIO 파싱 — 브리핑이 메뉴와 거의 동일하면(브리핑 박스·본문 안 그림) 회귀로 차단
+    ratio = None
+    for line in out.splitlines():
+        if "BRIEFING_DIFF_RATIO=" in line:
+            try:
+                ratio = float(line.split("BRIEFING_DIFF_RATIO=")[1].split()[0])
+            except (ValueError, IndexError):
+                pass
+    if ratio is not None and ratio < 0.03:
+        return False, (f"BRIEFING이 MENU와 거의 동일(diff={ratio:.3f}<0.03) — BRIEFING 화면은 반투명 박스+"
+                       "briefing 본문+'탭하여 시작'을 그려야 한다. 메뉴를 그대로 그리지 마라(SCENE_SPEC BRIEFING).")
+    return True, ""
 
 
 def diagnose(text):
