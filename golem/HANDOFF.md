@@ -2,7 +2,7 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 활성 트랙 = Godot 검증 하네스 강화 (2026-06-23, G97). 외부 리뷰 Phase 1·2·3·4·6 완료. 남은 건 Phase 5(시각스냅샷)·Phase6-퍼징(문서가 더 뒤로 미룸). 씬 증분(G96, 아래)은 병행 트랙.
+### ★ Godot 검증 하네스 강화 = 완료 (2026-06-23, G97~G98). 외부 리뷰 Phase 1~6 + 차등 퍼징 + 공격 화살표 증분 전부 닫힘·**CI green**. ▶ **다음 활성 = 게임 전진**(병행 트랙 씬 증분/덱 편성, 아래) 또는 시각 하드게이트 채택.
 
 **▶▶ G97 완료(이번 세션, 클로드 하네스 키0·골렘/저자분리 유지)**: 외부 리뷰("Web/iPhone 경로가 자동 보호 안 됨, 입력 프로브가 느슨")를 대조→수용. 지적 6건 전부 코드와 일치 확인 후 처리.
 - **Phase 1**: `run_input_probe.gd` 정밀화 — 선택·이동·공격을 각각 구조화 비교(PROBE_JSON expected vs actual), 불일치 시 **quit(1)**. 옛 `if selected!=null or turn!=before`(선택만 성공해도 통과)·문자열 grep 제거.
@@ -23,14 +23,14 @@
 
 ### (병행 트랙) Godot 씬 증분 — 아이소 2.5D + 자동 전투 (2026-06-24, G96).
 
-**▶▶ 씬 증분 첫 동작: 다음 증분 하나를 골라 ★키 재생성한다.** 후보 — ① 공격 화살표(v6: 근접 직선/원거리 포물선) ② 사거리 영역 타일 표시(v5: 선택 시 공격 reach 빨강) ③ 자동전투 아이폰 export(웹 빌드가 옛판이라 필요) ④ opposing-sides 레이아웃. **규칙(이번 세션 확립): 한 재생성=새 기능 1개.** SCENE_SPEC에서 나머지는 `※ 다음 증분`으로 보류하고 하나만 활성화 → `python golem/tools/godot_port_scene.py --cap 6`(스모크+입력프로브+자동프로브+렌더 게이트, **함정 자동주입+diagnose 진단피드백 내장**) → 캡처 검증 → 통과본 커밋 → 다음 증분. v5/v6 사양은 SCENE_SPEC에 이미 보류 상태로 들어있음. [[golem-one-increment-per-regen]]
+**▶▶ 씬 증분 첫 동작: 다음 증분 하나를 골라 ★키 재생성한다.** 후보 — ~~① 공격 화살표(v8)~~ **= G98 완료** · ② 사거리 영역 타일 표시(v5: 선택 시 공격 reach 빨강, SCENE_SPEC에 보류 중) · ③ opposing-sides 레이아웃(④, 고잠 — 아래 ⚠) · 큰 그림 = 덱 편성. **규칙(확립): 한 재생성=새 기능 1개.** SCENE_SPEC에서 나머지는 `※ 다음 증분`으로 보류하고 하나만 활성화 → `python golem/tools/godot_port_scene.py --cap 6`(스모크+입력프로브+**fixture**+자동프로브+렌더 게이트, **함정 자동주입+diagnose 진단피드백 내장**) → 캡처 검증 → 통과본 커밋 → 다음 증분. [[golem-one-increment-per-regen]]
 
-- **현재 위치(G96)**: 아이소 2.5D(다이아몬드 격자·빌보드+납작 그림자·머리위 HP바·정수 데미지·세로중앙정렬) + **자동 전투(v7)** 채택. `auto_step()` 그리디 정책으로 아군 자동 구동, `update_state`로 턴 진행, 결정적 종료(2회 재현 프로브). board.gd 게이트 통과·커밋(8b87178→ec9b661). 좌표는 `cell_to_screen(gx,gy)` 단일 진실원천(아이소 투영, 하네스 분리).
+- **현재 위치(G96→G98)**: 아이소 2.5D(다이아몬드 격자·빌보드+납작 그림자·머리위 HP바·정수 데미지·세로중앙정렬) + **자동 전투(v7)** + **공격 화살표(v8, G98 — 근접 직선/원거리 포물선)** 채택. `auto_step()` 그리디 정책으로 아군 자동 구동, `update_state`로 턴 진행, 결정적 종료(2회 재현 프로브). board.gd 게이트 통과·커밋(8b87178→ec9b661→779cb68). 좌표는 `cell_to_screen(gx,gy)` 단일 진실원천(아이소 투영, 하네스 분리).
 - **방향(사용자 G96)**: 브라운더스트2/트릭컬식 **덱 편성→자동 전투**(모바일). 자동전투 모드 먼저(이번 채택), 다음 큰 그림은 **덱 편성 단계**. 재미가 "퍼즐 풀이→덱 구성"으로 이동 → 골렘 재미게이트 의미가 바뀜(추후 정렬).
 - **omc 핵심로직 이식(설치X, 패턴만)**: #2 함정 자동주입(`godot/GDSCRIPT_PITFALLS.md`→port 프롬프트, b7c0465) · #1 증분분해 규칙(메모리+노트, 41a4a08) · #3 `diagnose()` 진단피드백(41a4a08). **새 GDScript 함정은 SCENE_SPEC 말고 `GDSCRIPT_PITFALLS.md`에 쌓는다.**
 - **⚠ opposing-sides 레이아웃 고잠**(④ 하려면): 유닛을 멀리 떨어뜨리면 (a) `rules_golden.json` 솔루션 무효→재추출 필요, (b) 입력프로브의 "턴0 공격쌍" 전제 깨짐→프로브를 move-then-attack으로 보강 필요. 이번에 시범수정 후 되돌림(squad_levels.json 원복).
 - **분업(엔진 바꿔도 유지)**: 룰 포팅·씬·외형(`_draw`)·정책 전부 골렘 ★키. 클로드는 하네스·SCENE_SPEC 사양·게이트·에셋만 [[godot-does-the-art-too]].
-- **접속**: 아이폰 `https://node.tail3e9e21.ts.net/`(IP 아님·HTTPS). 서버 `python godot/serve_web.py 8771`. **단 웹 빌드는 아직 옛판 — 자동전투 보려면 `--export-release Web` 먼저.**
+- **접속**: 아이폰 `https://node.tail3e9e21.ts.net/`(IP 아님·HTTPS). 서버 `python godot/serve_web.py 8771`. 웹 빌드(`godot/build_web/`)는 G98에서 최신 board.gd로 재export됨(자동전투·화살표 포함) — 단 gitignore라 신선 체크아웃은 `--export-release Web` 한 번 필요.
 - **결정 이유 정본**: `godot/context-notes.md`. 진행 체크: `godot/checklist.md`.
 
 ---
