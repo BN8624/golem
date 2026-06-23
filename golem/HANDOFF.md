@@ -2,13 +2,16 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 활성 트랙 = Godot 이식 (2026-06-23, G95). squad 재미 임계값(G94, 아래)은 보류 트랙.
+### ★ 활성 트랙 = Godot 이식 — 아이소 2.5D + 자동 전투 (2026-06-24, G96). squad 재미 임계값(G94, 아래)은 보류 트랙.
 
-**▶▶ 다음 세션 첫 동작: 사용자가 아이폰에서 4미션 플레이하고 피드백.** 접속 = `https://node.tail3e9e21.ts.net/`(IP 아님·HTTPS 필수). 서버 먼저 `python godot/serve_web.py 8771`(tailscale serve는 --bg라 유지·재부팅만 재실행). 피드백 뒤 **다음 다듬기**(맨 윗줄 hp라벨 화면밖 잘림·바닥 변주 가로띠·이동/넉백 트윈·hp 바)를 **골렘에 넘긴다** — `godot/SCENE_SPEC.md` 보강 → `python golem/tools/godot_port_scene.py --cap 5`(★키, board 외형 재생성, 스모크+입력프로브+렌더캡처 게이트) → 캡처 검증 → `--export-release Web`.
+**▶▶ 다음 세션 첫 동작: 다음 증분 하나를 골라 ★키 재생성한다.** 후보 — ① 공격 화살표(v6: 근접 직선/원거리 포물선) ② 사거리 영역 타일 표시(v5: 선택 시 공격 reach 빨강) ③ 자동전투 아이폰 export(웹 빌드가 옛판이라 필요) ④ opposing-sides 레이아웃. **규칙(이번 세션 확립): 한 재생성=새 기능 1개.** SCENE_SPEC에서 나머지는 `※ 다음 증분`으로 보류하고 하나만 활성화 → `python golem/tools/godot_port_scene.py --cap 6`(스모크+입력프로브+자동프로브+렌더 게이트, **함정 자동주입+diagnose 진단피드백 내장**) → 캡처 검증 → 통과본 커밋 → 다음 증분. v5/v6 사양은 SCENE_SPEC에 이미 보류 상태로 들어있음. [[golem-one-increment-per-regen]]
 
-- **현재 위치**: Phase 0~3.5 완료, origin/main 푸시(521fa0b). board = 미션선택+브리핑+서사+플레이+결과, Tiny Dungeon 스프라이트(기사·마법사 vs 초록 몬스터)·미션별 맵 톤·데미지 텍스트·타격 플래시. 골든 36/36·입력프로브·렌더캡처 통과. 아이폰 HTTPS(tailscale serve --https=443) + 나눔고딕(OFL) 임베드.
-- **분업(엔진 바꿔도 유지)**: 룰 포팅·씬·**외형(스프라이트·맵·이펙트·`_draw`)** 전부 골렘 ★키 저자. 클로드는 골든다리·하네스·에셋/폰트 준비·SCENE_SPEC 사양·렌더 게이트만. 클로드가 _draw 직접 짠 건 위반(G95 사용자 지적, G83 재발) → 교정 [[godot-does-the-art-too]].
-- **검증 교훈**: 헤드리스 스모크/입력프로브는 `_draw`를 호출 안 해 렌더 버그(draw_string·draw_set_transform 시그니처·폰트·텍스처) 못 잡음 → 게이트에 windowed **렌더 캡처** 추가. 단 게이트도 미관·미세버그(빨강 id충돌·고정cell·바닥 띠)는 못 잡으니 클로드가 캡처 보고 SCENE_SPEC 보강·되먹임 필수(이번 board 외형 3회 되먹임으로 채택).
+- **현재 위치(G96)**: 아이소 2.5D(다이아몬드 격자·빌보드+납작 그림자·머리위 HP바·정수 데미지·세로중앙정렬) + **자동 전투(v7)** 채택. `auto_step()` 그리디 정책으로 아군 자동 구동, `update_state`로 턴 진행, 결정적 종료(2회 재현 프로브). board.gd 게이트 통과·커밋(8b87178→ec9b661). 좌표는 `cell_to_screen(gx,gy)` 단일 진실원천(아이소 투영, 하네스 분리).
+- **방향(사용자 G96)**: 브라운더스트2/트릭컬식 **덱 편성→자동 전투**(모바일). 자동전투 모드 먼저(이번 채택), 다음 큰 그림은 **덱 편성 단계**. 재미가 "퍼즐 풀이→덱 구성"으로 이동 → 골렘 재미게이트 의미가 바뀜(추후 정렬).
+- **omc 핵심로직 이식(설치X, 패턴만)**: #2 함정 자동주입(`godot/GDSCRIPT_PITFALLS.md`→port 프롬프트, b7c0465) · #1 증분분해 규칙(메모리+노트, 41a4a08) · #3 `diagnose()` 진단피드백(41a4a08). **새 GDScript 함정은 SCENE_SPEC 말고 `GDSCRIPT_PITFALLS.md`에 쌓는다.**
+- **⚠ opposing-sides 레이아웃 고잠**(④ 하려면): 유닛을 멀리 떨어뜨리면 (a) `rules_golden.json` 솔루션 무효→재추출 필요, (b) 입력프로브의 "턴0 공격쌍" 전제 깨짐→프로브를 move-then-attack으로 보강 필요. 이번에 시범수정 후 되돌림(squad_levels.json 원복).
+- **분업(엔진 바꿔도 유지)**: 룰 포팅·씬·외형(`_draw`)·정책 전부 골렘 ★키. 클로드는 하네스·SCENE_SPEC 사양·게이트·에셋만 [[godot-does-the-art-too]].
+- **접속**: 아이폰 `https://node.tail3e9e21.ts.net/`(IP 아님·HTTPS). 서버 `python godot/serve_web.py 8771`. **단 웹 빌드는 아직 옛판 — 자동전투 보려면 `--export-release Web` 먼저.**
 - **결정 이유 정본**: `godot/context-notes.md`. 진행 체크: `godot/checklist.md`.
 
 ---
