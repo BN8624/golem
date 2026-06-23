@@ -43,8 +43,16 @@ The first line MUST be a one-line Korean comment, then `extends Node2D`.
 
 === rules.gd (already exists at res://scripts/rules.gd — CALL it, do NOT reimplement) ===
 {rules}
-{feedback}
+{base}{feedback}
 Now output the COMPLETE board.gd content (and nothing else)."""
+
+# 증분 모드: 검증된 현재 board를 base로 주고 "새 기능만 최소 변경"을 지시 → 풀 scratch 재생성이 이미 통과한 로직(선택/이동/RESULT)을 흔드는 회귀를 막는다(omc 증분분해).
+BASE_BLOCK = """=== CURRENT VERIFIED board.gd (this ALREADY PASSES every gate — smoke/probe/fixture/auto/render) ===
+{current}
+
+=== YOUR TASK (INCREMENTAL — critical) ===
+Make the SMALLEST possible change to the file above to add ONLY the newly-specified feature in the 사양 (the latest ★v section). KEEP EVERY OTHER LINE byte-identical — especially `_unhandled_input` PLAYING selection/move/attack, `execute_action`, `load_mission`/`start_battle_with`/`_enter_battle`, and the VICTORY/DEFEAT → screen="RESULT" transition. Do NOT rewrite working logic. Output the COMPLETE modified file (with your minimal addition), nothing else.
+"""
 
 
 def _strip_fences(t):
@@ -180,8 +188,12 @@ def diagnose(text):
         hints.append("→ 함정#7 위반: MENU에서 state는 {}. state.allies/enemies는 `screen=='PLAYING'` 가드 안에서만.")
     if hit("same name as a previously declared function"):
         hints.append("→ 함수 중복 선언. 같은 이름 함수는 하나만.")
+    if hit("already") and "declared in this scope" in t:
+        hints.append("→ 변수 중복 선언: 같은 스코프(같은 함수/블록)에서 같은 이름을 `var`로 두 번 선언 마라. 임시변수(tw/th 등)는 이름을 다르게.")
     if hit("not declared in the current scope"):
         hints.append("→ 변수 스코프: 블록(if/for) 안에서 선언한 변수를 밖에서 쓰지 마라. 필요한 바깥 스코프에 var 선언.")
+    if "Invalid operands" in t and "Array" in t and "Vector2" in t:
+        hints.append("→ pos 비교 함정: `pos`(Array) 와 Vector2 를 `!=`/`==` 로 직접 비교 마라. 원소별 `pos[0]==gx and pos[1]==gy` 로.")
     return ("아래 함정을 어겼다 — GDScript 함정 규칙을 다시 보라:\n" + "\n".join(hints) + "\n\n") if hints else ""
 
 
@@ -190,6 +202,8 @@ def main(argv=None):
     ap.add_argument("--cap", type=int, default=3)
     ap.add_argument("--godot", default=os.environ.get("GODOT", DEFAULT_GODOT))
     ap.add_argument("--replay", default=None, help="board.gd 파일로 골렘 호출 없이 스모크만(키0)")
+    ap.add_argument("--incr", action="store_true",
+                    help="증분 모드: 현재 검증된 board.gd를 base로 주고 새 기능만 최소 변경(풀 scratch 회귀 방지)")
     args = ap.parse_args(argv)
 
     from config import force_utf8_stdout
@@ -217,10 +231,19 @@ def main(argv=None):
     os.environ["CRITIC_MODEL"] = MODEL_31
     pool = KeyPool(get_api_keys(), models=[MODEL_31])
 
+    # 증분 모드: 루프 전에 현재 검증된 board를 base로 고정(각 시도의 실패 출력이 아니라 항상 같은 통과본을 base로 준다).
+    base = ""
+    if args.incr:
+        if not OUT.exists():
+            print("--incr: 현재 board.gd 가 없다. 검증된 board를 먼저 두라(git restore 등).")
+            return 1
+        base = BASE_BLOCK.format(current=OUT.read_text(encoding="utf-8"))
+        print("[SCENE] 증분 모드 — 검증된 board를 base로 최소 변경 지시")
+
     feedback = ""
     for attempt in range(1, args.cap + 1):
         print(f"[SCENE] 시도 {attempt}/{args.cap} — 골렘 board.gd 생성 (★키)")
-        prompt = PROMPT.format(spec=spec, pitfalls=pitfalls, rules=rules,
+        prompt = PROMPT.format(spec=spec, pitfalls=pitfalls, rules=rules, base=base,
                                feedback=("\n=== PREVIOUS ATTEMPT had errors — fix and re-output FULL file ===\n"
                                          + feedback + "\n") if feedback else "")
         with pool.checkout() as key:

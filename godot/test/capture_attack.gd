@@ -83,9 +83,12 @@ func _process(_d):
 		return true
 	return false
 
-# start_battle_with(로스터 앞 2개 id) → PLAYING·allies 2명·status PLAYING 인지 검사(새 진입 경로)
+# start_battle_with(예산 내 최저가 2명) → PLAYING·allies 2명·status PLAYING 인지 검사(새 진입 경로)
 func _check_start_battle():
-	var ids = [board.roster[0]["id"], board.roster[1]["id"]]
+	# 예산 초과 쌍을 피해 cost 오름차순 2명을 고른다(어느 구현이든 유효 부대 → PLAYING).
+	var sorted_roster = board.roster.duplicate()
+	sorted_roster.sort_custom(func(a, b): return a.get("cost", 0) < b.get("cost", 0))
+	var ids = [sorted_roster[0]["id"], sorted_roster[1]["id"]]
 	board.start_battle_with(ids)
 	var ok = board.screen == "PLAYING" and board.state["allies"].size() == 2 and board.state["status"] == "PLAYING"
 	print("SQUAD_BATTLE_OK=", ok, " allies=", board.state["allies"].size(), " status=", board.state["status"])
