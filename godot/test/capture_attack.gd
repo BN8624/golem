@@ -25,6 +25,7 @@ func _process(_d):
 		_cap("res://test/cap_menu.png")  # _ready 직후 screen=MENU
 	elif frame == 3:
 		board.load_mission(0)  # v2 계약: 메뉴 우회하고 곧장 플레이 상태로
+		board.auto_mode = false  # 렌더 게이트는 수동 시연 — 자동전투 간섭 끔(v7)
 	elif frame == 5:
 		_cap("res://test/cap_before.png")
 		print("BEFORE enemies: ", _enemy_hps())

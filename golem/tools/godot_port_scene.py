@@ -75,6 +75,18 @@ def run_probe(godot):
     return ok, lines
 
 
+def run_auto(godot):
+    # 자동 전투 프로브 — auto_step() 반복 호출이 결정적으로 종료(VICTORY/DEFEAT)하는지(v7)
+    r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
+                        "--script", "res://test/run_auto_probe.gd"],
+                       capture_output=True, text=True, encoding="utf-8", timeout=120)
+    out = (r.stdout or "") + (r.stderr or "")
+    ok = "자동 전투 동작함" in out
+    lines = "\n".join(l for l in out.splitlines()
+                      if "PROBE AUTO" in l or any(m in l for m in ERR_MARKERS))
+    return ok, lines
+
+
 def run_render(godot):
     # 렌더 캡처(windowed) — _draw 를 실제로 그려 헤드리스가 못 잡는 draw_string 시그니처/폰트/텍스처 에러를 잡는다.
     win = godot.replace("_console.exe", ".exe")  # 콘솔판→윈도판(실제 렌더 컨텍스트 필요)
@@ -141,9 +153,17 @@ def main(argv=None):
                         "자동 검증 계약(state/selected_unit_id/load_mission/_unhandled_input)과 "
                         "좌표 비교 함정(pos[0]==gx and pos[1]==gy)을 다시 확인하라. 프로브 출력:\n" + plines[:1500])
             continue
+        aok, alines = run_auto(args.godot)
+        if not aok:
+            print("  ✗ 자동전투 프로브 실패:\n" + "\n".join("    " + l for l in alines.splitlines()[:10]))
+            feedback = ("스모크·입력프로브는 통과했으나 자동 전투(auto_step) 실패. "
+                        "SCENE_SPEC ★v7(auto_step·그리디 정책·결정성)을 확인하라. "
+                        "auto_step()이 PLAYING에서 아군 액션 1개를 update_state로 적용하고, 끝나면 screen=RESULT가 돼야 한다. 자동 프로브 출력:\n"
+                        + alines[:1500])
+            continue
         rok, rinfo = run_render(args.godot)
         if rok:
-            print(f"★ 스모크+입력프로브+렌더캡처 통과 → {OUT}")
+            print(f"★ 스모크+입력프로브+자동전투+렌더캡처 통과 → {OUT}")
             print("  최종 미관/터치는 사용자가 캡처·F5로 확인.")
             return 0
         print("  ✗ 렌더 캡처 실패(_draw 에러):\n" + "\n".join("    " + l for l in rinfo.splitlines()[:10]))

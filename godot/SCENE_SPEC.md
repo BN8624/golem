@@ -15,6 +15,7 @@
   내부에서 `state = 깊은복제(initialState)`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `screen="PLAYING"`.
 - 메서드 `func _unhandled_input(event)` : `screen=="PLAYING"`일 때 좌클릭으로 아래 [플레이 입력]을 처리.
 - 메서드 `func cell_to_screen(gx:int, gy:int) -> Vector2` (**공개·필수**): 칸 (gx,gy)의 **화면 픽셀 중심**을 아이소 투영으로 반환한다. `_draw`(타일·유닛 배치)와 `_unhandled_input`의 클릭 히트판정이 **이 한 함수를 단일 진실원천으로** 쓴다. 프로브·캡처 하네스가 이 함수를 직접 호출해 클릭 위치를 잡으므로 **시그니처를 절대 바꾸지 마라.**
+- 멤버 `var auto_mode = true` : 자동 전투 on/off. 메서드 `func auto_step() -> void` (**공개·필수**): `screen=="PLAYING"`이면 아군 1명의 자동 액션을 골라 `rules.update_state` 1회 적용(엔진이 적 반응 처리), 종료면 `screen="RESULT"`. 자동 플레이아웃 프로브가 이걸 반복 호출해 결정적 종료를 검증한다 — [★v7 자동 전투] 참조. **시그니처 고정.**
 - **좌표계(아이소메트릭 2.5D·필수)**: 보드는 다이아몬드 격자다. 투영 =
   `cell_to_screen(gx,gy) = origin + Vector2((gx-gy)*TILE_W/2.0, (gx+gy)*TILE_H/2.0)` (2:1 아이소 → `TILE_H = TILE_W/2.0`).
   `TILE_W`·`origin`은 GxG 보드가 가로로 화면 폭(≈600, 좌우 여백 둠)에 맞고 **가로·세로 모두 가운데 정렬**되게 골렘이 정한다. 권장 `TILE_W = 600.0/state.gridSize`(→ `TILE_H = TILE_W/2`), `origin.x = 320`. **세로 중앙정렬**: 다이아몬드의 세로 픽셀 높이는 `(gridSize-1)*TILE_H`이므로 `origin.y = (640 + HUD높이)/2 - (gridSize-1)*TILE_H/2`로 둬서 보드가 화면 세로 가운데(HUD 아래)에 오게 한다 — 위로 쏠려 아래가 휑하면 안 된다(2026-06-24 캡처 실측).
@@ -144,6 +145,20 @@
    - **근접(range<=1): 직선** — `from`→`to` `draw_line` + 끝에 화살촉(작은 삼각형 `draw_colored_polygon`).
    - **원거리(range>=2): 포물선 호** — 2차 베지어. 제어점 `ctrl = (from+to)/2 + Vector2(0, -호높이)`(호높이 ≈ `from.distance_to(to)*0.3`, 위로 솟게). `t`를 0..1로 ~12등분 `p = (1-t)*(1-t)*from + 2*(1-t)*t*ctrl + t*t*to` 점들을 `draw_polyline`로 잇고 끝점에 화살촉.
    - 화살표는 깊이정렬된 유닛보다 **위**(최상단 오버레이). 잘 보이게 노랑/흰 + 외곽선. **`draw_set_transform` 쓰지 마라**(베지어·삼각형은 점 계산으로). 표시 전용 — 룰/상태·프로브에 영향 없음.
+
+## ★ v7 자동 전투 모드 (AUTO — 2026-06-24 사용자 요청, 브라운더스트2/트릭컬식)
+플레이어가 매 턴 안 누른다. 아군도 정책이 자동 구동되고, 사람은 관전한다(사거리·화살표·트윈으로 보임). **수동 조작(`_unhandled_input`·`cell_to_screen`)은 그대로 유지**한다 — 검증·향후 덱 편성에 쓴다. AUTO는 그 위에 자동 진행만 얹는다.
+
+- **멤버**: `var auto_mode = true`(기본 on), `var auto_ally_idx = 0`(라운드로빈 커서), `var auto_accum = 0.0`(틱 누적시간).
+- **`func auto_step() -> void`(공개·필수)**: `screen!="PLAYING"`이면 즉시 return. 아니면 **아군 1명**을 골라 그 액션 1개를 만들어 `state.status = rules.update_state(state, action)` 1회 호출. 데미지/플로터/플래시/화살표 fx는 manual `execute_action`과 동일하게 생성(hp 스냅샷 비교). status가 PLAYING이 아니면 `screen="RESULT"`. **`selected_unit_id`는 안 건드린다(수동과 독립).**
+- **아군 선택(라운드로빈·결정적)**: 살아있는 아군을 id 오름차순 리스트로 만들고 `auto_ally_idx % 산 아군수`로 한 명 고른 뒤 `auto_ally_idx += 1`. (산 아군이 없으면 return — 곧 DEFEAT 처리됨.)
+- **그리디 정책(결정적·RNG 금지)**: 고른 아군 `u`에 대해
+  1. **공격 우선**: 사거리(`1 <= dist <= u.range`, range 없으면 1) 안에 살아있는 적이 있으면 **가장 가까운(동률은 낮은 id)** 적을 향해 `{"unit":u.id,"type":"attack"}`.
+  2. **없으면 이동**: 가장 가까운 적(동률 낮은 id) 쪽으로 맨해튼 거리를 줄이는 **직교 한 칸**으로 `{"unit":u.id,"type":"move","dir":[dx,dy]}`. 후보 방향 우선순위 고정(예: 가로 먼저[적이 x로 더 멀면 ±x], 그다음 세로), **빈 칸·격자 안**일 때만. 막혔으면 다른 축으로, 그래도 막혔으면 그 아군은 패스(아무 액션 안 하고 return — 다음 틱에 다른 아군).
+- **타이머(관전 속도)**: `_process(delta)`에서 `if auto_mode and screen=="PLAYING": auto_accum += delta; if auto_accum >= 0.6: auto_accum = 0; auto_step()`. (0.6s/틱. 이동 트윈·화살표가 그 사이 보인다.)
+- **종료**: status가 VICTORY/DEFEAT면 `screen="RESULT"`(기존 RESULT 화면·버튼 그대로). RESULT에서 자동 진행 멈춤.
+- ⚠ **결정성**: 같은 미션을 두 번 자동 플레이하면 **턴 수·결과가 동일**해야 한다(RNG·시간의존 분기 금지 — 정책은 state만 보고 결정). 프로브가 2회 돌려 일치를 검증한다.
+- **수동과의 공존**: load_mission은 기존 계약대로(수동 가능)에 더해 **`auto_ally_idx=0`·`auto_accum=0`도 리셋**한다(미션 재시작 시 자동 전투가 동일하게 재현되게). 입력 프로브는 `load_mission` 직후 `auto_mode=false`로 꺼 수동을 깨끗이 검증한다. 자동 프로브는 `auto_step()`을 직접 반복 호출(타이머 무관)하고, 같은 미션을 2회 돌려 턴 수·결과 일치를 본다.
 
 > v3 항목과의 관계: v3의 **HP바·데미지외곽선·트윈·죽은유닛·HUD띠는 그대로 유효**하다. v3의 "정사각 그리드라인(3번)"과 "셀 하단 HP바 위치"만 위 v4 1·4번(다이아몬드 격자·머리 위 바)으로 **대체**된다.
 

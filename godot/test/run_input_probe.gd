@@ -13,6 +13,7 @@ func _process(_d):
 		return true
 	done = true
 	board.load_mission(0)  # v2 계약: 메뉴 우회하고 곧장 플레이 상태로
+	board.auto_mode = false  # 자동전투 끄고 수동 입력만 깨끗이 검증(v7)
 	# 여기선 board._ready 가 이미 실행됨(미션0 로드)
 	var grid = board.state["gridSize"]
 	var ally = board.state["allies"][0]
@@ -60,6 +61,7 @@ func _process(_d):
 
 	# 3) 공격 — 미션 리셋 후, 사거리 내 적이 있는 아군을 찾아 그 적 칸을 탭 → 적 hp 감소 기대
 	board.load_mission(0)
+	board.auto_mode = false
 	var atk_ally = null
 	var atk_enemy = null
 	for a in board.state["allies"]:
