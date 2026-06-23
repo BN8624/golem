@@ -24,10 +24,6 @@ var tex_knight
 var tex_mage
 var tex_monster
 
-var TILE_W = 64.0
-var TILE_H = 32.0
-var origin = Vector2(320, 320)
-
 func _ready():
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	rules = load("res://scripts/rules.gd").new()
@@ -311,7 +307,7 @@ func spawn_flash(key: String) -> void:
 
 func _draw():
 	if screen == "MENU":
-		draw_string(font, Vector2(220, 80), "SQUAD TACTICS", HORIZONTAL_ALIGNMENT_CENTER, -1, 32, Color.WHITE)
+		draw_string(font, Vector2(320, 80), "SQUAD TACTICS", HORIZONTAL_ALIGNMENT_CENTER, -1, 32, Color.WHITE)
 		for i in range(levels.size()):
 			var rect = Rect2(150, 150 + i * 70, 340, 60)
 			draw_rect(rect, Color(0.2, 0.2, 0.2, 0.8), true)
@@ -335,7 +331,12 @@ func _draw():
 			var is_picked = picked_ids.has(u.id)
 			draw_rect(rect, Color(0.3, 0.3, 0.3, 1.0) if not is_picked else Color(0.4, 0.6, 0.4, 1.0), true)
 			if is_picked: draw_rect(rect, Color.YELLOW, false, 2.0)
-			draw_string(font, rect.position + Vector2(10, 30), u.name + " [" + u.role + "] Cost:" + str(u.get("cost",0)) + " HP:" + str(u.hp) + " ATK:" + str(u.atk), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+			
+			var tex = tex_mage if u.get("range", 1) > 1 else tex_knight
+			draw_texture_rect(tex, Rect2(rect.position + Vector2(6, 9), Vector2(32, 32)), false, Color.WHITE)
+			
+			var info = u.name + " [" + u.role + "] Cost:" + str(u.get("cost",0)) + " HP:" + str(u.hp) + " ATK:" + str(u.atk)
+			draw_string(font, rect.position + Vector2(46, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
 		
 		var cur_cost = picked_cost()
 		var cost_color = Color.WHITE if cur_cost <= cost_budget else Color.RED
