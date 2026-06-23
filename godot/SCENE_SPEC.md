@@ -40,7 +40,7 @@
   - `initialState = { "gridSize":int, "allies":[...], "enemies":[...] }`. 유닛 `{ "id","hp","atk","pos":[x,y], 카드필드(range/knockback/...) }`.
   - `story = { "briefing":str, "victory":str, "defeat":str }`.
 - 깊은 복제는 `JSON.parse_string(JSON.stringify(initialState))`.
-- 로스터(덱 편성용): `res://data/roster.json` = `{ "units":[...] }`. 각 유닛 `{ "id":str, "name":str, "role":str, "hp":int, "atk":int, 카드필드(range/knockback/reflect_dmg/...), "desc":str }`. `roster = parse(...)["units"]`로 멤버에 보관. [★v10]에서 SQUAD_SELECT가 쓴다.
+- 로스터(덱 편성용): `res://data/roster.json` = `{ "cost_budget":int, "units":[...] }`. 각 유닛 `{ "id":str, "name":str, "role":str, "cost":int, "hp":int, "atk":int, 카드필드(range/knockback/reflect_dmg/...), "desc":str }`. `roster = parse(...)["units"]`, `cost_budget = parse(...)["cost_budget"]`로 멤버에 보관. `cost`는 편성 예산용 메타(룰 미사용). [★v10]에서 SQUAD_SELECT가 쓴다.
 
 ## 에셋 사양 (반드시 이 경로를 load — 클로드가 준비·동결한 CC0 에셋)
 - **폰트(필수)**: `font = load("res://assets/fonts/NanumGothic-Regular.ttf")`. 모든 `draw_string`에 이 font를 써라.
@@ -83,7 +83,7 @@
 - 공통: 화면 ~640px 기준 좌표.
 - **MENU**: 제목 + 4미션 버튼(사각형 + name/desc 텍스트). 버튼 위치를 `_unhandled_input`의 히트 판정과 동일 좌표로.
 - **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄 wrap) + 하단 "탭하여 시작".
-- **SQUAD_SELECT**: 제목("출전 부대 편성") + 로스터 유닛 카드 세로 목록(이름·역할·hp/atk·desc, 고른 유닛은 강조 테두리/체크) + 하단 "출전" 버튼. 상세·히트판정은 [★v10].
+- **SQUAD_SELECT**: 제목("출전 부대 편성") + 로스터 유닛 카드 세로 목록(이름·역할·**cost**·hp/atk·desc, 고른 유닛은 강조 테두리/체크) + **예산 표시 "코스트 N/한도"**(초과면 빨강) + 하단 "출전" 버튼(편성 규칙 불만족이면 흐리게/비활성 표시). 상세·히트판정은 [★v10].
 - **PLAYING**: **아래 [★v4 아이소메트릭]이 PLAYING 렌더의 정본이다.** 모든 칸·유닛·하이라이트 위치는 `cell_to_screen(gx,gy)`로 잡는다(정사각 `Rect2(x*cell,...)` 격자는 아이소 전환으로 폐기).
   - 유닛 텍스처 선택은 진영으로 고정 — **아군만 기사(range 없음/1)·마법사(range>1), 적은 무조건 `tex_monster`(tile_0108).** 적에 기사/마법사 텍스처를 쓰면 안 된다.
   - 상단에 "미션명 · 턴"(최상단 반투명 HUD 띠).
@@ -192,10 +192,11 @@
 ## ★ v10 덱 편성 단계 SQUAD_SELECT (2026-06-23 G100 — 이번 증분, "선택→자동전투" 루프를 닫음)
 브리핑 다음에 **전투 전 유닛 선택** 단계를 끼운다. 플레이어가 로스터에서 부대를 고르면 그 선택이 battle의 `allies`가 된다. **enemies는 미션 고정.** 룰·골든·rules.gd 불변 — 입력 진입만 바뀐다.
 
-- **멤버**: `var roster = []`(로딩서 채움), `var picked_ids = []`(현재 고른 로스터 id들). `screen=="SQUAD_SELECT"` 진입(BRIEFING 클릭) 시 `picked_ids.clear()`.
-- **편성 규칙**: 정확히 `squad_size` 명을 고른다. `squad_size = levels[pending_idx].initialState.allies.size()`(=미션이 기대하는 아군 수, 현재 전부 2). 그만큼 고르기 전엔 "출전" 비활성(클릭 무시).
-- **선택 입력(`screen=="SQUAD_SELECT"`, 좌클릭)**: 유닛 카드 클릭 → 토글. 안 골랐으면 `picked_ids`에 추가(단 이미 `squad_size`면 무시), 골랐으면 제거. "출전" 버튼 클릭 → `picked_ids.size()==squad_size`일 때만 `start_battle_with(picked_ids)`.
-- **메서드 `func start_battle_with(ids: Array) -> void`(공개·새 진입 경로)**:
+- **멤버**: `var roster = []`(로딩서 채움), `var cost_budget = 0`(로딩서 채움), `var picked_ids = []`(현재 고른 로스터 id들). `screen=="SQUAD_SELECT"` 진입(BRIEFING 클릭) 시 `picked_ids.clear()`.
+- **편성 규칙**: 정확히 `squad_size`명을 고르되 **고른 유닛 cost 합 ≤ `cost_budget`**. `squad_size = levels[pending_idx].initialState.allies.size()`(=미션이 기대하는 아군 수, 현재 전부 2). 강한 유닛은 cost가 높아 "아무나 N명"이 아니라 트레이드오프가 생긴다(예산 7·squad 2면 kael4+ria4=8은 막힘). 두 조건을 모두 만족하기 전엔 "출전" 비활성(클릭 무시).
+- **헬퍼**: `func picked_cost() -> int`(고른 유닛 cost 합). 유닛 cost는 `roster`에서 id로 찾아 `u.get("cost", 0)`.
+- **선택 입력(`screen=="SQUAD_SELECT"`, 좌클릭)**: 유닛 카드 클릭 → 토글. 안 골랐으면 추가(단 이미 `squad_size`명이면 무시 — **cost 초과는 추가는 허용하고 "출전"에서 막는다**, 그래야 무엇을 빼야 할지 보인다), 골랐으면 제거. "출전" 버튼 클릭 → `picked_ids.size()==squad_size and picked_cost()<=cost_budget`일 때만 `start_battle_with(picked_ids)`.
+- **메서드 `func start_battle_with(ids: Array) -> void`(공개·새 진입 경로)**: 주어진 ids로 전투를 구성한다(예산·count 게이트는 위 "출전" 클릭 경로의 책임). 캡처 하네스가 **예산 내 유효 부대**로 이걸 직접 불러 PLAYING 진입을 검증한다.
   - `var picked_allies = []`. `ids` 순서대로 `i`(0부터): 로스터 유닛을 깊은복제(`JSON.parse_string(JSON.stringify(u))`)하고 **전투용으로 정규화** — `id = i+1`(**정수 id 1..N, 미션 allies와 동일 의미** → 적 AI 타이브레이크가 기존과 동일하게 동작), `pos = [0, i]`(0열에 세로 배치). `name/role/desc/_comment`는 전투엔 불필요하니 떨궈도 되고 남겨도 무방(룰은 안 읽음). 카드필드(range/knockback/...)는 그대로 보존.
   - `var init = JSON.parse_string(JSON.stringify(levels[pending_idx].initialState))`. `init.allies = picked_allies`(enemies·gridSize는 미션 그대로). 
   - 그 다음은 **load_mission과 동일한 마감**: `state = init`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `auto_ally_idx=0`, `auto_accum=0`, `screen="PLAYING"`. (load_mission 본체를 복제하지 말고, 공통 마감을 `_enter_battle(init_state)` 헬퍼로 빼서 load_mission도 그걸 부르게 하면 중복이 없다 — 단 **load_mission의 외부 동작·시그니처는 불변**.)
