@@ -1,126 +1,103 @@
-# 미션 선택, 서사, 아이소메트릭 전투를 처리하는 보드 씬 스크립트
+# 미션 선택, 서사, 아이소메트릭 플레이 및 자동 전투를 제어하는 보드 스크립트
 extends Node2D
 
 var rules
 var levels = []
-var current_mission_idx = -1
-var pending_idx = -1
-var screen = "MENU"
+var font
+var tex_knight
+var tex_mage
+var tex_monster
 
-# 검증 계약 멤버
+var screen = "MENU"
 var state = {}
 var selected_unit_id = null
+var pending_idx = 0
+var current_mission_idx = 0
 
-# 표시용 데이터
-var font
-var textures = {}
-var max_hp = {} # "a1", "e1" keys
-var visual_pos = {} # tweening
-var effects = [] # {type: "text", pos: Vector2, text: String, color: Color, life: float}
-var flashes = {} # "a1": timer
-var tones = [Color(0.6, 0.6, 0.6), Color(0.5, 0.6, 0.7), Color(0.5, 0.4, 0.6), Color(0.7, 0.6, 0.4)]
+var auto_mode = true
+var auto_ally_idx = 0
+var auto_accum = 0.0
 
 var TILE_W = 0.0
 var TILE_H = 0.0
 var origin = Vector2.ZERO
 
+var max_hps = {} # "a1", "e1" 등 진영+id 키
+var effects = [] # {type, pos, val, life, color}
+var twins = {} # "a1": {start_pos, current_pos, t}
+var flashes = {} # "a1": life
+
+var tones = [
+	Color(0.7, 0.7, 0.7), # 기본
+	Color(0.5, 0.6, 0.7), # 청회색
+	Color(0.4, 0.3, 0.5), # 보라어둠
+	Color(0.8, 0.7, 0.4)  # 황금
+]
+
 func _ready():
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	rules = load("res://scripts/rules.gd").new()
-	font = load("res://assets/fonts/NanumGothic-Regular.ttf")
 	
 	var file = FileAccess.open("res://data/squad_levels.json", FileAccess.READ)
 	if file:
 		levels = JSON.parse_string(file.get_as_text())
 	
-	_load_textures()
-	queue_redraw()
-
-func _load_textures():
-	var paths = {
-		"knight": "res://assets/tinydungeon/Tiles/tile_0096.png",
-		"mage": "res://assets/tinydungeon/Tiles/tile_0084.png",
-		"monster": "res://assets/tinydungeon/Tiles/tile_0108.png"
-	}
-	for k in paths:
-		textures[k] = load(paths[k])
+	font = load("res://assets/fonts/NanumGothic-Regular.ttf")
+	tex_knight = load("res://assets/tinydungeon/Tiles/tile_0096.png")
+	tex_mage = load("res://assets/tinydungeon/Tiles/tile_0084.png")
+	tex_monster = load("res://assets/tinydungeon/Tiles/tile_0108.png")
 
 func load_mission(idx):
 	current_mission_idx = idx
 	var initial = levels[idx]["initialState"]
 	state = JSON.parse_string(JSON.stringify(initial))
-	state.turn = 0
-	state.status = "PLAYING"
+	state["turn"] = 0
+	state["status"] = "PLAYING"
 	
 	selected_unit_id = null
 	screen = "PLAYING"
 	
-	# 픽셀 설정
-	TILE_W = 600.0 / state.gridSize
+	# 표시용 스냅샷 및 리셋
+	max_hps.clear()
+	twins.clear()
+	flashes.clear()
+	effects.clear()
+	auto_ally_idx = 0
+	auto_accum = 0.0
+	
+	# max_hp 저장
+	for u in state["allies"]:
+		max_hps["a" + str(u["id"])] = u["hp"]
+	for u in state["enemies"]:
+		max_hps["e" + str(u["id"])] = u["hp"]
+	
+	# 보드 크기 계산
+	var gs = state["gridSize"]
+	TILE_W = 600.0 / gs
 	TILE_H = TILE_W / 2.0
 	origin.x = 320
-	origin.y = (640 + 36) / 2.0 - (state.gridSize - 1) * TILE_H / 2.0
-	
-	# Max HP 스냅샷
-	max_hp.clear()
-	for u in state.allies: max_hp["a" + str(u.id)] = u.hp
-	for u in state.enemies: max_hp["e" + str(u.id)] = u.hp
-	
-	# Initial Visual Pos
-	visual_pos.clear()
-	for u in state.allies: visual_pos["a" + str(u.id)] = cell_to_screen(u.pos[0], u.pos[1])
-	for u in state.enemies: visual_pos["e" + str(u.id)] = cell_to_screen(u.pos[0], u.pos[1])
+	origin.y = (640 + 40) / 2.0 - (gs - 1) * TILE_H / 2.0
 	
 	queue_redraw()
 
 func cell_to_screen(gx: int, gy: int) -> Vector2:
-	return origin + Vector2((gx - gy) * TILE_W / 2.0, (gx + gy) * TILE_H / 2.0)
+	var dx = (gx - gy) * TILE_W / 2.0
+	var dy = (gx + gy) * TILE_H / 2.0
+	return origin + Vector2(dx, dy)
 
 func screen_to_cell(px: float, py: float) -> Vector2:
 	var rx = (px - origin.x) / (TILE_W / 2.0)
 	var ry = (py - origin.y) / (TILE_H / 2.0)
-	return Vector2(round((rx + ry) / 2.0), round((ry - rx) / 2.0))
-
-func _process(delta):
-	if screen != "PLAYING": return
-	
-	# Tweening
-	var changed = false
-	for u in state.allies:
-		var key = "a" + str(u.id)
-		var target = cell_to_screen(u.pos[0], u.pos[1])
-		visual_pos[key] = visual_pos[key].lerp(target, 15.0 * delta)
-		if visual_pos[key].distance_to(target) > 0.1: changed = true
-	for u in state.enemies:
-		var key = "e" + str(u.id)
-		var target = cell_to_screen(u.pos[0], u.pos[1])
-		visual_pos[key] = visual_pos[key].lerp(target, 15.0 * delta)
-		if visual_pos[key].distance_to(target) > 0.1: changed = true
-	
-	# Effects
-	for i in range(effects.size() - 1, -1, -1):
-		effects[i].pos.y -= 60.0 * delta
-		effects[i].life -= delta
-		if effects[i].life <= 0:
-			effects.remove_at(i)
-		else:
-			changed = true
-			
-	# Flash
-	for k in flashes.keys():
-		flashes[k] -= delta
-		if flashes[k] <= 0:
-			flashes.erase(k)
-			changed = true
-			
-	if changed: queue_redraw()
+	var gx = round((rx + ry) / 2.0)
+	var gy = round((ry - rx) / 2.0)
+	return Vector2(gx, gy)
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var mp = event.position
 		if screen == "MENU":
 			for i in range(levels.size()):
-				var rect = Rect2(120, 150 + i * 80, 400, 60)
+				var rect = Rect2(120, 150 + i * 70, 400, 50)
 				if rect.has_point(mp):
 					pending_idx = i
 					screen = "BRIEFING"
@@ -128,249 +105,364 @@ func _unhandled_input(event):
 					return
 		elif screen == "BRIEFING":
 			load_mission(pending_idx)
-			return
 		elif screen == "PLAYING":
 			var cell = screen_to_cell(mp.x, mp.y)
 			var gx = int(cell.x)
 			var gy = int(cell.y)
-			
-			if gx < 0 or gx >= state.gridSize or gy < 0 or gy >= state.gridSize: return
-			
-			# Select Ally
-			var clicked_ally = null
-			for a in state.allies:
-				if a.hp > 0 and a.pos[0] == gx and a.pos[1] == gy:
-					clicked_ally = a
-					break
-			
-			if clicked_ally:
-				selected_unit_id = clicked_ally.id
-				queue_redraw()
-				return
-			
-			if selected_unit_id != null:
-				# Attack or Move
-				var ally = null
-				for a in state.allies:
-					if a.id == selected_unit_id: ally = a; break
-				
-				var clicked_enemy = null
-				for e in state.enemies:
-					if e.hp > 0 and e.pos[0] == gx and e.pos[1] == gy:
-						clicked_enemy = e
-						break
-				
-				if clicked_enemy:
-					var dist = abs(ally.pos[0] - gx) + abs(ally.pos[1] - gy)
-					var r = ally.get("range", 1)
-					if dist >= 1 and dist <= r:
-						perform_action({"unit": selected_unit_id, "type": "attack"})
-						return
-				else:
-					# Move
-					var dist = abs(ally.pos[0] - gx) + abs(ally.pos[1] - gy)
-					if dist == 1:
-						var dir = [gx - ally.pos[0], gy - ally.pos[1]]
-						perform_action({"unit": selected_unit_id, "type": "move", "dir": dir})
-						return
+			handle_play_click(gx, gy)
 		elif screen == "RESULT":
-			var btn_next = Rect2(220, 450, 200, 50)
-			var btn_retry = Rect2(120, 510, 180, 50)
-			var btn_menu = Rect2(320, 510, 180, 50)
-			if btn_next.has_point(mp):
-				var next = (current_mission_idx + 1) % levels.size()
-				if next == 0: screen = "MENU"
-				else: pending_idx = next; screen = "BRIEFING"
-				queue_redraw()
-			elif btn_retry.has_point(mp):
-				load_mission(current_mission_idx)
-			elif btn_menu.has_point(mp):
+			if mp.y > 400:
+				if state["status"] == "VICTORY":
+					var next_idx = current_mission_idx + 1
+					if next_idx < levels.size():
+						pending_idx = next_idx
+						screen = "BRIEFING"
+					else:
+						screen = "MENU"
+				else:
+					load_mission(current_mission_idx)
+			elif mp.y > 450: # 메뉴로
 				screen = "MENU"
-				queue_redraw()
+			queue_redraw()
 
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_R and screen == "PLAYING": load_mission(current_mission_idx)
-		if event.keycode == KEY_N: screen = "MENU"; queue_redraw()
+func handle_play_click(gx: int, gy: int):
+	if not state.has("gridSize"): return
+	var gs = state["gridSize"]
+	if gx < 0 or gx >= gs or gy < 0 or gy >= gs: return
 
-func perform_action(action):
-	var hp_before = {}
-	for u in state.allies: hp_before["a" + str(u.id)] = u.hp
-	for u in state.enemies: hp_before["e" + str(u.id)] = u.hp
+	var ally_here = null
+	for a in state["allies"]:
+		if a["hp"] > 0 and a["pos"][0] == gx and a["pos"][1] == gy:
+			ally_here = a
+			break
 	
-	var res = rules.update_state(state, action)
-	state.status = res
+	var enemy_here = null
+	for e in state["enemies"]:
+		if e["hp"] > 0 and e["pos"][0] == gx and e["pos"][1] == gy:
+			enemy_here = e
+			break
+
+	if ally_here:
+		selected_unit_id = ally_here["id"]
+	elif selected_unit_id != null:
+		var actor = null
+		for a in state["allies"]:
+			if a["id"] == selected_unit_id and a["hp"] > 0:
+				actor = a
+				break
+		if not actor: return
+		
+		var dist = abs(actor["pos"][0] - gx) + abs(actor["pos"][1] - gy)
+		var range_val = actor.get("range", 1)
+		
+		if enemy_here and dist >= 1 and dist <= range_val:
+			execute_action({"unit": actor["id"], "type": "attack"})
+		elif not enemy_here and dist == 1:
+			var dx = gx - actor["pos"][0]
+			var dy = gy - actor["pos"][1]
+			execute_action({"unit": actor["id"], "type": "move", "dir": [dx, dy]})
 	
-	# HP change effects
-	for u in state.allies:
-		var key = "a" + str(u.id)
-		var diff = u.hp - hp_before[key]
-		if diff != 0:
-			spawn_float_text(u.pos, str(int(round(diff))), diff > 0)
-			if diff < 0: flashes[key] = 0.2
-	for u in state.enemies:
-		var key = "e" + str(u.id)
-		var diff = u.hp - hp_before[key]
-		if diff != 0:
-			spawn_float_text(u.pos, str(int(round(diff))), diff > 0)
-			if diff < 0: flashes[key] = 0.2
-			
-	if state.status != "PLAYING":
-		screen = "RESULT"
-	
-	selected_unit_id = null
 	queue_redraw()
 
-func spawn_float_text(pos, text, is_heal):
+func execute_action(action):
+	var snap = {}
+	for a in state["allies"]: snap["a"+str(a["id"])] = a["hp"]
+	for e in state["enemies"]: snap["e"+str(e["id"])] = e["hp"]
+	
+	var old_pos = {}
+	for a in state["allies"]: old_pos["a"+str(a["id"])] = Vector2(a["pos"][0], a["pos"][1])
+	for e in state["enemies"]: old_pos["e"+str(e["id"])] = Vector2(e["pos"][0], e["pos"][1])
+
+	state["status"] = rules.update_state(state, action)
+	
+	# FX 생성
+	for a in state["allies"]:
+		var kid = "a"+str(a["id"])
+		if a["hp"] < snap.get(kid, 999):
+			spawn_damage_fx(kid, a["hp"] - snap[kid])
+			flashes[kid] = 0.2
+		if Vector2(a["pos"][0], a["pos"][1]) != old_pos.get(kid, Vector2(-1,-1)):
+			twins[kid] = {"start": old_pos[kid], "curr": Vector2(a["pos"][0], a["pos"][1]), "t": 0.0}
+
+	for e in state["enemies"]:
+		var kid = "e"+str(e["id"])
+		if e["hp"] < snap.get(kid, 999):
+			spawn_damage_fx(kid, e["hp"] - snap[kid])
+			flashes[kid] = 0.2
+		if Vector2(e["pos"][0], e["pos"][1]) != old_pos.get(kid, Vector2(-1,-1)):
+			twins[kid] = {"start": old_pos[kid], "curr": Vector2(e["pos"][0], e["pos"][1]), "t": 0.0}
+
+	if state["status"] != "PLAYING":
+		screen = "RESULT"
+	queue_redraw()
+
+func spawn_damage_fx(kid, diff):
+	var u = null
+	if kid.begins_with("a"):
+		for a in state["allies"]: if "a"+str(a["id"]) == kid: u = a; break
+	else:
+		for e in state["enemies"]: if "e"+str(e["id"]) == kid: u = e; break
+	if not u: return
+	
+	var color = Color.RED if diff < 0 else Color.GREEN
 	effects.append({
-		"type": "text",
-		"pos": cell_to_screen(pos[0], pos[1]) + Vector2(0, -20),
-		"text": ( "+" if is_heal else "" ) + text,
-		"color": Color.GREEN if is_heal else Color.RED,
-		"life": 1.0
+		"type": "damage",
+		"kid": kid,
+		"val": str(int(round(abs(diff)))),
+		"sign": "-" if diff < 0 else "+",
+		"life": 0.8,
+		"color": color,
+		"pos_offset": Vector2(0, 0)
 	})
+
+func auto_step():
+	if screen != "PLAYING": return
+	
+	var living_allies = []
+	for a in state["allies"]:
+		if a["hp"] > 0: living_allies.append(a)
+	living_allies.sort_custom(func(a, b): return a["id"] < b["id"])
+	
+	if living_allies.size() == 0: return
+	
+	var u = living_allies[auto_ally_idx % living_allies.size()]
+	auto_ally_idx += 1
+	
+	var range_val = u.get("range", 1)
+	var target = null
+	var min_dist = 999
+	for e in state["enemies"]:
+		if e["hp"] > 0:
+			var d = abs(u["pos"][0] - e["pos"][0]) + abs(u["pos"][1] - e["pos"][1])
+			if d < min_dist:
+				min_dist = d
+				target = e
+			elif d == min_dist:
+				if target == null or e["id"] < target["id"]:
+					target = e
+	
+	if not target: return
+	
+	if min_dist >= 1 and min_dist <= range_val:
+		execute_action({"unit": u["id"], "type": "attack"})
+	else:
+		var possible_moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+		var best_move = null
+		var best_dist = min_dist
+		
+		for m in possible_moves:
+			var nx = u["pos"][0] + m[0]
+			var ny = u["pos"][1] + m[1]
+			if nx >= 0 and nx < state["gridSize"] and ny >= 0 and ny < state["gridSize"]:
+				var occupied = false
+				for a in state["allies"]: if a["hp"] > 0 and a["pos"][0] == nx and a["pos"][1] == ny: occupied = true; break
+				if not occupied:
+					for e in state["enemies"]: if e["hp"] > 0 and e["pos"][0] == nx and e["pos"][1] == ny: occupied = true; break
+				
+				if not occupied:
+					var d = abs(nx - target["pos"][0]) + abs(ny - target["pos"][1])
+					if d < best_dist:
+						best_dist = d
+						best_move = m
+		
+		if best_move:
+			execute_action({"unit": u["id"], "type": "move", "dir": best_move})
+
+func _process(delta):
+	if auto_mode and screen == "PLAYING":
+		auto_accum += delta
+		if auto_accum >= 0.6:
+			auto_accum = 0
+			auto_step()
+	
+	# FX Update
+	for i in range(effects.size() - 1, -1, -1):
+		effects[i]["life"] -= delta
+		effects[i]["pos_offset"].y -= delta * 50.0
+		if effects[i]["life"] <= 0: effects.remove_at(i)
+	
+	for kid in flashes.keys():
+		flashes[kid] -= delta
+		if flashes[kid] <= 0: flashes.erase(kid)
+		
+	for kid in twins.keys():
+		twins[kid]["t"] += delta * 6.0
+		if twins[kid]["t"] >= 1.0: twins.erase(kid)
+	
+	if screen == "PLAYING": queue_redraw()
 
 func _draw():
 	if screen == "MENU":
-		draw_rect(Rect2(0,0,640,640), Color(0.1, 0.1, 0.15))
-		draw_string(font, Vector2(320, 80), "SQUAD MISSION", HORIZONTAL_ALIGNMENT_CENTER, -1, 32, Color.WHITE)
+		draw_string(font, Vector2(220, 80), "SQUAD TACTICS", HORIZONTAL_ALIGNMENT_CENTER, -1, 32, Color.WHITE)
 		for i in range(levels.size()):
-			var rect = Rect2(120, 150 + i * 80, 400, 60)
-			draw_rect(rect, Color(0.2, 0.2, 0.3))
-			draw_string(font, rect.position + Vector2(10, 25), levels[i].name, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
-			draw_string(font, rect.position + Vector2(10, 45), levels[i].desc, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.8, 0.8, 0.8))
+			var rect = Rect2(120, 150 + i * 70, 400, 50)
+			draw_rect(rect, Color(0.2, 0.2, 0.2, 0.8), true)
+			draw_string(font, rect.position + Vector2(10, 30), levels[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
+			draw_string(font, rect.position + Vector2(10, 45), levels[i]["desc"], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.LIGHT_GRAY)
 	
 	elif screen == "BRIEFING":
-		draw_rect(Rect2(0,0,640,640), Color(0,0,0,0.8))
-		var rect = Rect2(100, 150, 440, 300)
-		draw_rect(rect, Color(0.1, 0.1, 0.2, 0.9))
-		var story = levels[pending_idx].story.briefing
-		var lines = story.split("\n")
+		draw_rect(Rect2(100, 100, 440, 400), Color(0, 0, 0, 0.7), true)
+		var text = levels[pending_idx]["story"]["briefing"]
+		var lines = text.split("\n")
 		for i in range(lines.size()):
-			draw_string(font, rect.position + Vector2(20, 40 + i * 24), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
-		draw_string(font, Vector2(320, 500), "Tap to Start", HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.YELLOW)
+			draw_string(font, Vector2(120, 150 + i * 30), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
+		draw_string(font, Vector2(320, 450), "Tap to Start", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color.YELLOW)
 		
 	elif screen == "PLAYING":
 		# HUD
-		draw_rect(Rect2(0,0,640,36), Color(0,0,0,0.5))
-		draw_string(font, Vector2(20, 24), levels[current_mission_idx].name + " · Turn " + str(state.turn), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+		draw_rect(Rect2(0, 0, 640, 40), Color(0, 0, 0, 0.5), true)
+		var mission_name = levels[current_mission_idx]["name"]
+		draw_string(font, Vector2(20, 25), mission_name + " · Turn " + str(state["turn"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
+		
+		var gs = state["gridSize"]
+		var tone = tones[current_mission_idx % tones.size()]
 		
 		# Floor
-		var tone = tones[current_mission_idx % tones.size()]
-		for gx in range(state.gridSize):
-			for gy in range(state.gridSize):
+		for gx in range(gs):
+			for gy in range(gs):
 				var c = cell_to_screen(gx, gy)
+				var th = TILE_H / 2.0
+				var tw = TILE_W / 2.0
 				var pts = PackedVector2Array([
-					c + Vector2(0, -TILE_H/2),
-					c + Vector2(TILE_W/2, 0),
-					c + Vector2(0, TILE_H/2),
-					c + Vector2(-TILE_W/2, 0)
+					c + Vector2(0, -th),
+					c + Vector2(tw, 0),
+					c + Vector2(0, th),
+					c + Vector2(-tw, 0)
 				])
-				var var_tone = tone + Color((gx*7+gy*13)%5 * 0.01, (gx*7+gy*13)%5 * 0.01, (gx*7+gy*13)%5 * 0.01, 0)
+				var var_tone = tone + Color((gx*7+gy*13)%5 * 0.02 - 0.04, 0, 0, 0)
 				draw_colored_polygon(pts, var_tone)
-				var line_pts = PackedVector2Array(pts)
-				line_pts.append(pts[0])
-				draw_polyline(line_pts, Color(0,0,0,0.15), 1.0)
+				var line_pts = PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]])
+				draw_polyline(line_pts, Color(0, 0, 0, 0.15), 1.0)
 		
-		# Highlights
-		if selected_unit_id != null:
-			var ally = null
-			for a in state.allies: if a.id == selected_unit_id: ally = a; break
-			
-			# Selection
-			var sc = cell_to_screen(ally.pos[0], ally.pos[1])
-			var spts = PackedVector2Array([sc+Vector2(0,-TILE_H/2), sc+Vector2(TILE_W/2,0), sc+Vector2(0,TILE_H/2), sc+Vector2(-TILE_W/2,0)])
-			var slpts = PackedVector2Array(spts); slpts.append(spts[0])
-			draw_polyline(slpts, Color.YELLOW, 2.0)
-			
-			# Valid Moves & Attacks
-			for gx in range(state.gridSize):
-				for gy in range(state.gridSize):
-					var dist = abs(ally.pos[0] - gx) + abs(ally.pos[1] - gy)
-					var c = cell_to_screen(gx, gy)
-					var hpts = PackedVector2Array([c+Vector2(0,-TILE_H/2), c+Vector2(TILE_W/2,0), c+Vector2(0,TILE_H/2), c+Vector2(-TILE_W/2,0)])
-					
-					var is_enemy = false
-					for e in state.enemies: if e.hp > 0 and e.pos[0] == gx and e.pos[1] == gy: is_enemy = true; break
-					
-					if is_enemy and dist >= 1 and dist <= ally.get("range", 1):
-						var hlpts = PackedVector2Array(hpts); hlpts.append(hpts[0])
-						draw_polyline(hlpts, Color.RED, 2.0)
-					elif not is_enemy:
-						var occ = false
-						for a_o in state.allies: if a_o.hp > 0 and a_o.pos[0] == gx and a_o.pos[1] == gy: occ = true; break
-						if not occ and dist == 1:
-							draw_colored_polygon(hpts, Color(0, 1, 0, 0.3))
-
 		# Depth Sorted Units
 		var render_list = []
-		for u in state.allies: render_list.append({"type":"u", "z":u.pos[0]+u.pos[1], "unit":u, "side":"a"})
-		for u in state.enemies: render_list.append({"type":"u", "z":u.pos[0]+u.pos[1], "unit":u, "side":"e"})
-		render_list.sort_custom(func(a, b): return a.z < b.z)
+		for a in state["allies"]: render_list.append({"kind": "a", "u": a})
+		for e in state["enemies"]: render_list.append({"kind": "e", "u": e})
+		render_list.sort_custom(func(a, b): 
+			var pa = a["u"]["pos"]
+			var pb = b["u"]["pos"]
+			return (pa[0] + pa[1]) < (pb[0] + pb[1])
+		)
 		
 		for item in render_list:
-			var u = item.unit
-			var side = item.side
-			var key = side + str(u.id)
-			var c = visual_pos[key]
+			var u = item["u"]
+			var kind = item["kind"]
+			var kid = kind + str(u["id"])
+			var gx = u["pos"][0]
+			var gy = u["pos"][1]
+			var c = cell_to_screen(gx, gy)
+			
+			# Tweening
+			if twins.has(kid):
+				var t_info = twins[kid]
+				var start_p = Vector2(t_info["start"].x, t_info["start"].y)
+				var end_p = Vector2(t_info["curr"].x, t_info["curr"].y)
+				# We need to convert these grid coords to screen coords for interpolation
+				var sc_start = cell_to_screen(int(start_p.x), int(start_p.y))
+				var sc_end = cell_to_screen(int(end_p.x), int(end_p.y))
+				c = sc_start.lerp(sc_end, t_info["t"])
 			
 			# Shadow
 			var rx = TILE_W * 0.22
 			var ry = TILE_H * 0.18
-			var shpts = PackedVector2Array()
+			var spts = PackedVector2Array()
 			for i in range(16):
 				var t = TAU * i / 16.0
-				shpts.append(c + Vector2(cos(t)*rx, sin(t)*ry))
-			draw_colored_polygon(shpts, Color(0,0,0,0.22))
+				spts.append(c + Vector2(cos(t) * rx, sin(t) * ry))
+			draw_colored_polygon(spts, Color(0, 0, 0, 0.22))
 			
 			# Sprite
-			var tex = textures["monster"] if side == "e" else (textures["mage"] if u.get("range", 1) > 1 else textures["knight"])
-			var tw = TILE_W * 1.1
-			var th = tex.get_height() * (tw / tex.get_width())
-			var rect = Rect2(c.x - tw/2, c.y - th, tw, th)
-			var color = Color.WHITE
-			if u.hp <= 0: color = Color(0.3, 0.3, 0.3, 0.6)
-			elif flashes.has(key): color = Color(1, 0.2, 0.2)
-			draw_texture_rect(tex, rect, false, color)
+			var tex = tex_monster
+			if kind == "a":
+				tex = tex_mage if u.get("range", 1) > 1 else tex_knight
+			
+			var w = TILE_W * 1.1
+			var h = tex.get_height() * (w / tex.get_width())
+			var rect = Rect2(c.x - w/2.0, c.y - h, w, h)
+			
+			var mod = Color.WHITE
+			if u["hp"] <= 0: mod = Color(0.3, 0.3, 0.3, 0.6)
+			if flashes.has(kid): mod = Color(1, 0.3, 0.3)
+			draw_texture_rect(tex, rect, false, mod)
 			
 			# HP Bar
-			var hp_max = max_hp.get(key, 10)
-			var bar_w = tw * 0.6
-			var bar_h = 4.0
-			var bar_pos = Vector2(c.x - bar_w/2, c.y - th - 6)
-			draw_rect(Rect2(bar_pos, Vector2(bar_w, bar_h)), Color(0,0,0,0.5))
-			var ratio = clamp(u.hp / hp_max, 0.0, 1.0)
-			var bar_color = Color.GREEN if side == "a" else Color.RED
-			draw_rect(Rect2(bar_pos, Vector2(bar_w * ratio, bar_h)), bar_color)
-			if u.hp <= 0:
-				draw_string(font, bar_pos + Vector2(bar_w/2 - 4, -2), "X", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
-		
-		# Floating Effects
-		for ef in effects:
-			var p = ef.pos
-			draw_string(font, p + Vector2(-1, 0), ef.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK)
-			draw_string(font, p + Vector2(1, 0), ef.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK)
-			draw_string(font, p + Vector2(0, -1), ef.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK)
-			draw_string(font, p + Vector2(0, 1), ef.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK)
-			draw_string(font, p, ef.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, ef.color)
+			var hp_bg = Rect2(c.x - 15, c.y - h - 8, 30, 4)
+			draw_rect(hp_bg, Color(0,0,0,0.5), true)
+			var hp_ratio = float(u["hp"]) / max_hps.get(kid, 10.0)
+			var hp_col = Color.GREEN if kind == "a" else Color.RED
+			draw_rect(Rect2(hp_bg.position.x, hp_bg.position.y, hp_bg.size.x * clamp(hp_ratio, 0, 1), 4), hp_col, true)
+			if u["hp"] <= 0:
+				draw_string(font, c + Vector2(-5, -h - 10), "X", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
+
+			# Highlights
+			if selected_unit_id == u["id"] and kind == "a":
+				var hpts = PackedVector2Array([
+					c + Vector2(0, -TILE_H/2), c + Vector2(TILE_W/2, 0),
+					c + Vector2(0, TILE_H/2), c + Vector2(-TILE_W/2, 0), c + Vector2(0, -TILE_H/2)
+				])
+				draw_polyline(hpts, Color.YELLOW, 2.0)
+
+		# Action Highlights
+		if selected_unit_id != null:
+			var actor = null
+			for a in state["allies"]:
+				if a["id"] == selected_unit_id and a["hp"] > 0: actor = a; break
+			if actor:
+				var range_val = actor.get("range", 1)
+				for gx in range(gs):
+					for gy in range(gs):
+						var dist = abs(actor["pos"][0] - gx) + abs(actor["pos"][1] - gy)
+						var c = cell_to_screen(gx, gy)
+						var pts = PackedVector2Array([
+							c + Vector2(0, -TILE_H/2), c + Vector2(TILE_W/2, 0),
+							c + Vector2(0, TILE_H/2), c + Vector2(-TILE_W/2, 0)
+						])
+						var occupied = false
+						for a in state["allies"]: if a["hp"] > 0 and a["pos"][0] == gx and a["pos"][1] == gy: occupied = true; break
+						for e in state["enemies"]: if e["hp"] > 0 and e["pos"][0] == gx and e["pos"][1] == gy: occupied = true; break
+						
+						if not occupied and dist == 1:
+							draw_colored_polygon(pts, Color(0, 1, 0, 0.3))
+						elif dist >= 1 and dist <= range_val:
+							var enemy_here = false
+							for e in state["enemies"]: if e["hp"] > 0 and e["pos"][0] == gx and e["pos"][1] == gy: enemy_here = true; break
+							if enemy_here:
+								var lpts = PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]])
+								draw_polyline(lpts, Color.RED, 2.0)
+
+		# Damage FX
+		for fx in effects:
+			var u = null
+			if fx["kid"].begins_with("a"):
+				for a in state["allies"]: if "a"+str(a["id"]) == fx["kid"]: u = a; break
+			else:
+				for e in state["enemies"]: if "e"+str(e["id"]) == fx["kid"]: u = e; break
+			if not u: continue
+			var pos = cell_to_screen(u["pos"][0], u["pos"][1]) + Vector2(0, -TILE_W) + fx["pos_offset"]
+			var txt = fx["sign"] + fx["val"]
+			# Outline
+			for ox in [-1, 1]:
+				for oy in [-1, 1]:
+					draw_string(font, pos + Vector2(ox, oy), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, Color.BLACK)
+			draw_string(font, pos, txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, fx["color"])
 
 	elif screen == "RESULT":
-		draw_rect(Rect2(0,0,640,640), Color(0,0,0,0.6))
-		var is_win = state.status == "VICTORY"
-		var story = levels[current_mission_idx].story.victory if is_win else levels[current_mission_idx].story.defeat
-		draw_string(font, Vector2(320, 200), "MISSION " + ("SUCCESS" if is_win else "FAILED"), HORIZONTAL_ALIGNMENT_CENTER, -1, 32, Color.WHITE)
+		draw_rect(Rect2(0, 0, 640, 640), Color(0, 0, 0, 0.6), true)
+		var res_text = "VICTORY!" if state["status"] == "VICTORY" else "DEFEAT..."
+		var story_text = levels[current_mission_idx]["story"][state["status"].to_lower()]
+		draw_string(font, Vector2(320, 200), res_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 40, Color.YELLOW)
 		
-		var lines = story.split("\n")
+		var lines = story_text.split("\n")
 		for i in range(lines.size()):
-			draw_string(font, Vector2(320, 260 + i * 24), lines[i], HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color.WHITE)
+			draw_string(font, Vector2(320, 250 + i * 30), lines[i], HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
 		
-		if is_win:
-			var btn = Rect2(220, 450, 200, 50)
-			draw_rect(btn, Color(0.2, 0.5, 0.2))
-			draw_string(font, Vector2(320, 480), "Next Mission", HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
+		var btn_y = 400
+		if state["status"] == "VICTORY":
+			draw_rect(Rect2(220, btn_y, 200, 50), Color(0.3, 0.3, 0.3), true)
+			draw_string(font, Vector2(320, btn_y + 30), "Next Mission", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color.WHITE)
 		else:
-			var btn_r = Rect2(120, 510, 180, 50)
-			var btn_m = Rect2(320, 510, 180, 50)
-			draw_rect(btn_r, Color(0.5, 0.2, 0.2))
-			draw_string(font, Vector2(210, 535), "Retry", HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
-			draw_rect(btn_m, Color(0.3, 0.3, 0.3))
-			draw_string(font, Vector2(410, 535), "Menu", HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color.WHITE)
+			draw_rect(Rect2(220, btn_y, 200, 50), Color(0.3, 0.3, 0.3), true)
+			draw_string(font, Vector2(320, btn_y + 30), "Retry", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color.WHITE)
+		
+		draw_rect(Rect2(220, 460, 200, 50), Color(0.3, 0.3, 0.3), true)
+		draw_string(font, Vector2(320, 490), "Main Menu", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color.WHITE)
