@@ -1,6 +1,6 @@
 # golem — 결정적 게임 룰엔진을 골렘(31B)이 설계·검증하는 스튜디오
 
-LLM(gemma-4 31B)이 게임 규칙 엔진을 **설계→빌드→검증**하고, 사람은 "재미있나"만 판단한다. 검증은 모델 합의가 아니라 **모델 독립 Node 골든**(정확일치)이 정답 앵커다. 본선은 **전술 SRPG(영걸전형)**, 활성 트랙은 **squad(부대+능동 적 AI)**다. tactics(영웅 1명)는 **회귀 기준/안정 baseline**으로 동결 유지(verify_tactics가 지킴).
+LLM(gemma-4 31B)이 게임 규칙 엔진을 **설계→빌드→검증**하고, 사람은 "재미있나"만 판단한다. 검증은 모델 합의가 아니라 **모델 독립 Node 골든**(정확일치)이 정답 앵커다. 본선은 **전술 SRPG(영걸전형)**, 트랙은 **squad(부대+능동 적 AI)**다. tactics(영웅 1명)는 **회귀 기준/안정 baseline**으로 동결 유지(verify_tactics가 지킴). 검증된 squad 룰은 **Godot 4.7로 이식돼 실제 플레이 가능한 모바일 게임**이 된다(최근 활성 산출물 계층 — 아래 [Godot 트랙](#godot-트랙-검증된-룰--실제-플레이-가능한-게임-최근-활성)).
 
 ## 작업 시작 — 이 3개만 보면 움직인다
 1. **`golem/HANDOFF.md`** — 현재 위치와 다음 액션(★첫 동작). **여기만 보면 됨.**
@@ -33,11 +33,20 @@ golem/                  # 패키지 루트
 - **소설→게임 브리지**: `forge_ingest.py`가 forge 소설 백업을 `eterno_outline.json`(전제·인물·이벤트 미션·카드씨앗)으로 압축 → 서사(levelstory `--setting`)·카드(propose_cards `--ref`)·레벨(propose_levels `--missions`) 모두 소설에서 무인 생성. 소설=스킨/씨앗, 골렘=검증된 룰.
 - **현재 위치·다음 액션은 `golem/HANDOFF.md`만 본다.**
 
+## Godot 트랙 (검증된 룰 → 실제 플레이 가능한 게임, 최근 활성)
+검증된 squad 룰을 Godot 4.7로 이식해 아이폰에서 플레이한다. **분업**: 룰 포팅(`rules.gd`)·씬·외형(`board.gd` `_draw`)·자동전투 정책 전부 **골렘 ★키 저작**, 클로드는 사양(`godot/SCENE_SPEC.md`)·하네스·검증·증거 수집만, 최종 미관·조작감·재미 판정은 **사용자**. 자세한 현재 위치는 `golem/HANDOFF.md`.
+- **`godot/`** = Godot 4 프로젝트. `scripts/rules.gd`(JS 룰 GDScript 포팅) · `scripts/board.gd`(아이소 2.5D·자동전투·공격 화살표, 골렘 저작) · `data/squad_levels.json` · `test/`(검증) · `e2e/`(Playwright) · `build_web/`(Web export, gitignore).
+- **검증 계층(전부 키0)**: rules 골든(`test/run_rules_golden.gd`, JS↔GDScript 36/36 0-diff) · 입력 프로브(`run_input_probe.gd`, 선택·이동·공격 구조화·종료코드) · fixture 프로브(`run_fixture_probe.gd`, 미션0 비의존 `test/fixtures/*.json`) · 자동전투 프로브(`run_auto_probe.gd`, 결정적 종료) · **차등 퍼징**(`golem/tools/godot_fuzz_diff.py`, 시드 PRNG로 JS↔GDScript 무작위 케이스 0-diff) · **Playwright E2E**(`e2e/`, iPhone WebKit 부팅·터치→상태변화·자동전투 종료) · 시각 스냅샷(정적 MENU·BRIEFING).
+- **테스트 상태 노출**: `test/test_bridge.gd`(읽기전용 autoload, web `?test=1`에서만 `window.GOLEM_TEST`). board.gd 미변경(증거 수집=Claude).
+- **CI**: `.github/workflows/godot.yml`(keyless.yml과 분리, godot/** 경로 게이트) — import→골든→프로브→fixture→퍼징→Web export→E2E→시각.
+- 자동 검증은 "올바르게 실행/룰 일치/입력 후 상태 변경/웹 로드"만 책임지고 **재미는 검증하지 않는다**(사람 oracle).
+
 ## 검증 정본 (수정 후 반드시 실행)
 ```
-python golem/validators/verify_tactics.py     # 9카드 골든 회귀 + l8 strict 승격 + run_keyless(하네스 CI)
+python golem/validators/verify_tactics.py     # (엔진) 9카드 골든 회귀 + l8 strict 승격 + run_keyless(하네스 CI)
+python golem/tools/godot_fuzz_diff.py          # (Godot) JS↔GDScript 차등 퍼징 ALL MATCH (node+godot 필요)
 ```
-구성: `core/build_graded.py`(빌드·게이트·채점) + `core/contract_validator.py` + `core/static_gate.py` + `validators/` keyless 스크립트. 후보=strict False, **base 승격=strict True**.
+구성: `core/build_graded.py`(빌드·게이트·채점) + `core/contract_validator.py` + `core/static_gate.py` + `validators/` keyless 스크립트. 후보=strict False, **base 승격=strict True**. Godot 트랙 전체 게이트는 `.github/workflows/godot.yml`(또는 로컬 `golem/tools/godot_port_scene.py --replay godot/scripts/board.gd`).
 
 ## 생성 산출물 (수정 금지 — source of truth 아님)
 - `golem/tactics/play/` = 외형(검증 엔진을 **읽기전용** require, 룰 복제 안 함). tactics: `index.html`(`gen_tactics_play.py`=턴 재생) · **`play.html`(`gen_tactics_interactive.py`=직접 플레이)** · `levels.json`·`levelstory.json`·`assets/tile_sprites.json`(골렘 비전이 CC0 팩서 선택). **squad: `squad.html`(`gen_squad_play.py`=부대 턴재생 뷰어) · `squad_levels.json`(미션 레벨) · `squad_levelstory.json`(에테르노 서사).** 수정은 `tactics/bases/`/제너레이터에서만.
