@@ -22,6 +22,7 @@ from pathlib import Path
 MODEL_31 = "gemma-4-31b-it"
 GODOT_DIR = REPO_ROOT / "godot"
 SPEC = GODOT_DIR / "SCENE_SPEC.md"
+PITFALLS = GODOT_DIR / "GDSCRIPT_PITFALLS.md"  # 모든 생성에 자동 주입하는 공통 GDScript 함정(omc skills auto-inject 차용)
 RULES = GODOT_DIR / "scripts" / "rules.gd"
 OUT = GODOT_DIR / "scripts" / "board.gd"
 DEFAULT_GODOT = r"C:\Users\USER\godot-engine\Godot_v4.7-stable_win64_console.exe"
@@ -34,6 +35,10 @@ PROMPT = """You are writing a PLAYABLE Godot 4 scene script that drives a VERIFI
 Output ONLY the full content of `scripts/board.gd` — no prose, no markdown fences.
 The first line MUST be a one-line Korean comment, then `extends Node2D`.
 
+=== GDScript 공통 함정 (반드시 지켜라 — 어기면 스모크/렌더가 실패한다) ===
+{pitfalls}
+
+=== 이 씬의 사양 ===
 {spec}
 
 === rules.gd (already exists at res://scripts/rules.gd — CALL it, do NOT reimplement) ===
@@ -114,6 +119,7 @@ def main(argv=None):
     from config import force_utf8_stdout
     force_utf8_stdout()
     spec = SPEC.read_text(encoding="utf-8")
+    pitfalls = PITFALLS.read_text(encoding="utf-8") if PITFALLS.exists() else "(없음)"
     rules = RULES.read_text(encoding="utf-8")
     OUT.parent.mkdir(parents=True, exist_ok=True)
 
@@ -135,7 +141,7 @@ def main(argv=None):
     feedback = ""
     for attempt in range(1, args.cap + 1):
         print(f"[SCENE] 시도 {attempt}/{args.cap} — 골렘 board.gd 생성 (★키)")
-        prompt = PROMPT.format(spec=spec, rules=rules,
+        prompt = PROMPT.format(spec=spec, pitfalls=pitfalls, rules=rules,
                                feedback=("\n=== PREVIOUS ATTEMPT had errors — fix and re-output FULL file ===\n"
                                          + feedback + "\n") if feedback else "")
         with pool.checkout() as key:
