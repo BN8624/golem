@@ -2,7 +2,21 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ Godot 검증 강화 = 완료 (2026-06-23, G97~G99). 외부 리뷰 Phase 1~6 + 차등 퍼징 + 씬 증분 2개(화살표·사거리영역) + 시각 하드게이트 전부 닫힘·**CI green**. ▶ **다음 활성 = 게임 전진**(아래 후보 — 단순 증분은 소진, opposing-sides는 고잠/덱 편성은 큼).
+### ★ 다음 세션 첫 동작 = 덱 편성 단계 (게임 루프의 빠진 절반 — 사용자 결정 2026-06-23, G99)
+
+**왜**: 현재 루프 = 미션 탭 → 자동전투 관전 → 승패. **플레이어 결정이 0**(관전 데모). 자동전투 절반은 됐고, 빠진 절반 = **전투 전 유닛 선택·배치**(브라운더스트2/트릭컬식 덱 편성→자동전투 = G96 사용자 본진). 이게 들어가야 "선택→자동전투" 루프가 닫히고 재미게이트·밸런스가 진짜 의미를 가진다(관전이 아니라 플레이어 결정을 평가). 외형 폴리시·opposing-sides보다 가치가 분명히 위(2026-06-23 추천·채택).
+
+**원칙**: 한 방 ★키 재생성 금지 — 최소 슬라이스부터 [[golem-incremental-small-first]]. **룰·골든·rules.gd 불변**(고른 유닛이 `state.allies`가 될 뿐 — 입력 진입만 바뀐다). 게이트는 모든 `_draw` 화면을 본다(G99에서 닫음) → 새 화면 회귀도 잡힌다.
+
+**▶ 증분 순서(다음 세션)**:
+1. **(클로드 키0) 유닛 로스터 데이터** `godot/data/roster.json` — 보유 유닛 풀(id·이름·hp·atk·카드필드 range/knockback/reflect/flank 등 기존 재사용). 새 룰 0, 데이터만.
+2. **(클로드 키0) SCENE_SPEC에 새 화면 `SQUAD_SELECT` 계약** — `BRIEFING → SQUAD_SELECT → PLAYING`. 로스터에서 N명 골라 시작칸에 배치 → 그 선택이 battle initialState의 `allies`가 된다(enemies는 미션 고정 유지). **⚠ 검증 정합 필수: `load_mission(idx)`는 기존대로 고정 allies로 PLAYING 직행을 유지하라**(입력 프로브·fixture·test_bridge가 이 계약에 의존). SQUAD_SELECT는 그 위에 얹는 **새 진입 경로**(예: `start_battle_with(selected_allies)`)로, load_mission 시그니처·동작은 절대 불변.
+3. **(골렘 ★키) board.gd 재생성** — SQUAD_SELECT 화면 추가. `godot_port_scene.py --cap 6` 게이트 통과(렌더 게이트에 SQUAD_SELECT 캡처·검사 추가 권장 — G99식 화면별 검사).
+4. **검증·캡처·시각 기준이미지 갱신(새 화면)·커밋.** 이후 슬라이스 = 유닛 더·제약(코스트/슬롯)·언락·로스터 영속.
+
+---
+
+### Godot 검증 강화 = 완료 (2026-06-23, G97~G99) — 지난 세션 요약. 외부 리뷰 Phase 1~6 + 차등 퍼징 + 씬 증분 2개(화살표·사거리영역) + 시각 하드게이트 전부 닫힘·**CI green**.
 
 **▶▶ G99 완료(같은 세션, "시각 하드게이트부터 사거리영역 그 다음 순차")**:
 - **시각 하드게이트 채택(1ce26fe)**: CI artifact의 linux 기준이미지(menu/briefing) 커밋 + godot.yml 시각 스텝을 비교 게이트로(–-update-snapshots 제거). CI green 확인.

@@ -64,7 +64,8 @@
 - [x] (G99) 시각 하드게이트 채택 — linux 기준이미지 커밋 + godot.yml 비교 게이트 전환. CI green
 - [x] (G99 증분) 사거리 영역 v9 — 선택 아군 공격 reach 전체 옅은 빨강 fill. 표시 전용, 골렘 1시도
 - [x] (G99 회귀/게이트갭) 브리핑 회귀(재생성이 BRIEFING을 메뉴로 그림)를 시각 CI 게이트가 잡음 → capture_attack.gd에 브리핑 캡처+MENU 대비 차이율(BRIEFING_DIFF_RATIO<0.03 차단) 추가 = 게이트 갭 영구 차단. 재롤로 복원·CI green
-- [ ] (다음) 단순 증분 소진 — opposing-sides(고잠·골든재추출 선행) / 덱 편성(큼) / 새 외형 폴리시 사양화 중 택1
+- [ ] (다음 세션 = 덱 편성, 채택) 게임 루프의 빠진 절반 = 전투 전 유닛 선택·배치. 증분 = ① roster.json(키0) → ② SCENE_SPEC SQUAD_SELECT 화면 계약(키0, load_mission 직행 계약 불변 유지) → ③ board ★키 재생성 → ④ 검증·시각 기준이미지 갱신·커밋. 상세=HANDOFF 첫 블록
+  - (보류) opposing-sides(고잠·골든재추출 선행) / 외형 폴리시(적 화살표 등)는 덱 편성 뒤
 
 ## Phase 4 — 확장(선택)
 - [ ] 고도+골렘 루프로 카드/레벨 확장, 재미 게이트 적용 검토
