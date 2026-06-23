@@ -1,0 +1,80 @@
+# Godot 트랙 전용 CI — 헤드리스 골든·입력/ fixture 프로브 + Web export 산출물 검증(keyless.yml과 분리)
+name: godot
+
+on:
+  push:
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot.yml'
+  pull_request:
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot.yml'
+
+env:
+  GODOT_VERSION: '4.7'
+  GODOT_RELEASE: '4.7-stable'
+
+jobs:
+  godot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot 4.7 + export 템플릿 설치
+        run: |
+          set -e
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_RELEASE}"
+          curl -fL -o godot.zip "${BASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+          curl -fL -o templates.tpz "${BASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          unzip -q templates.tpz
+          TPL_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$TPL_DIR"
+          mv templates/* "$TPL_DIR"/
+          godot --version
+
+      - name: 프로젝트 import (headless)
+        working-directory: godot
+        run: godot --headless --import
+
+      - name: rules 골든 대조 (JS↔GDScript 0-diff)
+        working-directory: godot
+        run: godot --headless --path . --script res://test/run_rules_golden.gd
+
+      - name: 입력 프로브 (선택·이동·공격 계약, 미션0 통합)
+        working-directory: godot
+        run: godot --headless --path . --script res://test/run_input_probe.gd
+
+      - name: fixture 프로브 (기능 단위 계약, 미션0 비의존)
+        working-directory: godot
+        run: godot --headless --path . --script res://test/run_fixture_probe.gd
+
+      - name: Web export
+        working-directory: godot
+        run: |
+          set -e
+          mkdir -p build_web
+          godot --headless --path . --export-release Web build_web/index.html
+
+      - name: Web export 필수 파일 검증
+        working-directory: godot
+        run: |
+          set -e
+          for f in index.html index.js index.pck index.wasm; do
+            if [ ! -s "build_web/$f" ]; then
+              echo "MISSING or empty: build_web/$f"
+              exit 1
+            fi
+            echo "OK: build_web/$f ($(stat -c%s build_web/$f) bytes)"
+          done
+
+      - name: Web export 산출물 업로드(증거)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-export
+          path: godot/build_web/
+          if-no-files-found: ignore
