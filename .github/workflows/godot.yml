@@ -94,8 +94,7 @@ jobs:
         working-directory: godot/e2e
         # linux 기준이미지(visual.spec.js-snapshots/*-linux.png) 채택 완료 → 비교 게이트. maxDiffPixelRatio 0.02 초과 시 실패.
         # GOLEM 외형을 의도적으로 재생성하면: --update-snapshots 로 갱신 후 *-linux.png 재커밋(명시적 기준이미지 갱신).
-        # [임시 G100] board.gd SQUAD_SELECT 재생성으로 briefing/squad linux 기준 갱신 필요 → 이번 런만 --update-snapshots(artifact에서 *-linux.png 받아 커밋 후 원복).
-        run: npx playwright test visual.spec.js --update-snapshots
+        run: npx playwright test visual.spec.js
 
       - name: Web export + E2E + 시각 증거 업로드
         if: always()
