@@ -10,6 +10,7 @@
 헤드리스 프로브가 메뉴/브리핑을 건너뛰고 플레이를 검증한다. 다음 공개 인터페이스를 **정확히** 유지하라.
 - 멤버 `var state = {}` : 현재 미션 상태 dict. 키 `gridSize`, `allies`, `enemies`, `turn`, `status`.
 - 멤버 `var selected_unit_id` : 선택된 아군 id 또는 null.
+- 멤버 `var pending_idx` : BRIEFING/SQUAD_SELECT가 보여줄 미션 인덱스(int). 캡처 하네스가 메뉴 클릭을 우회해 `pending_idx=N; screen="BRIEFING"`/`"SQUAD_SELECT"`로 화면을 직접 띄워 렌더를 검증하므로 **이 이름·의미를 유지하라**(메뉴 버튼 픽셀 좌표에 게이트가 의존하지 않게 — 좌표는 골렘 자유).
 - 메서드 `func load_mission(idx) -> void` : **미션 idx의 initialState로 즉시 플레이 상태를 구성하고 화면을 PLAYING으로 전환**한다.
   (메뉴/브리핑을 거치지 않는다. 프로브가 이걸 직접 호출해 곧장 플레이한다.)
   내부에서 `state = 깊은복제(initialState)`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `screen="PLAYING"`.

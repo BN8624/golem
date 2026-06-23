@@ -105,10 +105,21 @@ def run_auto(godot):
 
 
 def run_render(godot):
+    # 윈도 렌더는 4연속 실행 시 GPU/윈도 컨텍스트 경합으로 드물게 false-negative가 난다(2026-06-23 실측: 동일 board가
+    # 배치에선 실패, 단독 실행은 통과). 실패 시 1회 재시도해 플레이키를 흡수한다(진짜 결함이면 둘 다 실패).
+    ok, info = _render_once(godot)
+    if ok:
+        return ok, info
+    ok2, info2 = _render_once(godot)
+    return ok2, info2
+
+
+def _render_once(godot):
     # 렌더 캡처(windowed) — _draw 를 실제로 그려 헤드리스가 못 잡는 draw_string 시그니처/폰트/텍스처 에러를 잡는다.
-    # + BRIEFING이 MENU와 다른 화면인지 검사(브리핑이 메뉴를 그리는 회귀 차단 — 헤드리스 프로브가 못 잡는 갭).
+    # + BRIEFING/SQUAD_SELECT가 서로 다른 화면인지 검사(회귀 차단 — 헤드리스 프로브가 못 잡는 갭).
     win = godot.replace("_console.exe", ".exe")  # 콘솔판→윈도판(실제 렌더 컨텍스트 필요)
-    caps = [GODOT_DIR / "test" / "cap_menu.png", GODOT_DIR / "test" / "cap_briefing.png", GODOT_DIR / "test" / "cap_after.png"]
+    caps = [GODOT_DIR / "test" / "cap_menu.png", GODOT_DIR / "test" / "cap_briefing.png",
+            GODOT_DIR / "test" / "cap_squad.png", GODOT_DIR / "test" / "cap_after.png"]
     for p in caps:
         if p.exists():
             p.unlink()
@@ -130,6 +141,23 @@ def run_render(godot):
     if ratio is not None and ratio < 0.03:
         return False, (f"BRIEFING이 MENU와 거의 동일(diff={ratio:.3f}<0.03) — BRIEFING 화면은 반투명 박스+"
                        "briefing 본문+'탭하여 시작'을 그려야 한다. 메뉴를 그대로 그리지 마라(SCENE_SPEC BRIEFING).")
+    # SQUAD_SELECT 화면별 검사(v10) — 브리핑 클릭이 SQUAD_SELECT로 가고, 그 화면이 BRIEFING과 다르게 그려지는지 + start_battle_with 기능
+    sratio = None
+    sbattle = None
+    for line in out.splitlines():
+        if "SQUAD_DIFF_RATIO=" in line:
+            try:
+                sratio = float(line.split("SQUAD_DIFF_RATIO=")[1].split()[0])
+            except (ValueError, IndexError):
+                pass
+        if "SQUAD_BATTLE_OK=" in line:
+            sbattle = "SQUAD_BATTLE_OK=true" in line.lower().replace(" ", "")
+    if sratio is not None and sratio < 0.03:
+        return False, (f"SQUAD_SELECT가 BRIEFING과 거의 동일(diff={sratio:.3f}<0.03) — BRIEFING 클릭은 "
+                       "SQUAD_SELECT(덱 편성)로 가야 하고, 그 화면은 로스터 유닛 목록+'출전' 버튼을 그려야 한다(SCENE_SPEC ★v10).")
+    if sbattle is False:
+        return False, ("start_battle_with([로스터 앞 2개 id]) 후 PLAYING·allies 2명·status PLAYING이 아니다. "
+                       "start_battle_with는 고른 유닛을 id 1..N 정수로 재부여·0열 배치해 state.allies로 넣고 PLAYING으로 가야 한다(SCENE_SPEC ★v10).")
     return True, ""
 
 
