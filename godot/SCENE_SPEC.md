@@ -16,6 +16,7 @@
 - 메서드 `func _unhandled_input(event)` : `screen=="PLAYING"`일 때 좌클릭으로 아래 [플레이 입력]을 처리.
 - 메서드 `func cell_to_screen(gx:int, gy:int) -> Vector2` (**공개·필수**): 칸 (gx,gy)의 **화면 픽셀 중심**을 아이소 투영으로 반환한다. `_draw`(타일·유닛 배치)와 `_unhandled_input`의 클릭 히트판정이 **이 한 함수를 단일 진실원천으로** 쓴다. 프로브·캡처 하네스가 이 함수를 직접 호출해 클릭 위치를 잡으므로 **시그니처를 절대 바꾸지 마라.**
 - 멤버 `var auto_mode = true` : 자동 전투 on/off. 메서드 `func auto_step() -> void` (**공개·필수**): `screen=="PLAYING"`이면 아군 1명의 자동 액션을 골라 `rules.update_state` 1회 적용(엔진이 적 반응 처리), 종료면 `screen="RESULT"`. 자동 플레이아웃 프로브가 이걸 반복 호출해 결정적 종료를 검증한다 — [★v7 자동 전투] 참조. **시그니처 고정.**
+- ⚠ **`load_mission(idx)`는 위 동작 그대로 절대 불변**이다(메뉴/브리핑/덱편성을 모두 건너뛰고 미션의 **고정 allies**로 PLAYING 직행). 입력 프로브·fixture·test_bridge가 이 계약에 의존한다. 덱 편성(아래 [★v10])은 load_mission을 **건드리지 않고** 그 위에 얹는 **새 진입 경로**다.
 - **좌표계(아이소메트릭 2.5D·필수)**: 보드는 다이아몬드 격자다. 투영 =
   `cell_to_screen(gx,gy) = origin + Vector2((gx-gy)*TILE_W/2.0, (gx+gy)*TILE_H/2.0)` (2:1 아이소 → `TILE_H = TILE_W/2.0`).
   `TILE_W`·`origin`은 GxG 보드가 가로로 화면 폭(≈600, 좌우 여백 둠)에 맞고 **가로·세로 모두 가운데 정렬**되게 골렘이 정한다. 권장 `TILE_W = 600.0/state.gridSize`(→ `TILE_H = TILE_W/2`), `origin.x = 320`. **세로 중앙정렬**: 다이아몬드의 세로 픽셀 높이는 `(gridSize-1)*TILE_H`이므로 `origin.y = (640 + HUD높이)/2 - (gridSize-1)*TILE_H/2`로 둬서 보드가 화면 세로 가운데(HUD 아래)에 오게 한다 — 위로 쏠려 아래가 휑하면 안 된다(2026-06-24 캡처 실측).
@@ -23,9 +24,10 @@
   - **탑다운 `int(x/cell)` 좌표계 금지.** 고정 cell·고정 offset 금지. origin/TILE_W는 위 식으로 gridSize에서 유도.
 
 ## 화면 모드 (`var screen`)
-`"MENU" → "BRIEFING" → "PLAYING" → "RESULT"`. `_ready()`는 `screen="MENU"`로 시작.
+`"MENU" → "BRIEFING" → "SQUAD_SELECT" → "PLAYING" → "RESULT"`. `_ready()`는 `screen="MENU"`로 시작.
 - **MENU**: 4미션 목록. 각 항목 `levels[i].name` + `levels[i].desc`를 세로 버튼으로. 클릭한 항목 i → `screen="BRIEFING"`, `pending_idx=i`.
-- **BRIEFING**: `levels[pending_idx].story.briefing` 본문 + "탭하여 시작" 안내. 클릭 또는 Enter/Space → `load_mission(pending_idx)`(→PLAYING).
+- **BRIEFING**: `levels[pending_idx].story.briefing` 본문 + "탭하여 시작" 안내. 클릭 또는 Enter/Space → `screen="SQUAD_SELECT"`(덱 편성으로. **load_mission 직행 아님** — 사람 진입 경로엔 편성 단계가 들어간다).
+- **SQUAD_SELECT**: 덱 편성. 로스터에서 유닛을 골라 출전. 상세는 [★v10]. "출전" → `start_battle_with(고른유닛들)`(→PLAYING).
 - **PLAYING**: 보드. 좌클릭 [플레이 입력]. 액션 후 status가 VICTORY/DEFEAT면 `screen="RESULT"`.
 - **RESULT**: status==VICTORY면 `levels[현재].story.victory`, DEFEAT면 `story.defeat` 표시.
   버튼: 승리=「다음 미션」(다음 idx BRIEFING; 마지막이면 「메뉴로」) / 패배=「다시」(같은 미션 load_mission) + 「메뉴로」(screen=MENU).
@@ -37,6 +39,7 @@
   - `initialState = { "gridSize":int, "allies":[...], "enemies":[...] }`. 유닛 `{ "id","hp","atk","pos":[x,y], 카드필드(range/knockback/...) }`.
   - `story = { "briefing":str, "victory":str, "defeat":str }`.
 - 깊은 복제는 `JSON.parse_string(JSON.stringify(initialState))`.
+- 로스터(덱 편성용): `res://data/roster.json` = `{ "units":[...] }`. 각 유닛 `{ "id":str, "name":str, "role":str, "hp":int, "atk":int, 카드필드(range/knockback/reflect_dmg/...), "desc":str }`. `roster = parse(...)["units"]`로 멤버에 보관. [★v10]에서 SQUAD_SELECT가 쓴다.
 
 ## 에셋 사양 (반드시 이 경로를 load — 클로드가 준비·동결한 CC0 에셋)
 - **폰트(필수)**: `font = load("res://assets/fonts/NanumGothic-Regular.ttf")`. 모든 `draw_string`에 이 font를 써라.
@@ -79,6 +82,7 @@
 - 공통: 화면 ~640px 기준 좌표.
 - **MENU**: 제목 + 4미션 버튼(사각형 + name/desc 텍스트). 버튼 위치를 `_unhandled_input`의 히트 판정과 동일 좌표로.
 - **BRIEFING**: 반투명 박스 + briefing 본문(여러 줄 wrap) + 하단 "탭하여 시작".
+- **SQUAD_SELECT**: 제목("출전 부대 편성") + 로스터 유닛 카드 세로 목록(이름·역할·hp/atk·desc, 고른 유닛은 강조 테두리/체크) + 하단 "출전" 버튼. 상세·히트판정은 [★v10].
 - **PLAYING**: **아래 [★v4 아이소메트릭]이 PLAYING 렌더의 정본이다.** 모든 칸·유닛·하이라이트 위치는 `cell_to_screen(gx,gy)`로 잡는다(정사각 `Rect2(x*cell,...)` 격자는 아이소 전환으로 폐기).
   - 유닛 텍스처 선택은 진영으로 고정 — **아군만 기사(range 없음/1)·마법사(range>1), 적은 무조건 `tex_monster`(tile_0108).** 적에 기사/마법사 텍스처를 쓰면 안 된다.
   - 상단에 "미션명 · 턴"(최상단 반투명 HUD 띠).
@@ -184,6 +188,18 @@
 - **auto_mode와 무관**: 자동전투 중엔 `selected_unit_id`가 없어 영역이 안 그려질 수 있고 정상(수동 선택 시 보인다). 표시 전용이라 auto_step·결정성에 영향 0.
 - **검증 불변(필수)**: 입력 프로브·fixture·자동 프로브·골든·차등 퍼징·시각 게이트(MENU/BRIEFING는 안 바뀜)가 **전부 그대로 통과**해야 한다. 하나라도 깨지면 영역 표시가 state를 건드렸거나 다른 화면을 바꾼 것.
 
+## ★ v10 덱 편성 단계 SQUAD_SELECT (2026-06-23 G100 — 이번 증분, "선택→자동전투" 루프를 닫음)
+브리핑 다음에 **전투 전 유닛 선택** 단계를 끼운다. 플레이어가 로스터에서 부대를 고르면 그 선택이 battle의 `allies`가 된다. **enemies는 미션 고정.** 룰·골든·rules.gd 불변 — 입력 진입만 바뀐다.
+
+- **멤버**: `var roster = []`(로딩서 채움), `var picked_ids = []`(현재 고른 로스터 id들). `screen=="SQUAD_SELECT"` 진입(BRIEFING 클릭) 시 `picked_ids.clear()`.
+- **편성 규칙**: 정확히 `squad_size` 명을 고른다. `squad_size = levels[pending_idx].initialState.allies.size()`(=미션이 기대하는 아군 수, 현재 전부 2). 그만큼 고르기 전엔 "출전" 비활성(클릭 무시).
+- **선택 입력(`screen=="SQUAD_SELECT"`, 좌클릭)**: 유닛 카드 클릭 → 토글. 안 골랐으면 `picked_ids`에 추가(단 이미 `squad_size`면 무시), 골랐으면 제거. "출전" 버튼 클릭 → `picked_ids.size()==squad_size`일 때만 `start_battle_with(picked_ids)`.
+- **메서드 `func start_battle_with(ids: Array) -> void`(공개·새 진입 경로)**:
+  - `var picked_allies = []`. `ids` 순서대로 `i`(0부터): 로스터 유닛을 깊은복제(`JSON.parse_string(JSON.stringify(u))`)하고 **전투용으로 정규화** — `id = i+1`(**정수 id 1..N, 미션 allies와 동일 의미** → 적 AI 타이브레이크가 기존과 동일하게 동작), `pos = [0, i]`(0열에 세로 배치). `name/role/desc/_comment`는 전투엔 불필요하니 떨궈도 되고 남겨도 무방(룰은 안 읽음). 카드필드(range/knockback/...)는 그대로 보존.
+  - `var init = JSON.parse_string(JSON.stringify(levels[pending_idx].initialState))`. `init.allies = picked_allies`(enemies·gridSize는 미션 그대로). 
+  - 그 다음은 **load_mission과 동일한 마감**: `state = init`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `auto_ally_idx=0`, `auto_accum=0`, `screen="PLAYING"`. (load_mission 본체를 복제하지 말고, 공통 마감을 `_enter_battle(init_state)` 헬퍼로 빼서 load_mission도 그걸 부르게 하면 중복이 없다 — 단 **load_mission의 외부 동작·시그니처는 불변**.)
+- **불변(필수)**: `load_mission(idx)`는 그대로 미션 고정 allies로 PLAYING 직행(프로브·fixture·test_bridge 의존). SQUAD_SELECT/start_battle_with는 **순수 추가** — 골든·입력프로브·fixture·자동프로브·차등퍼징·시각게이트(MENU/BRIEFING)가 **전부 그대로 통과**해야 한다. 적 AI가 정수 id를 타이브레이크에 쓰므로 start_battle_with가 `id=1..N` 정수로 재부여하는 게 핵심(로스터 문자열 id를 그대로 넣지 마라).
+
 ## 검증 (모두 통과해야 채택)
 1. 헤드리스 스모크: `--quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 뜸.
 2. 입력 프로브: `--script res://test/run_input_probe.gd` 가 **종료코드 0**(미션0 통합 — 선택·이동·공격을 구조화 비교, 불일치 시 `quit(1)`. 출력은 `PROBE_JSON`의 expected vs actual). `load_mission(0)`로 메뉴 우회 후 검증.
@@ -193,4 +209,5 @@
    SCRIPT ERROR/Parse Error 없이 `test/cap_menu.png`·`test/cap_after.png`를 생성해야 한다.
    (헤드리스 스모크/프로브가 `_draw`를 호출 안 해 못 잡는 draw_string 시그니처·폰트·텍스처 로드 에러를 여기서 잡는다. **v8 화살표의 draw_line/draw_polyline 에러도 여기서 잡힌다.**)
 6. 차등 퍼징: `python golem/tools/godot_fuzz_diff.py` 가 `ALL MATCH`(rules.gd ≡ JS 엔진 — 화살표는 표시 전용이라 영향 0이어야 한다).
-7. 최종 미관(예쁜지)과 실제 터치는 사람이 확인(0-diff 범위 밖).
+7. **SQUAD_SELECT 화면 캡처·검사(G99식 화면별 게이트, board.gd 재생성 증분서 추가)**: 캡처 하네스가 `screen="SQUAD_SELECT"`로도 `_draw`를 그려 SCRIPT ERROR 없이 PNG 생성 + MENU/BRIEFING과 픽셀차이로 새 화면이 실제로 다르게 그려지는지 검사(브리핑 회귀 차단과 동형). `start_battle_with([로스터 앞 2개 id])` 호출 후 PLAYING 상태가 `allies.size()==2`·`status=="PLAYING"`인지 키0 브리지로 확인.
+8. 최종 미관(예쁜지)과 실제 터치는 사람이 확인(0-diff 범위 밖).

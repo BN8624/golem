@@ -1,0 +1,59 @@
+{
+  "_comment": "보유 유닛 풀 — SQUAD_SELECT 화면에서 골라 state.allies로 들어간다. 필드는 rules.gd 재사용(hp/atk/range/knockback/reflect_dmg/flank_bonus/aura_shield/phalanx_defense). 룰 0, 데이터만.",
+  "units": [
+    {
+      "id": "kael",
+      "name": "카엘",
+      "role": "돌격",
+      "hp": 20,
+      "atk": 4,
+      "knockback": true,
+      "desc": "근위병을 밀쳐내는 왕가의 검."
+    },
+    {
+      "id": "ria",
+      "name": "리아",
+      "role": "사격",
+      "hp": 10,
+      "atk": 4,
+      "range": 3,
+      "desc": "원거리에서 기선을 제압하는 궁수."
+    },
+    {
+      "id": "baltazar",
+      "name": "발타자르",
+      "role": "방패",
+      "hp": 24,
+      "atk": 3,
+      "phalanx_defense": 2,
+      "desc": "받는 피해를 줄이는 마력 방패."
+    },
+    {
+      "id": "thorn",
+      "name": "가시",
+      "role": "반사",
+      "hp": 14,
+      "atk": 3,
+      "reflect_dmg": 3,
+      "desc": "공격을 되돌려주는 가시 갑옷."
+    },
+    {
+      "id": "vire",
+      "name": "비레",
+      "role": "협공",
+      "hp": 12,
+      "atk": 3,
+      "flank_bonus": 2,
+      "desc": "인접 아군 수만큼 위력이 오르는 측면병."
+    },
+    {
+      "id": "aegis",
+      "name": "이지스",
+      "role": "보호막",
+      "hp": 16,
+      "atk": 3,
+      "aura_shield": 2,
+      "desc": "주변 아군에게 보호막을 두르는 수호자."
+    }
+  ]
+}

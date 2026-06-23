@@ -81,3 +81,13 @@
 - **★ 브리핑 회귀 — 게이트 갭 발견**: 사거리영역 재생성이 BRIEFING을 메뉴로 그리는 회귀를 냈다. 로컬 게이트(스모크·입력프로브·fixture·자동·렌더캡처)는 **브리핑을 안 봤다** — load_mission(0)이 메뉴/브리핑을 우회하고, capture_attack.gd도 MENU+공격만 캡처. 그래서 회귀가 게이트를 통과해 커밋·푸시됐고, **시각 CI 게이트(briefing 12% diff)만 잡았다**. 채택한 첫 하드게이트가 바로 값을 했다.
 - **수습(게이트 갭 영구 차단)**: capture_attack.gd가 MENU→탭→BRIEFING을 캡처하고 두 화면 픽셀 차이율(BRIEFING_DIFF_RATIO)을 출력. godot_port_scene.run_render가 ratio<0.03이면(브리핑이 메뉴와 거의 동일=브리핑 안 그림) 게이트 실패. 개선 게이트로 재롤 → 브리핑 복원(diff 0.32, 반투명 박스+본문+탭하여 시작)·CI 완전 green.
 - **교훈**: ① GOLEM 풀 재생성은 명시 안 한 화면도 바꿀 수 있다 → 게이트는 모든 화면(_draw)을 봐야 한다(헤드리스 프로브는 load_mission 우회라 메뉴/브리핑 _draw를 영영 못 본다 — 렌더 캡처가 유일한 눈). ② 시각 하드게이트는 board가 자주 재생성되는 동안 의도적 외형 변경 시 기준이미지 갱신을 요구하지만(menu/briefing이 톨러런스 내면 통과), 그 대가로 _draw 회귀를 잡아준다 — 이번처럼.
+
+## G100 — 덱 편성 단계 SQUAD_SELECT 착수 (2026-06-23, 클로드 키0 증분 ①②)
+- **왜 지금**: 자동전투 절반은 됐으나 플레이어 결정이 0(관전 데모). 빠진 절반 = 전투 전 유닛 선택·배치(G96 사용자 본진). 이게 들어가야 "선택→자동전투" 루프가 닫히고 재미게이트·밸런스가 관전이 아닌 플레이어 결정을 평가한다.
+- **증분 ① roster.json(키0)**: 보유 유닛 풀 6명. 필드는 rules.gd가 이미 읽는 카드필드(range/knockback/reflect_dmg/flank_bonus/aura_shield/phalanx_defense) 그대로 재사용 — 새 룰 0, 데이터만. id는 문자열(kael 등)이나 전투 진입 시 정수로 재부여(아래).
+- **증분 ② SCENE_SPEC ★v10(키0)**: BRIEFING→SQUAD_SELECT→PLAYING. BRIEFING 클릭이 load_mission 직행 대신 SQUAD_SELECT로 간다(사람 진입 경로에만 편성 단계 삽입).
+- **★ 핵심 불변 결정**: `load_mission(idx)`는 동작·시그니처 절대 불변(미션 고정 allies로 PLAYING 직행). 입력프로브·fixture·test_bridge가 전부 이 계약에 의존 — 프로브는 메뉴/브리핑을 우회하고 load_mission을 직접 부르므로 SQUAD_SELECT 추가가 프로브를 안 건드린다. 덱 편성은 `start_battle_with(ids)`라는 **새 진입 경로**로만 얹는다.
+- **★ 정수 id 재부여 결정**: 적 AI 타이브레이크가 `a["id"] < b["id"]`다. 로스터 문자열 id를 그대로 넣으면 미션 골든(정수 id)과 의미가 갈린다. start_battle_with가 고른 순서대로 id=1..N 정수로 재부여 + pos=[0,i] 0열 배치 → 적 AI 타이브레이크가 기존 미션과 동일하게 동작. 카드필드는 보존.
+- **squad_size**: levels[pending_idx].initialState.allies.size()(현재 전부 2)만큼 정확히 고르게. 밸런스를 미션이 기대한 아군 수에 맞춤.
+- **공통 마감 헬퍼 제안**: load_mission과 start_battle_with가 state 마감(turn=0/status/selected null/auto 리셋/screen=PLAYING)을 공유하므로 `_enter_battle(init)` 헬퍼로 빼되 load_mission 외부 동작은 불변.
+- **남은 것(다음)**: ③ board.gd ★키 재생성(SQUAD_SELECT 화면 추가) → ④ 검증(골든·프로브·fixture·퍼징 전부 그대로 통과 확인)·SQUAD_SELECT 화면 캡처 게이트·시각 기준이미지 갱신·커밋.
