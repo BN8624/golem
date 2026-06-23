@@ -88,9 +88,16 @@ jobs:
 
       - name: Playwright WebKit/iPhone E2E (부팅·터치→상태변화·자동전투 종료·콘솔오류)
         working-directory: godot/e2e
-        run: npx playwright test
+        run: npx playwright test golem.spec.js
 
-      - name: Web export + E2E 증거 업로드
+      - name: 시각 스냅샷 (정적 MENU·BRIEFING — 비차단·linux 기준이미지 생성)
+        working-directory: godot/e2e
+        continue-on-error: true
+        # linux 기준이미지가 아직 repo에 없으므로 --update-snapshots 로 생성(통과)하고 아래 artifact 로 올린다.
+        # 채택하려면 artifact 의 *-linux.png 를 visual.spec.js-snapshots/ 에 커밋 후 이 줄에서 --update-snapshots 제거 → 픽셀 회귀 게이트.
+        run: npx playwright test visual.spec.js --update-snapshots
+
+      - name: Web export + E2E + 시각 증거 업로드
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -98,4 +105,6 @@ jobs:
           path: |
             godot/build_web/
             godot/e2e/proof/
+            godot/e2e/visual.spec.js-snapshots/
+            godot/e2e/playwright-report/
           if-no-files-found: ignore
