@@ -10,8 +10,9 @@
 - **Phase 3**: `.github/workflows/godot.yml` 신설(keyless.yml과 분리) — import→골든36/36→입력프로브→fixture→Web export→필수파일(index.html/js/pck/wasm) 검증. godot/** 경로 게이트.
 - **Phase 4**: `test/test_bridge.gd`(읽기전용 autoload, web `?test=1`에서만 window.GOLEM_TEST 노출 — **board.gd 미변경·키0**, 사용자가 "GOLEM_TEST 상태훅까지" 선택했으나 ★키 board 재생성 대신 더 안전한 브리지로 동일 목표 달성) + `godot/e2e/`(Playwright iPhone13 WebKit: 부팅→메뉴 탭 MENU→BRIEFING→PLAYING 상태변화→자동전투 종료 정밀검증, proof/ 스크린샷·trace·verdict). godot.yml에 E2E 잡 편입. **로컬 PASS**(실오류 0·양성 GL경고 16 분리·turn 5 DEFEAT).
 - **Phase 6**: `GolemStudioMode.md` "아트·음악·UI 폼은 사람 몫"→4자 분리로 정합(충돌 해소).
-- 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6)·3b41027(P4). 검증=골든36/36·입력프로브·fixture 6/6·E2E·하네스 replay·keyless ALL PASS(전부 키0, Godot 4.7 로컬).
-- **▶ 다음 후보**: ① **Phase 5 시각 스냅샷**(proof/ 스크린샷 인프라는 깖, 동일환경 기준이미지·GOLEM 외형 재생성시 명시적 갱신) ② **Phase6-퍼징**(fast-check JS↔GDScript 차등, 카드·룰 증가 후) ③ **godot.yml 첫 CI 런 확인**(Godot 4.7 linux 다운로드 URL 자산명·webkit deps — 미검증, 푸시 후 확인. 자산명 다르면 env GODOT_RELEASE 조정) ④ 병행 트랙 씬 증분(아래 G96)으로 복귀.
+- 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6)·3b41027(P4)·62bc391(docs). 검증=골든36/36·입력프로브·fixture 6/6·E2E·하네스 replay·keyless ALL PASS(전부 키0).
+- **✅ CI 확정(2026-06-23 푸시·런 28001508018)**: godot.yml 첫 런 success 1m35s — Godot 4.7 linux 다운로드 URL 정상·import·골든·프로브·fixture·Web export·**Playwright WebKit E2E까지 ubuntu CI에서 전부 통과**. keyless도 success. 외부 리뷰 완료기준(섹션10) 최소항목 전부 충족.
+- **▶ 다음 후보(문서가 더 뒤로 미룬 것들)**: ① **Phase 5 시각 스냅샷**(proof/ 인프라 깖, 동일환경 기준이미지·GOLEM 외형 재생성시 명시적 갱신) ② **Phase6-퍼징**(fast-check JS↔GDScript 차등, 카드·룰 증가 후) ③ 병행 트랙 씬 증분(아래 G96)으로 복귀. 참고: Node20 deprecation 경고(액션이 Node24로 강제실행, 무해)는 나중에 액션 버전업하면 사라짐.
 
 ---
 
