@@ -2,16 +2,16 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 활성 트랙 = Godot 검증 하네스 강화 (2026-06-23, G97). 외부 리뷰 Phase 1·2·3·6 완료. 다음 갈림길 = Phase 4(Playwright). 씬 증분(G96, 아래)은 병행 트랙.
+### ★ 활성 트랙 = Godot 검증 하네스 강화 (2026-06-23, G97). 외부 리뷰 Phase 1·2·3·4·6 완료. 남은 건 Phase 5(시각스냅샷)·Phase6-퍼징(문서가 더 뒤로 미룸). 씬 증분(G96, 아래)은 병행 트랙.
 
 **▶▶ G97 완료(이번 세션, 클로드 하네스 키0·골렘/저자분리 유지)**: 외부 리뷰("Web/iPhone 경로가 자동 보호 안 됨, 입력 프로브가 느슨")를 대조→수용. 지적 6건 전부 코드와 일치 확인 후 처리.
 - **Phase 1**: `run_input_probe.gd` 정밀화 — 선택·이동·공격을 각각 구조화 비교(PROBE_JSON expected vs actual), 불일치 시 **quit(1)**. 옛 `if selected!=null or turn!=before`(선택만 성공해도 통과)·문자열 grep 제거.
 - **Phase 2**: `run_fixture_probe.gd` + `godot/test/fixtures/*.json`(select/move/attack/victory/defeat/edge_cases) — 미션0 비의존 기능 단위 계약. **board.levels 주입**이라 board.gd(골렘 저작) 미수정. 음성테스트로 exit 1 확인.
 - **Phase 3**: `.github/workflows/godot.yml` 신설(keyless.yml과 분리) — import→골든36/36→입력프로브→fixture→Web export→필수파일(index.html/js/pck/wasm) 검증. godot/** 경로 게이트.
+- **Phase 4**: `test/test_bridge.gd`(읽기전용 autoload, web `?test=1`에서만 window.GOLEM_TEST 노출 — **board.gd 미변경·키0**, 사용자가 "GOLEM_TEST 상태훅까지" 선택했으나 ★키 board 재생성 대신 더 안전한 브리지로 동일 목표 달성) + `godot/e2e/`(Playwright iPhone13 WebKit: 부팅→메뉴 탭 MENU→BRIEFING→PLAYING 상태변화→자동전투 종료 정밀검증, proof/ 스크린샷·trace·verdict). godot.yml에 E2E 잡 편입. **로컬 PASS**(실오류 0·양성 GL경고 16 분리·turn 5 DEFEAT).
 - **Phase 6**: `GolemStudioMode.md` "아트·음악·UI 폼은 사람 몫"→4자 분리로 정합(충돌 해소).
-- 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6). 검증=골든36/36·입력프로브 PASS·fixture 6/6·하네스 replay OK·keyless ALL PASS(전부 키0, Godot 4.7 로컬).
-- **▶ 다음 갈림길(Phase 4, 사용자 결정)**: Playwright WebKit/iPhone E2E. ① npm 설치 필요(환경 액션) ② `window.GOLEM_TEST` 읽기전용 상태노출은 board.gd 변경=**골렘 ★키 SCENE_SPEC 경유** vs JS 브리지 — 저자분리상 클로드가 board.gd 직접 못 고침. 결정 후 진행. (Phase 5 시각스냅샷·Phase 6-퍼징은 더 뒤.)
-- **⚠ godot.yml 미검증**: Godot 4.7 linux 다운로드 URL은 첫 CI 런에서 확정. 자산명 다르면 env GODOT_RELEASE만 조정.
+- 커밋 63512bf(P1+2)·a32e9ae(P3)·5765397(P6)·3b41027(P4). 검증=골든36/36·입력프로브·fixture 6/6·E2E·하네스 replay·keyless ALL PASS(전부 키0, Godot 4.7 로컬).
+- **▶ 다음 후보**: ① **Phase 5 시각 스냅샷**(proof/ 스크린샷 인프라는 깖, 동일환경 기준이미지·GOLEM 외형 재생성시 명시적 갱신) ② **Phase6-퍼징**(fast-check JS↔GDScript 차등, 카드·룰 증가 후) ③ **godot.yml 첫 CI 런 확인**(Godot 4.7 linux 다운로드 URL 자산명·webkit deps — 미검증, 푸시 후 확인. 자산명 다르면 env GODOT_RELEASE 조정) ④ 병행 트랙 씬 증분(아래 G96)으로 복귀.
 
 ---
 

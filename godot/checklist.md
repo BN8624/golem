@@ -57,8 +57,8 @@
 - [x] (Phase 1/2 게이트) `godot_port_scene.py`가 종료코드로 PASS 판정 + fixture 단계 편입. 음성테스트(틀린 fixture→exit 1) 확인. replay 게이트·keyless ALL PASS
 - [x] (Phase 3) `.github/workflows/godot.yml` — Godot 4.7 import→골든→입력프로브→fixture→Web export→필수파일 검증. keyless.yml과 분리, godot/** 경로 게이트
 - [x] (Phase 6) GolemStudioMode.md 외형 저작 역할 정의를 Godot 트랙과 정합(충돌 해소)
-- [ ] (Phase 4, 갈림길) Playwright WebKit/iPhone E2E — npm 설치 필요. `window.GOLEM_TEST` 읽기전용 상태노출은 board.gd 변경=골렘 ★키 SCENE_SPEC 경유 vs JS 브리지 결정 필요(저자분리)
-- [ ] (Phase 5) 시각 스냅샷(화면 구조 안정 후, 동일 환경 기준이미지)
+- [x] (Phase 4) Playwright WebKit/iPhone E2E — `test/test_bridge.gd`(읽기전용 autoload, ?test=1 web에서만 window.GOLEM_TEST 노출, board.gd 미변경=키0) + `e2e/`(iPhone13 WebKit: 부팅→메뉴 탭 상태변화→자동전투 종료 검증, proof/ 증거·verdict). godot.yml에 E2E 잡 편입. 로컬 PASS(실오류 0·양성 GL경고 분리)
+- [ ] (Phase 5) 시각 스냅샷(화면 구조 안정 후, 동일 환경 기준이미지) — proof/ 스크린샷 인프라는 Phase 4가 이미 깖
 - [ ] (Phase 6-퍼징) fast-check JS↔GDScript 차등 퍼징(카드·룰 증가 후)
 
 ## Phase 4 — 확장(선택)

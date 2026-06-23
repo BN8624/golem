@@ -61,3 +61,10 @@
 - **Phase 3 — Godot CI**: keyless.yml은 Python·Node만, Godot 0건이라 rules.gd 파싱·board 런타임·Web export 고장이 main에 그대로 들어갈 수 있었다. `godot.yml` 분리 신설(godot/** 경로 게이트). windowed 렌더 캡처는 디스플레이 필요라 CI 제외(로컬 게이트 유지). Godot 4.7 linux URL은 첫 런에서 확정.
 - **Phase 6 — 역할정의**: GolemStudioMode.md "아트·음악·UI 폼은 사람 몫"이 HANDOFF "외형도 골렘이"와 충돌 → 4자 분리(원본에셋=사람/Claude, 배치·화면·UI·이펙트 저작=GOLEM, 사양·계약·하네스·증거=Claude, 미관·조작감·재미 판정=사용자).
 - **다음 갈림길(Phase 4)**: Playwright WebKit E2E. `window.GOLEM_TEST` 읽기전용 상태노출이 board.gd 변경을 요구 → 골렘 ★키(SCENE_SPEC 경유) vs JS 브리지. 저자분리상 클로드가 board.gd 직접 못 고치므로 사용자 결정 필요. npm 설치도 환경 액션이라 go 전제.
+
+## Phase 4 — Playwright E2E + 상태 브리지 (2026-06-23, G97 후속)
+- **사용자 선택**: "GOLEM_TEST 상태훅까지"(board.gd 변경=★키로 제시함). 하지만 더 안전한 길로 동일 목표 달성 — board.gd를 ★키로 통째 재생성하면 G96 아이소+자동전투를 잃을 리스크가 있어, **읽기전용 autoload `test_bridge.gd`로 분리**(board.gd 미변경·키0). 저자분리상 테스트 증거 수집은 Claude 몫이라 더 깨끗(board.gd=순수 게임, 브리지=증거). board에 골렘이 직접 박길 원하면 그때 ★키 전환.
+- **브리지 안전장치**: ① `set_process(OS.has_feature("web"))` — 데스크톱/헤드리스 완전 비활성 ② 헤드리스 프로브는 `extends SceneTree`라 autoload 자체를 로드 안 함(이중 안전) ③ web에서도 `?test=1` 없으면 첫 프레임 후 영구 비활성 ④ board 상태를 읽기만(절대 수정X). → 골든·프로브·프로덕션에 0 영향(재확인 PASS).
+- **E2E 설계**: auto_mode 기본 true라 미션 진입 시 자동전투가 돈다 → 메뉴 탭(MENU→BRIEFING→PLAYING)이 "터치→상태변화" 증거, 이후 자동전투 turn 증가·RESULT 종료를 GOLEM_TEST로 관찰. 수동 move/attack 정밀검증은 이미 헤드리스 프로브/ fixture가 결정적으로 담당 → E2E는 web/브라우저/터치변환/WASM 층만 책임(역할 분리).
+- **좌표 변환**: 게임 논리 640x640(stretch aspect=keep)을 캔버스 boundingBox에 uniform scale·centered로 매핑해 탭. 헤드리스 WebKit(ANGLE) GL 경고(glBlitFramebuffer)는 양성 노이즈라 필터(실 iPhone Safari Metal에선 안 남, 최종은 사람 oracle). verdict.json이 verified(자동) vs human_review_required(미관·조작감·재미) 분리 — 자동이 재미를 통과했다 주장 안 함.
+- **남음**: Phase 5 시각스냅샷(proof/ 인프라 있음)·Phase6-퍼징(fast-check, 카드 증가 후)·godot.yml 첫 CI 런에서 Godot 4.7 다운로드 URL·webkit deps 확정.
