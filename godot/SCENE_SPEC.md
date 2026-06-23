@@ -91,6 +91,9 @@
   `_draw`를 호출 안 해 못 잡으니 렌더 캡처 게이트로 잡는다. 2026-06-23 실제 버그).
 - `draw_string`은 `\n`을 무시한다. 여러 줄은 줄 단위로 나눠 그리거나 `draw_multiline_string`.
 
+### ⚠ GDScript 다중변수 선언 함정 (반드시 지킬 것)
+- **`var a, b = ...` 같은 한 줄 다중 변수 선언 금지** — GDScript는 안 된다(`Parse Error: Expected end of statement after variable declaration, found ","`, 2026-06-24 실제 3회 실패). 변수마다 `var`를 따로: `var dx = ...` 다음 줄 `var dy = ...`. 베지어/방향/타원 계산에서 특히 주의.
+
 ## 불변식
 1. **rules.gd 수정·재구현 금지.** 룰 판정은 전부 update_state 경유. 씬은 표시·입력만.
 2. 결정적 — RNG 금지.
