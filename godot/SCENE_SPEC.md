@@ -204,11 +204,26 @@
   - 그 다음은 **load_mission과 동일한 마감**: `state = init`, `state.turn=0`, `state.status="PLAYING"`, `selected_unit_id=null`, `auto_ally_idx=0`, `auto_accum=0`, `screen="PLAYING"`. (load_mission 본체를 복제하지 말고, 공통 마감을 `_enter_battle(init_state)` 헬퍼로 빼서 load_mission도 그걸 부르게 하면 중복이 없다 — 단 **load_mission의 외부 동작·시그니처는 불변**.)
 - **불변(필수)**: `load_mission(idx)`는 그대로 미션 고정 allies로 PLAYING 직행(프로브·fixture·test_bridge 의존). SQUAD_SELECT/start_battle_with는 **순수 추가** — 골든·입력프로브·fixture·자동프로브·차등퍼징·시각게이트(MENU/BRIEFING)가 **전부 그대로 통과**해야 한다. 적 AI가 정수 id를 타이브레이크에 쓰므로 start_battle_with가 `id=1..N` 정수로 재부여하는 게 핵심(로스터 문자열 id를 그대로 넣지 마라).
 
+## ★ v11 로스터 언락·영속 (2026-06-23 G103 — 이번 증분, SQUAD_SELECT 위에 진행/저장 얹음)
+미션을 클리어하면 새 유닛이 해금되고, 그 진행이 저장된다. **룰·골든·load_mission·start_battle_with 전부 불변** — SQUAD_SELECT 표시·선택 게이트와 VICTORY 직후 1줄만 늘어난다.
+
+- **데이터**: 각 로스터 유닛에 `unlock`(str) — `"start"`(처음부터 보유) 또는 미션 `mission_id`(그 미션 클리어 시 해금). 현재 start=kael/ria/baltazar, V1-E01→thorn·V1-E02→vire·V1-E03→aegis.
+- **멤버 `var unlocked_ids = []`**(해금된 로스터 id들). `_ready`에서 `_load_unlocks()`로 채운다.
+- **메서드 `func is_unlocked(uid) -> bool`**: `uid in unlocked_ids`.
+- **메서드 `func _load_unlocks() -> void`**: 저장 상태를 읽어 `unlocked_ids`를 채운다. **없으면 기본 = `unlock=="start"`인 유닛 id들**. 저장 매체 —
+  - **web**(`OS.has_feature("web")`): `JavaScriptBridge.eval("localStorage.getItem('golem_unlocks')")` → JSON 파싱(없으면 기본). 
+  - **desktop/headless**: 영속 안 함 — 매 실행 기본(start 셋)으로 시작(제품은 web, 데스크톱은 dev). 즉 web가 아니면 그냥 기본 셋만 채우면 된다.
+- **메서드 `func _save_unlocks() -> void`**: web면 `JavaScriptBridge.eval("localStorage.setItem('golem_unlocks', '" + JSON.stringify(unlocked_ids) + "')")`. web 아니면 no-op.
+- **메서드 `func unlock_for_mission(mid: String) -> void`(공개·필수)**: roster에서 `u.unlock == mid`인 유닛 id를 `unlocked_ids`에 (없을 때만) 추가하고 `_save_unlocks()`. **VICTORY 처리에서 `unlock_for_mission(levels[current_mission_idx].mission_id)`를 호출**한다(미션 클리어 = 해금). 헤드리스 언락 프로브가 이 메서드를 직접 불러 검증하므로 **시그니처 고정.**
+- **SQUAD_SELECT 게이트**: 카드 목록은 **로스터 전부**를 그리되, **잠긴 유닛(`not is_unlocked(u.id)`)은 회색+자물쇠 표시(🔒 또는 "LOCKED")로 그리고 클릭 토글 무시**(picked에 안 들어감). 해금된 유닛만 선택 가능. cost/예산/출전 게이트는 [★v10] 그대로(잠긴 유닛은 picked_ids에 못 드니 자연히 제외).
+- **불변(필수)**: load_mission·start_battle_with·골든·입력프로브·fixture·자동프로브·차등퍼징 **전부 그대로 통과**. 언락은 SQUAD_SELECT 표시/선택과 VICTORY 직후 1콜만 — PLAYING 전투 로직·좌표 0 변경. 캡처/시각 게이트는 **기본(start 셋)** 상태로 SQUAD_SELECT를 그린다(헤드리스/캡처는 영속 안 하니 항상 기본 = 결정적).
+
 ## 검증 (모두 통과해야 채택)
 1. 헤드리스 스모크: `--quit-after 30` 가 SCRIPT ERROR/Parse Error 없이 뜸.
 2. 입력 프로브: `--script res://test/run_input_probe.gd` 가 **종료코드 0**(미션0 통합 — 선택·이동·공격을 구조화 비교, 불일치 시 `quit(1)`. 출력은 `PROBE_JSON`의 expected vs actual). `load_mission(0)`로 메뉴 우회 후 검증.
 3. fixture 프로브: `--script res://test/run_fixture_probe.gd` 가 **종료코드 0**(미션0 비의존 기능 단위 계약 — `test/fixtures/*.json`, `board.levels=[fixture]` 주입). 불일치 시 `quit(1)`.
 4. 자동 전투 프로브: `--script res://test/run_auto_probe.gd` 가 `자동 전투 동작함`(결정적 종료·2회 재현 일치).
+4b. 언락 프로브: `--script res://test/run_unlock_probe.gd` 가 **종료코드 0**(v11 — 기본 해금=`unlock=="start"` 셋·`unlock_for_mission(mid)`·`is_unlocked`·중복방지. 헤드리스=영속 안 함). 불일치 시 `quit(1)`.
 5. **렌더 캡처(windowed)**: `--script res://test/capture_attack.gd` 가 _draw(MENU+PLAYING)를 실제로 그리며
    SCRIPT ERROR/Parse Error 없이 `test/cap_menu.png`·`test/cap_after.png`를 생성해야 한다.
    (헤드리스 스모크/프로브가 `_draw`를 호출 안 해 못 잡는 draw_string 시그니처·폰트·텍스처 로드 에러를 여기서 잡는다. **v8 화살표의 draw_line/draw_polyline 에러도 여기서 잡힌다.**)
