@@ -102,6 +102,18 @@ def run_fixture(godot):
     return ok, lines
 
 
+def run_unlock(godot):
+    # 로스터 언락 프로브 — 기본 해금 셋·unlock_for_mission·is_unlocked·중복방지(v11, 헤드리스=영속 안 함)
+    r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
+                        "--script", "res://test/run_unlock_probe.gd"],
+                       capture_output=True, text=True, encoding="utf-8", timeout=120)
+    out = (r.stdout or "") + (r.stderr or "")
+    ok = r.returncode == 0
+    lines = "\n".join(l for l in out.splitlines()
+                      if "UNLOCK" in l or any(m in l for m in ERR_MARKERS))
+    return ok, lines
+
+
 def run_auto(godot):
     # 자동 전투 프로브 — auto_step() 반복 호출이 결정적으로 종료(VICTORY/DEFEAT)하는지(v7)
     r = subprocess.run([godot, "--headless", "--path", str(GODOT_DIR),
@@ -287,6 +299,14 @@ def main(argv=None):
                         "SCENE_SPEC ★v7(auto_step·그리디 정책·결정성)을 확인하라. "
                         "auto_step()이 PLAYING에서 아군 액션 1개를 update_state로 적용하고, 끝나면 screen=RESULT가 돼야 한다. 자동 프로브 출력:\n"
                         + alines[:1500])
+            continue
+        uok, ulines = run_unlock(args.godot)
+        if not uok:
+            print("  ✗ 언락 프로브 실패:\n" + "\n".join("    " + l for l in ulines.splitlines()[:10]))
+            feedback = ("스모크·프로브는 통과했으나 로스터 언락(v11) 계약 실패. "
+                        "기본 해금 = unlock=='start' 유닛, unlock_for_mission(mid)가 그 미션 unlock 유닛을 (중복없이) 추가, "
+                        "is_unlocked(uid) 계약을 확인하라. unlocked_ids 멤버·헤드리스는 영속 안 함(기본 셋). UNLOCK_JSON 출력:\n"
+                        + ulines[:1500])
             continue
         rok, rinfo = run_render(args.godot)
         if rok:
