@@ -58,6 +58,10 @@ jobs:
         working-directory: godot
         run: godot --headless --path . --script res://test/run_fixture_probe.gd
 
+      - name: 언락 프로브 (로스터 해금 계약 v11, 헤드리스)
+        working-directory: godot
+        run: godot --headless --path . --script res://test/run_unlock_probe.gd
+
       - name: JS↔GDScript 차등 퍼징 (시드 결정적, 300 케이스)
         run: python golem/tools/godot_fuzz_diff.py --n 300 --seed 20260623 --godot godot
 

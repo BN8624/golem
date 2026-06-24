@@ -2,20 +2,20 @@
 
 ## ▶ 새 세션 여기부터
 
-### ★ 덱 편성 = 3슬라이스 완료 (2026-06-23, G100 SQUAD_SELECT + G101 코스트 + G102 스프라이트 카드). "선택→자동전투" 루프 닫힘·트레이드오프·외형. CI green.
+### ★ 덱 편성 = 4슬라이스 완료 (2026-06-23~24, G100 SQUAD_SELECT + G101 코스트 + G102 스프라이트 + G103 언락·영속). 루프 닫힘·트레이드오프·외형·진행/저장. CI green.
 
-**G102(스프라이트 카드, 이번)**: SQUAD_SELECT 유닛 카드 왼쪽에 스프라이트 썸네일(range>1 mage/else knight, 32x32). 텍스트 카드 → 그림 카드. `--incr`로 board 재생성, 룰·골든·PLAYING 좌표 불변. 시각 델타가 임계(2%) 안이라 기준이미지 갱신 불필요.
+**G103(언락·영속, 이번)**: 미션 클리어로 유닛 해금 + 진행 저장. 각 유닛 `unlock`("start" 또는 mission_id) — start=kael/ria/baltazar, V1-E01→thorn·E02→vire·E03→aegis. SQUAD_SELECT는 잠긴 유닛을 회색+선택불가로 표시, VICTORY(auto_step→execute_action 경유) 시 `unlock_for_mission(mid)` 해금. **영속 = web localStorage**(데스크톱/헤드리스는 인메모리 기본셋). 헤드리스 언락 프로브(로직) + 웹 E2E(localStorage reload 영속) 둘 다 검증. 룰·골든·load_mission 불변.
 
-**G101(코스트 예산)**: 유닛 `cost` + 미션 공통 `cost_budget`(7). 편성 = squad_size명 + cost합 ≤ budget. "아무나 N명"이 트레이드오프로(kael4+ria4=8 막힘 → 협공 vire2가 인에이블러). cost는 편성 메타(룰 미사용).
-
-**G100 베이스**: BRIEFING→**SQUAD_SELECT**→PLAYING. 로스터 6명서 골라 `start_battle_with(ids)`가 id 1..N 정수 재부여·0열 배치해 `state.allies`로. `load_mission(idx)` 불변(프로브/fixture/test_bridge 의존).
+**G102(스프라이트 카드)**: SQUAD_SELECT 유닛 카드에 스프라이트 썸네일(range>1 mage/else knight 32x32).
+**G101(코스트 예산)**: 유닛 `cost` + `cost_budget`(7). 편성 = squad_size명 + cost합 ≤ budget("아무나 N명"→트레이드오프).
+**G100 베이스**: BRIEFING→SQUAD_SELECT→PLAYING. `start_battle_with(ids)` id 1..N 정수 재부여. `load_mission(idx)` 불변.
 
 **▶ 다음 세션 첫 동작 = 다음 슬라이스(택1, 사용자 취향)**:
-- **B. 로스터 영속·언락** — 미션 클리어로 유닛 해금, 로컬저장(web localStorage 배관 = 새 트랙).
 - **D. 미션별 예산/배치 선택** — cost_budget를 미션마다(squad_levels.json 메타) + 시작 칸을 플레이어가 고르게(현재 0열 고정).
-- **F. SQUAD_SELECT 외형 더** — 역할 아이콘/cost 배지/선택 체크마크 등(G102 위에 `--incr`).
+- **G. 해금 피드백·진행 UI** — VICTORY 화면에 "○○ 해금!" + MENU에 클리어 표시(현재 해금은 조용히 됨). 진행감 강화.
+- **F. SQUAD_SELECT 외형 더** — 역할 아이콘/cost 배지/선택 체크마크.
 - **E. opposing-sides 레이아웃**(고잠 — 골든 재추출+프로브 move-then-attack 선행).
-추천 = **B(영속)** 또는 **D(미션별 예산·시작칸)**. 외형 1차(G102) 섰으니 다음은 깊이(영속/배치).
+추천 = **D(미션별 예산·시작칸)** 또는 **G(해금 피드백)**. 메커니즘·진행은 섰으니 다음은 미션별 다양성이나 진행 체감. 전부 `--incr`.
 
 **★ 핵심 교훈 — 씬 증분은 `--incr` 모드로**: 풀 scratch 재생성은 board 전체를 매번 새로 써서 **검증된 PLAYING 로직을 자꾸 회귀**시킨다(G101 scratch 9시도 회귀 다발). 해법 = **`--incr`**: 검증된 현재 board를 base로 주고 "새 기능만 추가, 무관 로직 보존". **board에 기능 더할 땐 `git restore`로 검증본 두고 `--incr --cap 4`.** ⚠ **단 echo 함정**: 약한 모델은 base를 그대로 반환해 새 기능을 0줄 추가하기도 함(G102) → 하네스가 "생성물==base면 거부·되먹임" + BASE_BLOCK "동일=실패, 반드시 추가" + 사양에 구체 draw 코드 힌트를 넣어야 실제로 구현된다. [[golem-one-increment-per-regen]] [[godot-gates-no-pixel-coupling]]
 

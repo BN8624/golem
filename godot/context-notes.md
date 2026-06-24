@@ -107,3 +107,12 @@
 - **수습 3종(키0)**: ① 하네스가 생성물.strip()==base면 게이트 전에 거부·되먹임("동일 파일=실패"). ② BASE_BLOCK을 "반드시 새 기능 추가, 무관 로직만 보존"으로 재균형. ③ 사양에 draw_texture_rect 구체 코드 힌트. → 3번째 시도에서 스프라이트 실제 추가됨.
 - **부수 변경(수용)**: 모델이 죽은 변수 TILE_W/origin 제거(project가 인라인 600/gridSize 계산이라 무영향) + 메뉴 제목 x 220→320 재중앙. 둘 다 시각 임계(2%) 안이라 기준이미지 무변경.
 - **시각 기준 갱신 불필요**: 스프라이트(6장 32x32)+메뉴 제목 이동이 maxDiffPixelRatio 0.02 안. win32 비교게이트 3/3·git 기준 무변경. CI 하드게이트로 linux 확인.
+
+## G103 — 로스터 언락·영속 (2026-06-23~24, 새 트랙: 세이브 시스템)
+- **언락 모델**: 유닛 unlock 메타("start" 또는 mission_id). 시작 3명(kael/ria/baltazar), V1-E01→thorn·E02→vire·E03→aegis. SQUAD_SELECT는 잠긴 유닛도 보여주되 회색+선택불가(진행감 티저). VICTORY 직후 unlock_for_mission(현 미션 mission_id) 해금.
+- **영속 결정 = web localStorage**: 타깃이 아이폰 웹이라 localStorage(동기·신뢰). 데스크톱/헤드리스는 인메모리 기본셋(제품 아님). board.gd가 OS.has_feature("web")로 분기 — web면 JavaScriptBridge로 localStorage get/set, 아니면 기본 start셋. user:// IDBFS는 web reload 전 flush 타이밍이 불확실해 피함(localStorage가 동기라 E2E 신뢰).
+- **검증 2층**: ① 헤드리스 언락 프로브(run_unlock_probe.gd, 키0) — 로직(기본셋·unlock_for_mission·is_unlocked·중복방지). ② 웹 E2E(golem.spec, 키0) — 영속(localStorage 깨끗→UNLOCK:V1-E01→thorn 해금→reload→유지). 둘 다 PASS. godot.yml·godot_port_scene 게이트 둘 다 편입.
+- **분업**: 언락 게임로직·세이브 board.gd(골렘 ★키 --incr). 클로드는 사양·프로브·브리지·E2E. 브리지에 unlocked 노출 + "UNLOCK:<mid>" 네비 추가(영속 E2E용, board 미변경).
+- **버그(되먹임으로 잡힘)**: 한 시도가 VICTORY 언락서 levels[idx].mission_id 직접접근 → fixture(주입레벨엔 mission_id 없음) 크래시("Invalid access mission_id"). 채택본은 .get("mission_id","") 가드 — fixture victory 통과. (사양에 .get 가드 명시했고 게이트가 안 한 시도를 떨굼.)
+- **auto_step 경유 확인**: 자동전투라 승리가 auto_step→execute_action→VICTORY로 옴. 언락이 execute_action VICTORY 분기에 있어 자동승리도 해금됨(수동·자동 공통).
+- **시각/baseline**: SQUAD_SELECT 잠긴 카드 회색 처리도 임계(2%) 안 → 기준이미지 무변경. board diff 59삽입/8삭제 전부 언락 영역(--incr echo거부+강화지시 효과로 부수 변경 0).
