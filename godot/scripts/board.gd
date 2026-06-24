@@ -1,4 +1,4 @@
-# 미션 선택, 부대 편성, 아이소메트릭 전투 및 자동 전투 시스템 구현
+# 미션 선택, 부대 편성, 아이소메트릭 전투, 자동 전투 및 유닛 해금 시스템 구현
 extends Node2D
 
 var rules
@@ -16,6 +16,7 @@ var auto_ally_idx = 0
 var auto_accum = 0.0
 
 var picked_ids = []
+var unlocked_ids = []
 var max_hps = {}
 var effects = []
 var unit_twins = {}
@@ -37,9 +38,43 @@ func _ready():
 	roster = rs_data["units"]
 	cost_budget = rs_data.get("cost_budget", 0)
 	
+	_load_unlocks()
+	
 	tex_knight = load("res://assets/tinydungeon/Tiles/tile_0096.png")
 	tex_mage = load("res://assets/tinydungeon/Tiles/tile_0084.png")
 	tex_monster = load("res://assets/tinydungeon/Tiles/tile_0108.png")
+
+func _load_unlocks() -> void:
+	unlocked_ids.clear()
+	var saved = null
+	if OS.has_feature("web"):
+		var json_str = JavaScriptBridge.eval("localStorage.getItem('golem_unlocks')")
+		if json_str != null:
+			saved = JSON.parse_string(json_str)
+	
+	if saved is Array:
+		unlocked_ids = saved
+	else:
+		for u in roster:
+			if u.get("unlock") == "start":
+				unlocked_ids.append(u.id)
+
+func _save_unlocks() -> void:
+	if OS.has_feature("web"):
+		var json_str = JSON.stringify(unlocked_ids)
+		JavaScriptBridge.eval("localStorage.setItem('golem_unlocks', '" + json_str + "')")
+
+func is_unlocked(uid: String) -> bool:
+	return uid in unlocked_ids
+
+func unlock_for_mission(mid: String) -> void:
+	var changed = false
+	for u in roster:
+		if u.get("unlock") == mid and not unlocked_ids.has(u.id):
+			unlocked_ids.append(u.id)
+			changed = true
+	if changed:
+		_save_unlocks()
 
 func project(pv: Vector2) -> Vector2:
 	if screen != "PLAYING": return Vector2.ZERO
@@ -147,11 +182,14 @@ func _unhandled_input(event):
 		elif screen == "SQUAD_SELECT":
 			var squad_size = levels[pending_idx].initialState.allies.size()
 			for i in range(roster.size()):
+				var u = roster[i]
 				if mp.x > 100 and mp.x < 540 and mp.y > 100 + i * 60 and mp.y < 150 + i * 60:
-					if picked_ids.has(roster[i].id):
-						picked_ids.erase(roster[i].id)
+					if not is_unlocked(u.id):
+						continue
+					if picked_ids.has(u.id):
+						picked_ids.erase(u.id)
 					elif picked_ids.size() < squad_size:
-						picked_ids.append(roster[i].id)
+						picked_ids.append(u.id)
 					queue_redraw()
 			if mp.x > 220 and mp.x < 420 and mp.y > 540 and mp.y < 590:
 				if picked_ids.size() == squad_size and picked_cost() <= cost_budget:
@@ -219,6 +257,11 @@ func execute_action(action: Dictionary) -> void:
 	for u in state.enemies: old_pos["e" + str(u.id)] = Vector2(u.pos[0], u.pos[1])
 	
 	state.status = rules.update_state(state, action)
+	
+	if state.status == "VICTORY":
+		var mid = levels[pending_idx].get("mission_id", "")
+		if mid != "":
+			unlock_for_mission(mid)
 	
 	for u in state.allies:
 		var key = "a" + str(u.id)
@@ -329,14 +372,22 @@ func _draw():
 			var u = roster[i]
 			var rect = Rect2(100, 100 + i * 60, 440, 50)
 			var is_picked = picked_ids.has(u.id)
-			draw_rect(rect, Color(0.3, 0.3, 0.3, 1.0) if not is_picked else Color(0.4, 0.6, 0.4, 1.0), true)
+			var unlocked = is_unlocked(u.id)
+			var card_col = Color(0.3, 0.3, 0.3, 1.0)
+			if not unlocked: card_col = Color(0.2, 0.2, 0.2, 1.0)
+			elif is_picked: card_col = Color(0.4, 0.6, 0.4, 1.0)
+			draw_rect(rect, card_col, true)
 			if is_picked: draw_rect(rect, Color.YELLOW, false, 2.0)
 			
 			var tex = tex_mage if u.get("range", 1) > 1 else tex_knight
-			draw_texture_rect(tex, Rect2(rect.position + Vector2(6, 9), Vector2(32, 32)), false, Color.WHITE)
+			var tex_mod = Color.WHITE if unlocked else Color(0.4, 0.4, 0.4, 1.0)
+			draw_texture_rect(tex, Rect2(rect.position + Vector2(6, 9), Vector2(32, 32)), false, tex_mod)
 			
-			var info = u.name + " [" + u.role + "] Cost:" + str(u.get("cost",0)) + " HP:" + str(u.hp) + " ATK:" + str(u.atk)
-			draw_string(font, rect.position + Vector2(46, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+			if unlocked:
+				var info = u.name + " [" + u.role + "] Cost:" + str(u.get("cost",0)) + " HP:" + str(u.hp) + " ATK:" + str(u.atk)
+				draw_string(font, rect.position + Vector2(46, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+			else:
+				draw_string(font, rect.position + Vector2(46, 30), "🔒 LOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.6, 0.6, 0.6, 1.0))
 		
 		var cur_cost = picked_cost()
 		var cost_color = Color.WHITE if cur_cost <= cost_budget else Color.RED
