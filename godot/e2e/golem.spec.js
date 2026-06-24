@@ -70,3 +70,25 @@ test('Godot web: 부팅→화면전환→자동전투 종료, 콘솔오류 0', a
   expect(result.status === 'VICTORY' || result.status === 'DEFEAT').toBeTruthy();
   expect(result.turn).toBeGreaterThan(0);
 });
+
+// v11 로스터 언락 영속 — 미션 클리어로 해금된 유닛이 페이지 reload(localStorage) 후에도 유지되는지(웹 전용 검증)
+test('Godot web: 언락이 localStorage로 영속(reload 후 유지)', async ({ page }) => {
+  await page.goto('/index.html?test=1');
+  await page.evaluate(() => localStorage.removeItem('golem_unlocks')); // 깨끗한 시작
+  await page.reload();
+  await expect.poll(async () => (await golemState(page))?.screen, { timeout: 120000 }).toBe('MENU');
+
+  // 기본 = start 셋(thorn 잠김)
+  const before = (await golemState(page))?.unlocked || [];
+  expect(before).not.toContain('thorn');
+
+  // V1-E01 클리어 해금(브리지 네비) → thorn 해금 + localStorage 저장
+  await nav(page, 'UNLOCK:V1-E01');
+  await expect.poll(async () => (await golemState(page))?.unlocked || []).toContain('thorn');
+
+  // reload → localStorage에서 복원되어 thorn 여전히 해금
+  await page.reload();
+  await expect.poll(async () => (await golemState(page))?.screen, { timeout: 120000 }).toBe('MENU');
+  const after = (await golemState(page))?.unlocked || [];
+  expect(after, 'reload 후 unlocked').toContain('thorn');
+});

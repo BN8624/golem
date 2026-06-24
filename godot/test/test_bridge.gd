@@ -32,6 +32,8 @@ func _process(_d) -> void:
 		JavaScriptBridge.eval("window.GOLEM_NAV = '';", true)
 		if nav == "PLAY":
 			board.load_mission(0)
+		elif nav.begins_with("UNLOCK:"):
+			board.unlock_for_mission(nav.substr(7))  # 미션 클리어 해금 + 저장(영속 검증용)
 		elif nav == "BRIEFING" or nav == "SQUAD_SELECT":
 			board.set("pending_idx", 0)
 			if nav == "SQUAD_SELECT":
@@ -44,6 +46,7 @@ func _process(_d) -> void:
 	payload["screen"] = board.get("screen")
 	payload["selectedUnitId"] = board.get("selected_unit_id")
 	payload["mission"] = board.get("current_mission_idx")
+	payload["unlocked"] = board.get("unlocked_ids")  # v11 영속 검증용
 	var st = board.get("state")
 	if st is Dictionary:
 		payload["turn"] = st.get("turn", null)
